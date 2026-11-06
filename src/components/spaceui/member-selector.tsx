@@ -109,9 +109,9 @@ function MemberBubble({ member, isSelected, onClick }: MemberBubbleProps) {
               duration: 0.2,
               ease: MOTION_EASE,
             }}
-            className="absolute bottom-5 right-0 size-4 rounded-full bg-foreground dark:bg-white flex items-center justify-center shadow-xs pointer-events-none"
+            className="absolute bottom-5 right-0 size-4 rounded-full bg-foreground flex items-center justify-center shadow-xs pointer-events-none"
           >
-            <IconPlus className="size-2.5 text-background dark:text-black" strokeWidth={2.5} />
+            <IconPlus className="size-2.5 text-background" strokeWidth={2.5} />
           </motion.div>
         )}
       </AnimatePresence>

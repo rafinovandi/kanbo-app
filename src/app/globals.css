@@ -69,6 +69,8 @@
   --color-kb-text-2: var(--kb-text-2);
   --color-kb-placeholder: var(--kb-placeholder);
   --color-kb-divider: var(--kb-divider);
+  --color-kb-line: var(--kb-line);
+  --color-kb-faint: var(--kb-faint);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -143,40 +145,215 @@
   --kb-text-2: #3a3d46;
   --kb-placeholder: #8e929c;
   --kb-divider: #eff0f3;
+  --kb-line: #d9dbe1; /* stronger hairline: grid lines, dashed outlines in illustrations */
+  --kb-faint: #c4c7ce; /* disabled / empty-state numbers ("0", "0%") */
 }
 
+/* Dark theme = Kanbo dark design ("Dashboard · Dark mode" / "Board · Dark mode" in the canvas).
+   Exact hexes from the design. The solid kb-* hues (blue, green, ...) stay the same as in light. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1b1c1f;
+  --foreground: #f2f3f5;
+  --card: #1b1c1f;
+  --card-foreground: #f2f3f5;
+  --popover: #1b1c1f;
+  --popover-foreground: #f2f3f5;
+  --primary: #f2f3f5; /* primary buttons flip to light fill */
+  --primary-foreground: #1b1c1f;
+  --secondary: #232428;
+  --secondary-foreground: #f2f3f5;
+  --muted: #232428;
+  --muted-foreground: #a7a8af;
+  --accent: #34353b; /* hover for menu / list items */
+  --accent-foreground: #f2f3f5;
+  --destructive: #ff8a86;
+  --border: #2f3035;
+  --input: #2f3035;
+  --ring: #7db8ff;
+  --chart-1: #2f9bff;
+  --chart-2: #2fc85a;
+  --chart-3: #e4703b;
+  --chart-4: #9b87f5;
+  --chart-5: #f25cc8;
+  --sidebar: #1b1c1f;
+  --sidebar-foreground: #d4d5d9;
+  --sidebar-primary: #f2f3f5; /* active nav item: light fill, dark text */
+  --sidebar-primary-foreground: #1b1c1f;
+  --sidebar-accent: #2b2c31;
+  --sidebar-accent-foreground: #f2f3f5;
+  --sidebar-border: #2f3035;
+  --sidebar-ring: #7db8ff;
+
+  /* Kanbo palette (fg = lighter text, tint = dark chip background) */
+  --kb-blue-fg: #7db8ff;
+  --kb-blue-tint: #1c3250;
+  --kb-green-fg: #6fd89a;
+  --kb-green-tint: #1b3a29;
+  --kb-orange-fg: #ffa77a;
+  --kb-orange-tint: #3f2a1e;
+  --kb-lilac-fg: #b3a5ff;
+  --kb-lilac-tint: #2b2750;
+  --kb-pink-fg: #ff8ad4;
+  --kb-pink-tint: #40223a;
+  --kb-red-fg: #ff8a86;
+  --kb-red-tint: #402325;
+  --kb-yellow-fg: #f0cb5a;
+  --kb-yellow-tint: #3d3516;
+  --kb-gray-fg: #d4d5d9;
+  --kb-gray-tint: #34353b;
+  --kb-surface: #232428;
+  --kb-text-2: #d4d5d9;
+  --kb-placeholder: #8a8b92;
+  --kb-divider: #2a2b30;
+  --kb-line: #45464d;
+  --kb-faint: #585a63;
+}
+
+/* Decorative animations (sign in visual, empty states). Static under prefers-reduced-motion. */
+@keyframes kb-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--kb-float, -8px));
+  }
+}
+/* Ring fill: the circle uses pathLength="100"; --kb-ring-to is the final dashoffset (100 = empty).
+   Only start/end keyframes (no midpoint), same timing as kb-bar-fill, so the easing stays smooth. */
+@keyframes kb-ring-fill {
+  0%,
+  15% {
+    stroke-dashoffset: 100;
+  }
+  55%,
+  85% {
+    stroke-dashoffset: var(--kb-ring-to, 25);
+  }
+  100% {
+    stroke-dashoffset: 100;
+  }
+}
+/* Progress bar fill: a full-width bar scaled from the left; --kb-bar-to is the final scale (0..1). */
+@keyframes kb-bar-fill {
+  0%,
+  15% {
+    transform: scaleX(0);
+  }
+  55%,
+  85% {
+    transform: scaleX(var(--kb-bar-to, 0.5));
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+@keyframes kb-check-fill {
+  0%,
+  40% {
+    opacity: 0;
+  }
+  48%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes kb-check-draw {
+  0%,
+  45% {
+    stroke-dashoffset: 16;
+  }
+  55%,
+  90% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 16;
+  }
+}
+/* My Tasks empty-state board (6s loop): a card hops To Do → In Progress → Done, then fades. */
+@keyframes kb-card-hop {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  15% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(50px, -12px);
+  }
+  35%,
+  50% {
+    transform: translate(100px, 0);
+  }
+  60% {
+    transform: translate(150px, -12px);
+  }
+  70% {
+    transform: translate(200px, 0);
+  }
+  88% {
+    opacity: 1;
+  }
+  96%,
+  100% {
+    transform: translate(200px, 0);
+    opacity: 0;
+  }
+}
+/* Green check badge on the Done column, shown just after the card lands. */
+@keyframes kb-pop-check {
+  0%,
+  70% {
+    opacity: 0;
+  }
+  76%,
+  88% {
+    opacity: 1;
+  }
+  95%,
+  100% {
+    opacity: 0;
+  }
+}
+/* Board progress ring (pathLength 100): 0% → 34% → 100% as the card moves, then resets. */
+@keyframes kb-board-ring {
+  0%,
+  30% {
+    stroke-dashoffset: 100;
+  }
+  40%,
+  62% {
+    stroke-dashoffset: 66;
+  }
+  74%,
+  90% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: 100;
+  }
+}
+@keyframes kb-sparkle {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kb-anim {
+    animation: none !important;
+  }
 }
 
 @layer base {
@@ -188,5 +365,37 @@
   }
   html {
     @apply font-sans;
+  }
+}
+/* Page transitions between routes (<PageTransition>, React <ViewTransition>): the old page fades
+   out quickly, the new one fades in and rises a little. Off under prefers-reduced-motion. */
+::view-transition-old(.page-exit) {
+  animation: 120ms ease-out both kb-page-fade reverse;
+}
+::view-transition-new(.page-enter) {
+  animation:
+    220ms ease-out 120ms both kb-page-fade,
+    300ms ease-out 120ms both kb-page-rise;
+}
+@keyframes kb-page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes kb-page-rise {
+  from {
+    transform: translateY(8px);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(.page-exit),
+  ::view-transition-new(.page-enter) {
+    animation: none;
   }
 }

@@ -5,6 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "cn"
 import { Slot } from "radix-ui"
 
+import { useHydrated } from "@/hooks/use-hydrated"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -162,6 +163,10 @@ function Sidebar({
   collapsible?: "offcanvas" | "icon" | "none"
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  // Kanbo fix: the sidebar streams in behind <Suspense>, so it hydrates after SidebarProvider has
+  // already switched isMobile to true. Wait until this instance has hydrated before using the
+  // mobile branch, otherwise the first client render differs from the server HTML (hydration error).
+  const hydrated = useHydrated()
 
   if (collapsible === "none") {
     return (
@@ -178,7 +183,7 @@ function Sidebar({
     )
   }
 
-  if (isMobile) {
+  if (isMobile && hydrated) {
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent
