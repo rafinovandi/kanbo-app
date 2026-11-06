@@ -1,0 +1,192 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Kanbo palette (Kanban Board canvas): solid · fg (text on tint) · tint (chip bg) */
+  --color-kb-blue: var(--kb-blue);
+  --color-kb-blue-fg: var(--kb-blue-fg);
+  --color-kb-blue-tint: var(--kb-blue-tint);
+  --color-kb-green: var(--kb-green);
+  --color-kb-green-fg: var(--kb-green-fg);
+  --color-kb-green-tint: var(--kb-green-tint);
+  --color-kb-orange: var(--kb-orange);
+  --color-kb-orange-fg: var(--kb-orange-fg);
+  --color-kb-orange-tint: var(--kb-orange-tint);
+  --color-kb-lilac: var(--kb-lilac);
+  --color-kb-lilac-fg: var(--kb-lilac-fg);
+  --color-kb-lilac-tint: var(--kb-lilac-tint);
+  --color-kb-pink: var(--kb-pink);
+  --color-kb-pink-fg: var(--kb-pink-fg);
+  --color-kb-pink-tint: var(--kb-pink-tint);
+  --color-kb-red: var(--kb-red);
+  --color-kb-red-fg: var(--kb-red-fg);
+  --color-kb-red-tint: var(--kb-red-tint);
+  --color-kb-yellow: var(--kb-yellow);
+  --color-kb-yellow-fg: var(--kb-yellow-fg);
+  --color-kb-yellow-tint: var(--kb-yellow-tint);
+  --color-kb-gray: var(--kb-gray);
+  --color-kb-gray-fg: var(--kb-gray-fg);
+  --color-kb-gray-tint: var(--kb-gray-tint);
+  --color-kb-surface: var(--kb-surface);
+  --color-kb-text-2: var(--kb-text-2);
+  --color-kb-placeholder: var(--kb-placeholder);
+  --color-kb-divider: var(--kb-divider);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Light theme = Kanbo design ("Kanban Board" canvas). Values are exact hexes from the design. */
+:root {
+  --background: #ffffff;
+  --foreground: #111318;
+  --card: #ffffff;
+  --card-foreground: #111318;
+  --popover: #ffffff;
+  --popover-foreground: #111318;
+  --primary: #111318; /* primary buttons are black */
+  --primary-foreground: #ffffff;
+  --secondary: #f5f6f8;
+  --secondary-foreground: #111318;
+  --muted: #f5f6f8;
+  --muted-foreground: #5b5f6b;
+  --accent: #eff0f3; /* hover for menu / list items */
+  --accent-foreground: #111318;
+  --destructive: #e5484d;
+  --border: #e7e8ec;
+  --input: #e7e8ec;
+  --ring: #1a63c7; /* focus ring: accent-strong (spec §15) */
+  --chart-1: #2f9bff;
+  --chart-2: #2fc85a;
+  --chart-3: #e4703b;
+  --chart-4: #9b87f5;
+  --chart-5: #f25cc8;
+  --radius: 0.625rem; /* 10px; xl ≈ 14px */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3a3d46;
+  --sidebar-primary: #111318; /* active nav item: black fill, white text */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f6f8;
+  --sidebar-accent-foreground: #111318;
+  --sidebar-border: #e7e8ec;
+  --sidebar-ring: #1a63c7;
+
+  /* Kanbo palette */
+  --kb-blue: #2f9bff;
+  --kb-blue-fg: #1a63c7;
+  --kb-blue-tint: #e6f2ff;
+  --kb-green: #2fc85a;
+  --kb-green-fg: #1a7a39;
+  --kb-green-tint: #e4f8ea;
+  --kb-orange: #e4703b;
+  --kb-orange-fg: #b3460f;
+  --kb-orange-tint: #ffeee6;
+  --kb-lilac: #9b87f5;
+  --kb-lilac-fg: #5a43c6;
+  --kb-lilac-tint: #f0edfe;
+  --kb-pink: #f25cc8;
+  --kb-pink-fg: #a3247f;
+  --kb-pink-tint: #fde9f7;
+  --kb-red: #e5484d;
+  --kb-red-fg: #b3271f;
+  --kb-red-tint: #fdeceb;
+  --kb-yellow: #e0b400; /* solid not in the design (estimate); fg + tint are */
+  --kb-yellow-fg: #7a5c00;
+  --kb-yellow-tint: #fdf5d6;
+  --kb-gray: #8e929c;
+  --kb-gray-fg: #3a3d46;
+  --kb-gray-tint: #eff0f3;
+  --kb-surface: #f5f6f8;
+  --kb-text-2: #3a3d46;
+  --kb-placeholder: #8e929c;
+  --kb-divider: #eff0f3;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
