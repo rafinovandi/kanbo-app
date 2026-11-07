@@ -18,8 +18,10 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { SIDEBAR_MENU_LIST } from "@/constants/sidebar-constant";
+import useDashboardStats from "@/hooks/use-dashboard-stats";
 import { isPathActive } from "@/lib/utils";
 import type { AuthProfile } from "@/types/auth";
+import type { ProjectSummary } from "@/types/project";
 
 import KanboLogo from "./kanbo-logo";
 import SidebarProjectCard from "./sidebar-project-card";
@@ -42,14 +44,25 @@ function ActivePill() {
   );
 }
 
-export default function AppSidebar({ profile }: { profile: AuthProfile }) {
+export default function AppSidebar({
+  profile,
+  projects,
+}: {
+  profile: AuthProfile;
+  projects: ProjectSummary[];
+}) {
   const pathname = usePathname();
+  // No project switcher yet: the current project is the board being viewed, otherwise the newest one.
+  const viewedId = pathname.match(/^\/projects\/([^/]+)/)?.[1];
+  const project = projects.find((item) => item.id === viewedId) ?? projects[0] ?? null;
+  const { data: stats } = useDashboardStats();
+  const openTasks = stats ? stats.total - stats.done : 0;
 
   return (
     <Sidebar className="border-r border-kb-divider">
       <SidebarHeader className="gap-5 px-4 pt-5 pb-0">
         <KanboLogo subtitle="Personal workspace" className="px-1.5 py-1" />
-        <SidebarProjectCard />
+        <SidebarProjectCard project={project} />
       </SidebarHeader>
 
       <SidebarSeparator className="mx-4 my-5 bg-kb-divider data-horizontal:w-auto" />
@@ -60,7 +73,9 @@ export default function AppSidebar({ profile }: { profile: AuthProfile }) {
             <MotionConfig reducedMotion="user">
             <SidebarMenu className="gap-1" aria-label="Main">
               {SIDEBAR_MENU_LIST.map((item) => {
-                const isActive = !!item.url && isPathActive(pathname, item.url);
+                const url = item.needsProject ? (project ? `/projects/${project.id}` : null) : item.url;
+                const activePath = item.activePath ?? url;
+                const isActive = !!activePath && isPathActive(pathname, activePath);
                 const content = (
                   <>
                     {isActive && <ActivePill />}
@@ -71,9 +86,9 @@ export default function AppSidebar({ profile }: { profile: AuthProfile }) {
 
                 return (
                   <SidebarMenuItem key={item.title}>
-                    {item.url && !item.disabled ? (
+                    {url && !item.disabled ? (
                       <SidebarMenuButton asChild isActive={isActive} className={NAV_BUTTON_CLASS}>
-                        <Link href={item.url} aria-current={isActive ? "page" : undefined}>
+                        <Link href={url} aria-current={isActive ? "page" : undefined}>
                           {content}
                         </Link>
                       </SidebarMenuButton>
@@ -88,7 +103,7 @@ export default function AppSidebar({ profile }: { profile: AuthProfile }) {
                     )}
                     {item.badge && (
                       <SidebarMenuBadge className="right-3 h-5 min-w-[22px] rounded-md bg-kb-gray-tint font-semibold text-kb-text-2 peer-data-[size=default]/menu-button:top-3">
-                        0
+                        {openTasks}
                       </SidebarMenuBadge>
                     )}
                   </SidebarMenuItem>

@@ -30,7 +30,7 @@ See [`env.example`](./env.example). Minimum to run locally:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys (`sb_publishable_…`) |
 | `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys (`sb_secret_…`, server only) |
 
-Invites also need `TOKEN_HASH_PEPPER` (`openssl rand -hex 32`), `RESEND_API_KEY` and `EMAIL_FROM`.
+Invites also need `TOKEN_HASH_PEPPER` (`openssl rand -hex 32`). Invite links are copied from the app and shared by hand; no email service is required.
 Google OAuth credentials live in Supabase → Authentication → Providers → Google, not in `.env`.
 
 ## Project structure
