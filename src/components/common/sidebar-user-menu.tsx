@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRight2, Logout, Profile } from "iconsax-react";
+import { ArrowRight2, Logout, Profile, Cpu } from "iconsax-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 
 import { signOut } from "@/actions/auth-action";
 import {
@@ -24,12 +24,14 @@ import {
 import { isPathActive } from "@/lib/utils";
 import type { AuthProfile } from "@/types/auth";
 
+import AgentBotsDialog from "./agent-bots-dialog";
 import UserAvatar from "./user-avatar";
 
 export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
   const { isMobile } = useSidebar();
   const pathname = usePathname();
   const [isSigningOut, startSignOut] = useTransition();
+  const [botsOpen, setBotsOpen] = useState(false);
   const onProfile = isPathActive(pathname, "/profile");
 
   return (
@@ -84,6 +86,10 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
                   View Profile
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setBotsOpen(true)}>
+                <Cpu size={16} variant="Linear" color="currentColor" aria-hidden />
+                Agent Bots
+              </DropdownMenuItem>
               <DropdownMenuItem
                 variant="destructive"
                 disabled={isSigningOut}
@@ -95,6 +101,7 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
+        <AgentBotsDialog open={botsOpen} onOpenChange={setBotsOpen} />
       </SidebarMenuItem>
     </SidebarMenu>
   );
