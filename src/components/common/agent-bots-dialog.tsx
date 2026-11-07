@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { addAgentBotAction, removeAgentBotAction } from "@/actions/agent-bot-action";
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import useAgentBots, { AGENT_BOTS_KEY } from "@/hooks/use-agent-bots";
@@ -117,28 +117,31 @@ export default function AgentBotsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="gap-5 p-6 sm:max-w-[480px]">
-          <DialogHeader className="pr-10">
-            <DialogTitle className="text-lg font-semibold">Agent Bots</DialogTitle>
+        <DialogContent closeClassName="top-3.5" className="gap-0 p-0 sm:max-w-[480px]">
+          <div className="flex h-[68px] items-center border-b border-kb-divider pr-16 pl-6">
+            <DialogTitle className="text-[15px] font-semibold">Agent Bots</DialogTitle>
+          </div>
+
+          <div className="flex flex-col gap-5 p-6">
             <DialogDescription>
               Add your own Telegram bot. Kanbo keeps its token encrypted and uses it to talk to the chats you connect.
             </DialogDescription>
-          </DialogHeader>
 
-          {isLoading ? (
-            <Skeleton className="h-14 w-full rounded-[10px]" />
-          ) : (
-            bots &&
-            bots.length > 0 && (
-              <ul className="flex flex-col gap-2">
-                {bots.map((bot) => (
-                  <BotRow key={bot.id} bot={bot} onRemove={setRemoving} />
-                ))}
-              </ul>
-            )
-          )}
+            {isLoading ? (
+              <Skeleton className="h-14 w-full rounded-[10px]" />
+            ) : (
+              bots &&
+              bots.length > 0 && (
+                <ul className="flex flex-col gap-2">
+                  {bots.map((bot) => (
+                    <BotRow key={bot.id} bot={bot} onRemove={setRemoving} />
+                  ))}
+                </ul>
+              )
+            )}
 
-          <AddBotForm />
+            <AddBotForm />
+          </div>
         </DialogContent>
       </Dialog>
 
