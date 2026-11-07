@@ -42,15 +42,23 @@ export async function createTaskAction(_prev: TaskFormState, formData: FormData)
   const categoryId = text(formData, "category_id");
   const assigneeIds = parseAssigneeIds(text(formData, "assignee_ids"), (id) => UUID.test(id));
 
-  const supabase = await getSession();
-  if (!supabase) return { status: "error", errors: { _form: ["Your session expired. Sign in again."] } };
-  const { data: claims } = await supabase.auth.getClaims();
-  const userId = claims?.claims?.sub;
-  const { data: me } = await supabase
-    .from("profiles")
-    .select("timezone")
-    .eq("id", userId ?? "")
-    .maybeSingle();
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims?.sub;
+  if (!userId) return { status: "error", errors: { _form: ["Your session expired. Sign in again."] } };
+
+  const [{ data: me }, { data: last }] = await Promise.all([
+    supabase.from("profiles").select("timezone").eq("id", userId).maybeSingle(),
+    UUID.test(categoryId)
+      ? supabase
+          .from("tasks")
+          .select("position")
+          .eq("category_id", categoryId)
+          .order("position", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null as { position: number } | null }),
+  ]);
 
   const { values, errors } = validateNewTask({
     title: text(formData, "title"),
@@ -61,14 +69,6 @@ export async function createTaskAction(_prev: TaskFormState, formData: FormData)
   });
   if (!UUID.test(projectId) || !UUID.test(categoryId) || !assigneeIds) errors._form = [FAILED];
   if (Object.keys(errors).length > 0) return { status: "error", errors };
-
-  const { data: last } = await supabase
-    .from("tasks")
-    .select("position")
-    .eq("category_id", categoryId)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   const { data: task, error } = await supabase
     .from("tasks")
@@ -107,21 +107,21 @@ export async function moveTaskAction(taskId: string, categoryId: string, positio
 
   const supabase = await getSession();
   if (!supabase) return { status: "error", message: "Your session expired. Sign in again." };
-  const { data: claims } = await supabase.auth.getClaims();
 
-  const { data: before } = await supabase.from("tasks").select("project_id, category_id").eq("id", taskId).maybeSingle();
-
-  let nextPosition = position;
-  if (nextPosition === undefined) {
-    const { data: last } = await supabase
-      .from("tasks")
-      .select("position")
-      .eq("category_id", categoryId)
-      .order("position", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    nextPosition = (last?.position ?? 0) + 1;
-  }
+  const [{ data: claims }, { data: before }, lastResult] = await Promise.all([
+    supabase.auth.getClaims(),
+    supabase.from("tasks").select("project_id, category_id").eq("id", taskId).maybeSingle(),
+    position === undefined
+      ? supabase
+          .from("tasks")
+          .select("position")
+          .eq("category_id", categoryId)
+          .order("position", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve(null),
+  ]);
+  const nextPosition = position ?? (lastResult?.data?.position ?? 0) + 1;
 
   const { data, error } = await supabase
     .from("tasks")
