@@ -77,6 +77,11 @@ export default function TaskDescription({
     onEditStart?.();
   };
 
+  const editAtEnd = () => {
+    if (value && !value.endsWith("\n")) onChange(`${value}\n\n`);
+    edit();
+  };
+
   const apply = (next: { value: string; cursor: number }) => {
     cursor.current = { start: next.cursor, end: next.cursor };
     onChange(next.value);
@@ -138,6 +143,7 @@ export default function TaskDescription({
   };
 
   const blocks = parseDescription(value);
+  const hasText = blocks.some((block) => block.type === "text");
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -217,6 +223,13 @@ export default function TaskDescription({
                 </p>
               ),
             )}
+            <button
+              type="button"
+              onClick={editAtEnd}
+              className={cn("min-h-8 w-full cursor-text text-left text-muted-foreground", FOCUS_CLASS, TEXT_CLASS)}
+            >
+              {hasText ? <span className="sr-only">Add more text</span> : "Add more text…"}
+            </button>
           </div>
         )}
       </div>

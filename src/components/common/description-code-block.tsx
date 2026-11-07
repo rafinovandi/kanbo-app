@@ -19,13 +19,13 @@ export default function DescriptionCodeBlock({ lang, code }: { lang: string; cod
 
   return (
     <CodeBlock className="rounded-xl">
-      <CodeBlockHeader>
+      <CodeBlockHeader className="border-b border-border bg-muted py-2">
         <CodeBlockTitle>
           <Code1 size={14} variant="Linear" color="currentColor" aria-hidden />
           {lang}
         </CodeBlockTitle>
         <CodeBlockActions>
-          <CodeBlockCopyButton value={code} />
+          <CodeBlockCopyButton value={code} showLabel />
         </CodeBlockActions>
       </CodeBlockHeader>
       <CodeBlockContent lineNumbers className="font-mono text-[13px]">

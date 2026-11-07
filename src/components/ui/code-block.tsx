@@ -86,12 +86,13 @@ function CodeBlockActions({
 
 function CodeBlockCopyButton({
   value,
+  showLabel = false,
   variant = "ghost",
-  size = "icon-xs",
+  size = showLabel ? "sm" : "icon-xs",
   className,
   onClick,
   ...props
-}: React.ComponentProps<typeof Button> & { value: string }) {
+}: React.ComponentProps<typeof Button> & { value: string; showLabel?: boolean }) {
   const [copied, setCopied] = React.useState(false)
 
   React.useEffect(() => {
@@ -128,6 +129,7 @@ function CodeBlockCopyButton({
           <CopyIcon
           />
         )}
+        {showLabel && (copied ? "Copied" : "Copy")}
       </Button>
       <span aria-live="polite" className="sr-only">
         {copied ? "Copied" : ""}
