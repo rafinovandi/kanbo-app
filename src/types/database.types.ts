@@ -393,6 +393,18 @@ export type Database = {
         }
         Returns: string
       }
+      my_due_notifications: {
+        Args: { p_days?: number; p_today: string }
+        Returns: {
+          due_date: string
+          project_color: Database["public"]["Enums"]["project_color"]
+          project_id: string
+          project_name: string
+          status_key: Database["public"]["Enums"]["category_key"]
+          task_id: string
+          title: string
+        }[]
+      }
       my_pending_invites: {
         Args: never
         Returns: {
@@ -404,9 +416,14 @@ export type Database = {
           project_name: string
         }[]
       }
+      project_access: { Args: { p_project_id: string }; Returns: string }
+      reorder_categories: {
+        Args: { p_category_ids: string[]; p_project_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      category_key: "todo" | "progress" | "preview" | "done"
+      category_key: "todo" | "progress" | "review" | "done"
       member_status: "pending" | "active"
       project_color: "gray" | "blue" | "lilac" | "pink" | "orange" | "green"
       task_priority: "low" | "medium" | "high"
@@ -538,7 +555,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      category_key: ["todo", "progress", "preview", "done"],
+      category_key: ["todo", "progress", "review", "done"],
       member_status: ["pending", "active"],
       project_color: ["gray", "blue", "lilac", "pink", "orange", "green"],
       task_priority: ["low", "medium", "high"],
