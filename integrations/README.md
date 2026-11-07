@@ -28,6 +28,7 @@ The agent exchanges the code for a per-chat token on its own and stores it. You 
    Keep `KANBO_LINKS_FILE` in the persistent folder, or the agent forgets its links after a restart.
 3. The helper needs Node 18 or newer (it uses the built-in `fetch`) and no packages.
 4. Telegram: keep `requireMention: true` so the agent only reacts when mentioned.
+5. If OpenClaw asks you to approve every command run, allow the `kanbo.mjs` command permanently ("always") in its exec approvals, otherwise each call needs a tap.
 
 `KANBO_API_URL` must be a public address the agent can reach (a Vercel production URL, not localhost and not a protected preview URL).
 
@@ -35,9 +36,10 @@ The agent exchanges the code for a per-chat token on its own and stores it. You 
 
 ```bash
 export KANBO_API_URL=https://your-kanbo.vercel.app
-echo '{"code":"ABCD1234"}' | node kanbo.mjs link --chat -1001234567890
+node kanbo.mjs link --chat -1001234567890 --code ABCD1234
 node kanbo.mjs context --chat -1001234567890
-echo '{"tasks":[{"title":"Test task"}]}' | node kanbo.mjs preview-tasks --chat -1001234567890
+echo '{"tasks":[{"title":"Test task"}]}' > input.json
+node kanbo.mjs preview-tasks --chat -1001234567890 --input input.json
 ```
 
 Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat.
