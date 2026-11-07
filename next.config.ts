@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     agentFeedback: true,
+    // forbidden() and app/forbidden.tsx: the 403 page for a signed-in user who is not a member of a project.
+    authInterrupts: true,
     // Server Actions accept 1 MB by default; avatar uploads go up to 2 MB (AVATAR_MAX_BYTES)
     // plus multipart overhead and the other form fields.
     serverActions: { bodySizeLimit: "3mb" },
