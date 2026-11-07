@@ -5,6 +5,7 @@ import { after } from "next/server";
 import { environment } from "@/configs/environment";
 import { escapeHtml, sendMessage } from "@/lib/agent/telegram";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { formatShortDate } from "@/lib/utils";
 
 export type NotifyEvent = "task.created" | "task.completed";
 
@@ -27,23 +28,40 @@ type Person = { name: string; telegram_username: string | null };
 const mention = (person: Person) =>
   person.telegram_username ? `@${escapeHtml(person.telegram_username.replace(/^@/, ""))}` : escapeHtml(person.name);
 
-function buildMessage(input: {
+type MessageInput = {
   event: NotifyEvent;
   projectId: string;
   projectName: string;
   title: string;
+  priority: string;
+  dueDate: string | null;
+  column: string;
+  previousColumn?: string;
   actor: string;
   assignees: Person[];
-}) {
-  const heading = input.event === "task.created" ? "New task" : "Task completed ✅";
-  const verb = input.event === "task.created" ? "Added by" : "Completed by";
-  const lines = [
-    `<b>${heading}</b> · ${escapeHtml(input.projectName)}`,
-    escapeHtml(input.title),
-    `${verb} ${input.actor}${input.assignees.length > 0 ? ` · Assigned to ${input.assignees.map(mention).join(", ")}` : ""}`,
+};
+
+function buildMessage(input: MessageInput) {
+  const created = input.event === "task.created";
+  const heading = `${created ? "•" : "✅"} <b>${created ? "New task" : "Task completed"}</b> in ${escapeHtml(input.projectName)}`;
+  const priority = input.priority.charAt(0).toUpperCase() + input.priority.slice(1);
+  const column = !created && input.previousColumn ? `${input.previousColumn} → ${input.column}` : input.column;
+  const details = [
+    `Priority: ${escapeHtml(priority)}`,
+    input.dueDate ? `Due: ${escapeHtml(formatShortDate(input.dueDate))}` : null,
+    column ? `Column: ${escapeHtml(column)}` : null,
+  ].filter(Boolean);
+
+  return [
+    heading,
+    `<blockquote>${escapeHtml(input.title)}</blockquote>`,
+    details.join(" · "),
+    `by ${input.actor}`,
+    input.assignees.length > 0 ? `assigned to ${input.assignees.map(mention).join(", ")}` : null,
     `<a href="${environment.APP_URL}/projects/${input.projectId}">Open board</a>`,
-  ];
-  return lines.join("\n");
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
 }
 
 // Tells the Telegram chats linked to a project about a task event, after the response has been sent.
@@ -58,25 +76,25 @@ async function sendNotifications(input: NotifyInput) {
 
   const { data: task } = await admin
     .from("tasks")
-    .select("id, title, category_id")
+    .select("id, title, category_id, priority, due_date")
     .eq("id", input.taskId)
     .eq("project_id", input.projectId)
     .maybeSingle();
   if (!task) return;
 
+  const categoryIds = [task.category_id, input.previousCategoryId].filter((id): id is string => Boolean(id));
+  const { data: categories } = await admin.from("categories").select("id, name, key").in("id", categoryIds);
+  const category = (id?: string) => categories?.find((c) => c.id === id);
   if (input.event === "task.completed") {
-    const ids = [task.category_id, input.previousCategoryId].filter((id): id is string => Boolean(id));
-    const { data: categories } = await admin.from("categories").select("id, key").in("id", ids);
-    const keyOf = (id?: string) => categories?.find((c) => c.id === id)?.key;
-    if (keyOf(task.category_id) !== "done" || keyOf(input.previousCategoryId) === "done") return;
+    if (category(task.category_id)?.key !== "done" || category(input.previousCategoryId)?.key === "done") return;
   }
 
-  const column = input.event === "task.created" ? "notify_task_created" : "notify_task_completed";
+  const flag = input.event === "task.created" ? "notify_task_created" : "notify_task_completed";
   let linksQuery = admin
     .from("agent_links")
     .select("id, bot_id, chat_id")
     .eq("project_id", input.projectId)
-    .eq(column, true)
+    .eq(flag, true)
     .is("revoked_at", null);
   if (input.exceptLinkId) linksQuery = linksQuery.neq("id", input.exceptLinkId);
   const { data: links } = await linksQuery;
@@ -99,6 +117,10 @@ async function sendNotifications(input: NotifyInput) {
     projectId: input.projectId,
     projectName: project?.name ?? "Kanbo",
     title: task.title,
+    priority: task.priority,
+    dueDate: task.due_date,
+    column: category(task.category_id)?.name ?? "",
+    previousColumn: category(input.previousCategoryId)?.name,
     actor: input.actorLabel ? escapeHtml(input.actorLabel) : actorProfile ? mention(actorProfile) : "a teammate",
     assignees: people ?? [],
   });
