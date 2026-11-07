@@ -6,8 +6,8 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
+  MouseSensor,
   MeasuringStrategy,
-  PointerSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -102,9 +102,9 @@ export default function BoardColumns({
   const activeCategory = activeTask ? categories.find((category) => category.id === activeTask.categoryId) : undefined;
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 6 },
+      activationConstraint: { delay: 250, tolerance: 8 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
