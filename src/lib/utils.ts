@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 export { cn } from "cn";
+export { getSafeRedirectPath } from "./safe-redirect";
 
 // Inline style for a looping decorative animation. `name` is a kb-* keyframe in globals.css;
 // `vars` sets the CSS custom properties some keyframes read (e.g. --kb-float, --kb-ring-to).
@@ -44,14 +45,6 @@ export function formatLongDate(date: Date, timeZone: string): string {
   }
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
   return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")}`;
-}
-
-// Only same-site relative paths ("/dashboard", not "//evil.com" or "https://…") are allowed
-// as a post-login destination; anything else falls back.
-export function getSafeRedirectPath(value: unknown, fallback = "/dashboard"): string {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
-    ? value
-    : fallback;
 }
 
 // True when `pathname` is `href` itself or a page below it ("/profile" matches "/profile/edit").
