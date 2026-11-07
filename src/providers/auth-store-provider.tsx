@@ -5,7 +5,7 @@ import { useEffect, type ReactNode } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import type { AuthProfile } from "@/types/auth";
 
-// Same as website_cafe, but the profile comes from the server (Supabase), not a cookie,
+// The profile comes from the server (Supabase), not a cookie,
 // so name/avatar changes show up right away (spec §12).
 export default function AuthStoreProvider({
   children,

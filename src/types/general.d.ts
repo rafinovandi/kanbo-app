@@ -1,4 +1,4 @@
-// Same pattern as website_cafe: shared form state for server actions + useActionState.
+// Shared form state for server actions + useActionState.
 export type FormState = {
   status?: string;
   errors?: {
