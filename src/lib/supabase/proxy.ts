@@ -5,7 +5,7 @@ import { environment } from "@/configs/environment";
 import type { Database } from "@/types/database.types";
 
 // Pages reachable without a session (PRD §6.7).
-const PUBLIC_PATHS = ["/login", "/auth", "/invite", "/privacy", "/terms"];
+const PUBLIC_PATHS = ["/login", "/401", "/auth", "/invite", "/privacy", "/terms"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -39,14 +39,20 @@ export async function updateSession(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (!isSignedIn && !isPublicPath(pathname)) {
+    // Opening the bare root goes to the sign-in page; any other private page shows the 401 page
+    // ("Your session has ended", spec §13) and returns here after sign-in.
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
     url.search = "";
-    if (pathname !== "/") url.searchParams.set("next", `${pathname}${search}`);
+    if (pathname === "/") {
+      url.pathname = "/login";
+    } else {
+      url.pathname = "/401";
+      url.searchParams.set("next", `${pathname}${search}`);
+    }
     return redirectKeepingCookies(url, response);
   }
 
-  if (isSignedIn && pathname === "/login") {
+  if (isSignedIn && (pathname === "/login" || pathname === "/401")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
