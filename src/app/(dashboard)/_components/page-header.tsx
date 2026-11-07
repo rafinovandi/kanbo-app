@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 // Top bar: page icon + name on the left, theme toggle and Notifications (tasks that are due) on the right.
-// On phones the sidebar opens from the trigger. Sub-pages pass `backHref`: a back arrow replaces the page icon.
+// On phones the sidebar opens from the burger button, so the page icon is hidden there. Sub-pages pass `backHref`:
+// a back arrow replaces the page icon.
 export default function PageHeader({
   title,
   icon: PageIcon,
@@ -28,7 +29,7 @@ export default function PageHeader({
             </Link>
           </Button>
         ) : (
-          PageIcon && <PageIcon size={20} variant="Linear" color="currentColor" aria-hidden />
+          PageIcon && <PageIcon size={20} variant="Linear" color="currentColor" className="max-md:hidden" aria-hidden />
         )}
         <span>{title}</span>
       </div>

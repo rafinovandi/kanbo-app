@@ -23,7 +23,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { SidebarLeft } from "iconsax-react"
+import { HambergerMenu } from "iconsax-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -275,7 +275,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <SidebarLeft size={18} variant="Linear" color="currentColor" aria-hidden />
+      <HambergerMenu size={18} variant="Linear" color="currentColor" aria-hidden />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
