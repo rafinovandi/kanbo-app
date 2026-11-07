@@ -14,6 +14,244 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_bots: {
+        Row: {
+          bot_id: string
+          bot_username: string
+          channel: string
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          revoked_at: string | null
+          secret_id: string | null
+          token_hint: string | null
+        }
+        Insert: {
+          bot_id: string
+          bot_username: string
+          channel?: string
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          revoked_at?: string | null
+          secret_id?: string | null
+          token_hint?: string | null
+        }
+        Update: {
+          bot_id?: string
+          bot_username?: string
+          channel?: string
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          revoked_at?: string | null
+          secret_id?: string | null
+          token_hint?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_bots_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_link_codes: {
+        Row: {
+          bot_id: string
+          code_hash: string
+          created_by: string
+          expires_at: string
+          project_id: string
+          used_at: string | null
+        }
+        Insert: {
+          bot_id: string
+          code_hash: string
+          created_by: string
+          expires_at?: string
+          project_id: string
+          used_at?: string | null
+        }
+        Update: {
+          bot_id?: string
+          code_hash?: string
+          created_by?: string
+          expires_at?: string
+          project_id?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_link_codes_bot_id_created_by_fkey"
+            columns: ["bot_id", "created_by"]
+            isOneToOne: false
+            referencedRelation: "agent_bots"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "agent_link_codes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_links: {
+        Row: {
+          bot_id: string
+          channel: string
+          chat_id: string
+          created_at: string
+          id: string
+          last_used_at: string | null
+          linked_by: string
+          notify_disabled_reason: string | null
+          notify_task_completed: boolean
+          notify_task_created: boolean
+          project_id: string
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          bot_id: string
+          channel?: string
+          chat_id: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          linked_by: string
+          notify_disabled_reason?: string | null
+          notify_task_completed?: boolean
+          notify_task_created?: boolean
+          project_id: string
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          bot_id?: string
+          channel?: string
+          chat_id?: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          linked_by?: string
+          notify_disabled_reason?: string | null
+          notify_task_completed?: boolean
+          notify_task_created?: boolean
+          project_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_links_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "agent_bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_links_linked_by_fkey"
+            columns: ["linked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agent_links_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_link_attempts: {
+        Row: {
+          client_hash: string
+          count: number
+          window_start: string
+        }
+        Insert: {
+          client_hash: string
+          count?: number
+          window_start: string
+        }
+        Update: {
+          client_hash?: string
+          count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
+      agent_rate_limits: {
+        Row: {
+          count: number
+          token_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          token_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          token_id?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_rate_limits_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "agent_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agent_requests: {
+        Row: {
+          created_at: string
+          idempotency_key: string
+          payload_hash: string
+          response_body: Json | null
+          response_status: number
+          token_id: string
+        }
+        Insert: {
+          created_at?: string
+          idempotency_key: string
+          payload_hash: string
+          response_body?: Json | null
+          response_status: number
+          token_id: string
+        }
+        Update: {
+          created_at?: string
+          idempotency_key?: string
+          payload_hash?: string
+          response_body?: Json | null
+          response_status?: number
+          token_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_requests_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "agent_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: Database["public"]["Enums"]["project_color"]
@@ -48,6 +286,51 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_log: {
+        Row: {
+          created_at: string
+          error: string | null
+          event: string
+          id: string
+          link_id: string
+          status: Database["public"]["Enums"]["notify_status"]
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event: string
+          id?: string
+          link_id: string
+          status: Database["public"]["Enums"]["notify_status"]
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event?: string
+          id?: string
+          link_id?: string
+          status?: Database["public"]["Enums"]["notify_status"]
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "agent_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_log_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -380,8 +663,24 @@ export type Database = {
           day: string
         }[]
       }
+      agent_link_rate_limit: {
+        Args: { p_client_hash: string }
+        Returns: {
+          allowed: boolean
+          retry_after: number
+        }[]
+      }
+      agent_rate_limit: {
+        Args: { p_token_id: string }
+        Returns: {
+          allowed: boolean
+          retry_after: number
+        }[]
+      }
+      cleanup_agent_data: { Args: never; Returns: undefined }
       dashboard_stats: { Args: never; Returns: Json }
       delete_category: { Args: { p_category_id: string }; Returns: string }
+      get_agent_bot_token: { Args: { p_bot_id: string }; Returns: string }
       get_profile: { Args: { p_username: string }; Returns: Json }
       invite_member: {
         Args: {
@@ -421,10 +720,15 @@ export type Database = {
         Args: { p_category_ids: string[]; p_project_id: string }
         Returns: undefined
       }
+      set_agent_bot_token: {
+        Args: { p_bot_id: string; p_token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       category_key: "todo" | "progress" | "review" | "done"
       member_status: "pending" | "active"
+      notify_status: "sent" | "failed" | "skipped"
       project_color: "gray" | "blue" | "lilac" | "pink" | "orange" | "green"
       task_priority: "low" | "medium" | "high"
       task_source: "web" | "agent"
@@ -557,6 +861,7 @@ export const Constants = {
     Enums: {
       category_key: ["todo", "progress", "review", "done"],
       member_status: ["pending", "active"],
+      notify_status: ["sent", "failed", "skipped"],
       project_color: ["gray", "blue", "lilac", "pink", "orange", "green"],
       task_priority: ["low", "medium", "high"],
       task_source: ["web", "agent"],
