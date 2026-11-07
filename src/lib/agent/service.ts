@@ -12,6 +12,7 @@ import {
   type AgentLinkContext,
   type ApiResult,
 } from "@/lib/agent/http";
+import { notifyProject } from "@/lib/agent/notify";
 import { createChatToken, hashAgentSecret, normalizeLinkCode } from "@/lib/agent/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { escapeLikePattern, getTodayInTimeZone } from "@/lib/utils";
@@ -341,6 +342,16 @@ export async function createTasks(ctx: AgentLinkContext, request: Request): Prom
       if (assignError) warnings.push({ index: -1, message: "The tasks were saved, but their assignees could not be set." });
     }
 
+    for (const row of rows) {
+      notifyProject({
+        projectId: ctx.projectId,
+        taskId: row.id,
+        event: "task.created",
+        actorLabel: sender ? `${sender} (via agent)` : "the agent",
+        exceptLinkId: ctx.id,
+      });
+    }
+
     return {
       status: 201,
       body: { created: rows.map(({ id, title }) => ({ id, title })), url: boardUrl(ctx.projectId), warnings },
@@ -455,6 +466,17 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
           ? await ctx.admin.from("task_assignees").insert(assignees.map((a) => ({ task_id: task.id, user_id: a.id })))
           : { error: null };
       if (clearError || setError) warn("The task was updated, but its assignees could not be changed.");
+    }
+    if (patch.category_id) {
+      const sender = text(body.sender, 64);
+      notifyProject({
+        projectId: ctx.projectId,
+        taskId: task.id,
+        event: "task.completed",
+        actorLabel: sender ? `${sender} (via agent)` : "the agent",
+        exceptLinkId: ctx.id,
+        previousCategoryId: task.category_id,
+      });
     }
     return { status: 200, body: { id: task.id, title: task.title, changes, url: boardUrl(ctx.projectId), warnings } };
   });

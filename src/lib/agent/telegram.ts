@@ -4,7 +4,7 @@ const API = "https://api.telegram.org";
 const TIMEOUT_MS = 8000;
 
 export type TelegramBot = { id: string; username: string };
-export type TelegramResult<T> = { ok: true; data: T } | { ok: false; error: string };
+export type TelegramResult<T> = { ok: true; data: T } | { ok: false; error: string; status?: number };
 
 async function call<T>(token: string, method: string, body?: Record<string, unknown>): Promise<TelegramResult<T>> {
   try {
@@ -16,7 +16,9 @@ async function call<T>(token: string, method: string, body?: Record<string, unkn
       cache: "no-store",
     });
     const json = (await response.json()) as { ok: boolean; result?: T; description?: string };
-    if (!json.ok || json.result === undefined) return { ok: false, error: json.description ?? `HTTP ${response.status}` };
+    if (!json.ok || json.result === undefined) {
+      return { ok: false, error: json.description ?? `HTTP ${response.status}`, status: response.status };
+    }
     return { ok: true, data: json.result };
   } catch {
     return { ok: false, error: "Could not reach Telegram" };

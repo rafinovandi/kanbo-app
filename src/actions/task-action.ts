@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { notifyProject } from "@/lib/agent/notify";
 import { createClient } from "@/lib/supabase/server";
 import { getTodayInTimeZone } from "@/lib/utils";
 import type { TaskFormState, TaskPriority } from "@/types/task";
@@ -92,6 +93,8 @@ export async function createTaskAction(_prev: TaskFormState, formData: FormData)
     assigneesFailed = !!assignError;
   }
 
+  notifyProject({ projectId, taskId: task.id, event: "task.created", actorId: userId });
+
   revalidatePath("/", "layout");
   return { status: "success", assigneesFailed };
 }
@@ -104,6 +107,9 @@ export async function moveTaskAction(taskId: string, categoryId: string, positio
 
   const supabase = await getSession();
   if (!supabase) return { status: "error", message: "Your session expired. Sign in again." };
+  const { data: claims } = await supabase.auth.getClaims();
+
+  const { data: before } = await supabase.from("tasks").select("project_id, category_id").eq("id", taskId).maybeSingle();
 
   let nextPosition = position;
   if (nextPosition === undefined) {
@@ -123,7 +129,18 @@ export async function moveTaskAction(taskId: string, categoryId: string, positio
     .eq("id", taskId)
     .select("id");
   if (error) return { status: "error", message: FAILED };
-  return data.length > 0 ? { status: "success" } : { status: "error", message: NOT_ALLOWED };
+  if (data.length === 0) return { status: "error", message: NOT_ALLOWED };
+
+  if (before && before.category_id !== categoryId) {
+    notifyProject({
+      projectId: before.project_id,
+      taskId,
+      event: "task.completed",
+      actorId: claims?.claims?.sub,
+      previousCategoryId: before.category_id,
+    });
+  }
+  return { status: "success" };
 }
 
 export async function deleteTaskAction(taskId: string): Promise<TaskActionResult> {
