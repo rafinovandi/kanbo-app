@@ -2,7 +2,8 @@
 
 import { MotionConfig, motion } from "motion/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 import {
   Sidebar,
@@ -20,6 +21,7 @@ import {
 import { SIDEBAR_MENU_LIST } from "@/constants/sidebar-constant";
 import useDashboardStats from "@/hooks/use-dashboard-stats";
 import { isPathActive } from "@/lib/utils";
+import { useSelectedProjectStore } from "@/stores/selected-project-store";
 import type { AuthProfile } from "@/types/auth";
 import type { ProjectSummary } from "@/types/project";
 
@@ -27,7 +29,7 @@ import KanboLogo from "./kanbo-logo";
 import SidebarProjectCard from "./sidebar-project-card";
 import SidebarUserMenu from "./sidebar-user-menu";
 
-// Active nav item: black fill + white text (spec §4). Items are at least 44px tall.
+// Active nav item: black fill + white text. Items are at least 44px tall.
 // The fill is a separate <motion.span> (shared layoutId) so it glides between items; the button
 // itself stays transparent when active.
 const NAV_BUTTON_CLASS =
@@ -52,9 +54,23 @@ export default function AppSidebar({
   projects: ProjectSummary[];
 }) {
   const pathname = usePathname();
-  // No project switcher yet: the current project is the board being viewed, otherwise the newest one.
+  const router = useRouter();
+  const selectedId = useSelectedProjectStore((state) => state.selectedId);
+  const setSelectedId = useSelectedProjectStore((state) => state.setSelectedId);
+  // Current project: the board being viewed, else the one picked in the switcher, else the newest.
   const viewedId = pathname.match(/^\/projects\/([^/]+)/)?.[1];
-  const project = projects.find((item) => item.id === viewedId) ?? projects[0] ?? null;
+  const viewed = projects.find((item) => item.id === viewedId);
+  const project =
+    viewed ?? projects.find((item) => item.id === selectedId) ?? projects[0] ?? null;
+
+  useEffect(() => {
+    if (viewed && viewed.id !== selectedId) setSelectedId(viewed.id);
+  }, [viewed, selectedId, setSelectedId]);
+
+  const selectProject = (id: string) => {
+    setSelectedId(id);
+    if (viewedId) router.push(`/projects/${id}`);
+  };
   const { data: stats } = useDashboardStats();
   const openTasks = stats ? stats.total - stats.done : 0;
 
@@ -62,7 +78,7 @@ export default function AppSidebar({
     <Sidebar className="border-r border-kb-divider">
       <SidebarHeader className="gap-5 px-4 pt-5 pb-0">
         <KanboLogo subtitle="Personal workspace" className="px-1.5 py-1" />
-        <SidebarProjectCard project={project} />
+        <SidebarProjectCard project={project} projects={projects} onSelect={selectProject} />
       </SidebarHeader>
 
       <SidebarSeparator className="mx-4 my-5 bg-kb-divider data-horizontal:w-auto" />

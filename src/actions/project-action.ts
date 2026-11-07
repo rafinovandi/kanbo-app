@@ -59,3 +59,24 @@ export async function createProjectAction(
     failedInvites,
   };
 }
+
+export type DeleteProjectResult = { status: "success" } | { status: "error"; message: string };
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Deletes the project and everything in it (cascade). RLS only lets admins do it, so no deleted
+// row means the caller isn't one.
+export async function deleteProjectAction(projectId: string): Promise<DeleteProjectResult> {
+  if (!UUID.test(projectId)) return { status: "error", message: "Something went wrong. Try again." };
+
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (!claimsData?.claims?.sub) return { status: "error", message: "Your session expired. Sign in again." };
+
+  const { data, error } = await supabase.from("projects").delete().eq("id", projectId).select("id");
+  if (error) return { status: "error", message: "Could not delete the project. Try again." };
+  if (data.length === 0) return { status: "error", message: "You don't have permission to do that." };
+
+  revalidatePath("/", "layout");
+  return { status: "success" };
+}

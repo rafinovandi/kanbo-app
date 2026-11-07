@@ -18,10 +18,12 @@ import useProjectMembers from "@/hooks/use-project-members";
 import { cn } from "@/lib/utils";
 import type { BoardData } from "@/types/board";
 
+import BoardProjectMenu from "./board-project-menu";
+
 const MAX_AVATARS = 4;
 
-// Breadcrumb, project tile and name, and the Members button (spec §9).
-export default function BoardHeader({ project }: { project: BoardData["project"] }) {
+// Breadcrumb, project tile and name, the Members button, and the ⋯ menu for admins.
+export default function BoardHeader({ project, isAdmin }: { project: BoardData["project"]; isAdmin: boolean }) {
   const { data } = useProjectMembers(project.id);
   const people = data?.members.filter((member) => member.status === "active" && member.profile) ?? [];
 
@@ -69,6 +71,7 @@ export default function BoardHeader({ project }: { project: BoardData["project"]
             <span className="text-[13px] font-medium">Members</span>
           </button>
         </MembersDialog>
+        {isAdmin && <BoardProjectMenu project={{ id: project.id, name: project.name }} />}
       </div>
     </div>
   );

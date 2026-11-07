@@ -36,7 +36,7 @@ export default function Board({ projectId }: { projectId: string }) {
 
   return (
     <>
-      <BoardHeader project={data.project} />
+      <BoardHeader project={data.project} isAdmin={isAdmin} />
       <BoardToolbar
         projectId={projectId}
         categories={data.categories}
