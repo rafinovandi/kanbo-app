@@ -2,11 +2,11 @@
 
 import { DocumentUpload } from "iconsax-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import ActionBar from "@/components/common/action-bar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -210,17 +210,14 @@ export default function EditProfileForm({
         </CardContent>
       </Card>
 
-      <Card role="region" aria-label="Save changes" className="sticky bottom-4 z-10 shadow-lg">
-        <CardContent className="flex flex-wrap items-center justify-end gap-2">
-          <span className="mr-auto text-[13px] text-muted-foreground" aria-live="polite">{status}</span>
-          <Button asChild variant="outline">
-            <Link href="/profile">Cancel</Link>
-          </Button>
-          <Button type="submit" disabled={!dirty || !valid || pending}>
-            {pending ? "Saving…" : "Save Changes"}
-          </Button>
-        </CardContent>
-      </Card>
+      <ActionBar
+        className="sticky bottom-4 z-10"
+        message={status}
+        cancelHref="/profile"
+        submitLabel={pending ? "Saving…" : "Save Changes"}
+        submitType="submit"
+        submitDisabled={!dirty || !valid || pending}
+      />
     </form>
   );
 }

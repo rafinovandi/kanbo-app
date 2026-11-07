@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCurrentProfile } from "@/lib/profile";
 import { formatLongDate, getFirstName } from "@/lib/utils";
 
 // Reads the session and the current date, so it streams in behind <Suspense>.
-export default async function DashboardGreeting({ subtitle }: { subtitle: string }) {
+export default async function DashboardGreeting({ children }: { children: ReactNode }) {
   const profile = await getCurrentProfile();
   const today = formatLongDate(new Date(), profile.timezone);
 
@@ -13,7 +15,7 @@ export default async function DashboardGreeting({ subtitle }: { subtitle: string
         Hello, {getFirstName(profile.name)}
       </h1>
       <p className="text-sm text-muted-foreground">
-        {today} · {subtitle}
+        {today} · {children}
       </p>
     </div>
   );

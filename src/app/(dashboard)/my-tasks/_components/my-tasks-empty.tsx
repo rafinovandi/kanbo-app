@@ -1,5 +1,6 @@
 import { Add } from "iconsax-react";
 
+import NewProjectDialog from "@/components/common/new-project-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MY_TASKS_STEPS } from "@/constants/my-tasks-constant";
@@ -8,7 +9,7 @@ import { ACCENT_BADGE_CLASS, CTA_BUTTON_CLASS } from "@/constants/ui-constant";
 import MyTasksEmptyIllustration from "./my-tasks-empty-illustration";
 
 // Empty state for a user with no projects ("My Tasks (empty, new user)"): no card or outline,
-// content centered on the page. The New Project button has no behavior yet (the dialog comes later).
+// content centered on the page.
 export default function MyTasksEmpty() {
   return (
     <section
@@ -31,10 +32,12 @@ export default function MyTasksEmpty() {
         </p>
       </div>
 
-      <Button type="button" className={CTA_BUTTON_CLASS}>
-        <Add size={20} variant="Linear" color="currentColor" className="size-5" aria-hidden />
-        New Project
-      </Button>
+      <NewProjectDialog>
+        <Button type="button" className={CTA_BUTTON_CLASS}>
+          <Add size={20} variant="Linear" color="currentColor" className="size-5" aria-hidden />
+          New Project
+        </Button>
+      </NewProjectDialog>
 
       <ol
         aria-label="How it works"

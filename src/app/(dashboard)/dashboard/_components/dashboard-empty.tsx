@@ -1,5 +1,6 @@
 import { Add } from "iconsax-react";
 
+import NewProjectDialog from "@/components/common/new-project-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ACCENT_BADGE_CLASS, CTA_BUTTON_CLASS } from "@/constants/ui-constant";
@@ -7,7 +8,6 @@ import { ACCENT_BADGE_CLASS, CTA_BUTTON_CLASS } from "@/constants/ui-constant";
 import DashboardEmptyPreview from "./dashboard-empty-preview";
 
 // Empty state for a user with no projects: "Dashboard empty · Variant D" (text left, preview right).
-// The New Project button has no behavior yet (the dialog comes later).
 export default function DashboardEmpty() {
   return (
     <section
@@ -26,10 +26,12 @@ export default function DashboardEmpty() {
           Your dashboard fills up as you work: task counts, project progress and how much you
           finish, all in one place.
         </p>
-        <Button type="button" className={CTA_BUTTON_CLASS}>
-          <Add size={20} variant="Linear" color="currentColor" className="size-5" aria-hidden />
-          New Project
-        </Button>
+        <NewProjectDialog>
+          <Button type="button" className={CTA_BUTTON_CLASS}>
+            <Add size={20} variant="Linear" color="currentColor" className="size-5" aria-hidden />
+            New Project
+          </Button>
+        </NewProjectDialog>
       </div>
 
       <DashboardEmptyPreview />

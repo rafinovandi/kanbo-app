@@ -15,9 +15,7 @@ export default function LoginForm() {
       <div className="flex flex-1 items-center justify-center py-12">
         <div className="flex w-full max-w-[380px] flex-col gap-7">
           <div className="flex flex-col gap-2">
-            <h1 className="text-[30px] leading-tight font-semibold tracking-[-0.02em]">
-              Welcome to Kanbo
-            </h1>
+            <h1 className="text-[30px] leading-tight font-semibold tracking-[-0.02em]">Welcome to Kanbo</h1>
             <p className="text-[15px] leading-relaxed text-muted-foreground">
               Sign in to see your boards and pick up where your team left off.
             </p>
@@ -44,8 +42,7 @@ export default function LoginForm() {
             <span className="flex flex-col gap-0.5">
               <span className="text-sm font-semibold">Got an invite?</span>
               <span className="text-[13px] leading-normal text-muted-foreground">
-                Sign in with the Google account the invite was sent to, and the project shows up
-                right away.
+                Sign in with the Google account the invite was sent to, and the project shows up right away.
               </span>
             </span>
           </div>
