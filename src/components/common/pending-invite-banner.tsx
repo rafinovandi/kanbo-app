@@ -8,7 +8,7 @@ import usePendingInvites from "@/hooks/use-pending-invites";
 
 import PendingInviteDialog from "./pending-invite-dialog";
 
-// "You've been invited to {Project}" for every invite waiting for the user (spec §5).
+// "You've been invited to {Project}" for every invite waiting for the user.
 export default function PendingInviteBanner() {
   const { data: invites } = usePendingInvites();
   if (!invites?.length) return null;

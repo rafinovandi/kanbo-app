@@ -1,6 +1,6 @@
 import { kbAnimation } from "@/lib/utils";
 
-// The "0" of the 410 page (spec §13): two chain links pull apart, a spark flashes, a small clock
+// The "0" of the 410 page: two chain links pull apart, a spark flashes, a small clock
 // sits beside them. SVG elements in the error hero's 360×200 coordinates (disc center 180,108).
 export default function InviteExpiredIllustration() {
   const pull = (x: number, y: number) =>

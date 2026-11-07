@@ -17,7 +17,7 @@ import type { ProjectSummary } from "@/types/project";
 import MemberRow from "./member-row";
 import MembersInviteForm from "./members-invite-form";
 
-// Body of the Members dialog (spec §8). Mounted only while the dialog is open, so the list is
+// Body of the Members dialog. Mounted only while the dialog is open, so the list is
 // fetched on open and dropped on close.
 export default function MembersDialogContent({ project, onLeft }: { project: ProjectSummary; onLeft: () => void }) {
   const me = useAuthStore((state) => state.profile);

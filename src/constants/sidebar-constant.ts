@@ -15,7 +15,7 @@ export type SidebarMenuItemConfig = {
 // Kanbo has no role-based menus: every signed-in user sees the same list.
 export const SIDEBAR_MENU_LIST: SidebarMenuItemConfig[] = [
   { title: "Dashboard", url: "/dashboard", icon: Element3 },
-  // Board needs a current project; disabled until the user has one (PRD §6.8).
+  // Board needs a current project; disabled until the user has one.
   { title: "Board", url: null, icon: Kanban, needsProject: true, activePath: "/projects" },
   { title: "My Tasks", url: "/my-tasks", icon: TaskSquare, badge: true },
 ];

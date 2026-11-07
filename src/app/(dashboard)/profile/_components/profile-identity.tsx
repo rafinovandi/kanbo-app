@@ -76,7 +76,7 @@ export default function ProfileIdentity({
   );
 }
 
-// Shown on your own profile when a section is hidden from other people (spec §12).
+// Shown on your own profile when a section is hidden from other people.
 export function HiddenNote() {
   return <p className="text-xs text-muted-foreground">Hidden from others</p>;
 }

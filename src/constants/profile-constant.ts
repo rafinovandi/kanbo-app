@@ -10,7 +10,7 @@ export const PROJECT_TONE: Record<ProjectColor, { dot: string; bar: string }> = 
   green: { dot: "bg-kb-green", bar: "bg-kb-green" },
 };
 
-// Activity graph: tasks per day → level 0..4 (spec §12: 0, 1–2, 3–4, 5–6, 7+).
+// Activity graph: tasks per day → level 0..4 (0, 1–2, 3–4, 5–6, 7+).
 export const ACTIVITY_DAYS = 365;
 export const RECENT_TASKS_LIMIT = 6;
 

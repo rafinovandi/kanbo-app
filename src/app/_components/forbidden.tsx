@@ -10,7 +10,7 @@ import SignedInAs from "./signed-in-as";
 
 const BUTTON_CLASS = "h-12 w-full rounded-xl text-[15px] font-medium";
 
-// 403: signed in, but not a member of the project (spec §13). Full page, no sidebar.
+// 403: signed in, but not a member of the project. Full page, no sidebar.
 export default function Forbidden() {
   return (
     <ErrorPage
@@ -22,7 +22,7 @@ export default function Forbidden() {
       heading="You don't have access to this project"
       message="This board is private to its members. Ask the project owner to invite you, or switch to an account that is already a member."
       primary={
-        // Requesting access has no flow designed yet (spec §13, §16), so the button stays disabled.
+        // Requesting access has no flow yet, so the button stays disabled.
         <Button type="button" disabled className={BUTTON_CLASS}>
           Request Access
         </Button>

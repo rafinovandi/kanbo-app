@@ -2,7 +2,7 @@
 
 import useDashboardStats from "@/hooks/use-dashboard-stats";
 
-// "N open tasks across M projects", or the no-projects line (spec §5).
+// "N open tasks across M projects", or the no-projects line.
 export default function DashboardSubtitle() {
   const { data: stats } = useDashboardStats();
   if (!stats) return "…";

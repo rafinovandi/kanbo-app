@@ -13,7 +13,7 @@ import BoardFilterMenu from "./board-filter-menu";
 import BoardSortMenu from "./board-sort-menu";
 import CategoryDialog from "./category-dialog";
 
-// Search, Filter, Sort and Add Category (spec §9); Add Category is for admins only.
+// Search, Filter, Sort and Add Category; Add Category is for admins only.
 export default function BoardToolbar({
   projectId,
   categories,

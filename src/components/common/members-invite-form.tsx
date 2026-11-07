@@ -10,7 +10,7 @@ import { isValidEmail } from "@/validations/project";
 
 import { InviteLinkRow } from "./invite-links";
 
-// "Invite people" (admins only, spec §8). The link of each invite made in this session stays here to
+// "Invite people" (admins only). The link of each invite made in this session stays here to
 // be copied, since the database keeps only its hash.
 export default function MembersInviteForm({
   projectId,

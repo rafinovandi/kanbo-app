@@ -7,7 +7,7 @@ import { PROJECT_TONE } from "@/constants/profile-constant";
 import useBoard from "@/hooks/use-board";
 import { cn } from "@/lib/utils";
 
-// The column after the categories (spec §9): the project's progress ring and tasks per status.
+// The column after the categories: the project's progress ring and tasks per status.
 // It reads the whole board, not the searched one.
 export default function BoardOverview({ projectId }: { projectId: string }) {
   const { data } = useBoard(projectId);

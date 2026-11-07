@@ -10,7 +10,7 @@ import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 
 import { signInWithGoogle } from "../actions";
 
-// Black primary button, 48px, Google logo in a white circle (spec §2).
+// Black primary button, 48px, Google logo in a white circle.
 const BUTTON_CLASS =
   "h-12 w-full gap-2.5 rounded-xl text-[15px] font-medium disabled:opacity-85 aria-busy:cursor-progress";
 

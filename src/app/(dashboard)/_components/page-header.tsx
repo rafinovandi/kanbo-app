@@ -6,7 +6,7 @@ import ThemeToggle from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-// Top bar (spec §4): page icon + name on the left, theme toggle and Notifications (tasks that are due) on the right.
+// Top bar: page icon + name on the left, theme toggle and Notifications (tasks that are due) on the right.
 // On phones the sidebar opens from the trigger. Sub-pages pass `backHref`: a back arrow replaces the page icon.
 export default function PageHeader({
   title,

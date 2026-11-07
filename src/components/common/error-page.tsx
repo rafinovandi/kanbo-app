@@ -4,7 +4,7 @@ import KanboLogo from "@/components/common/kanbo-logo";
 import { Badge } from "@/components/ui/badge";
 import { kbAnimation } from "@/lib/utils";
 
-// Badge and disc colors per error page (spec §13): 404 blue, 403 orange, 401 lilac, 410 yellow.
+// Badge and disc colors per error page: 404 blue, 403 orange, 401 lilac, 410 yellow.
 const TONE_CLASS = {
   blue: { badge: "bg-kb-blue-tint text-kb-blue-fg", disc: "fill-kb-blue-tint" },
   orange: { badge: "bg-kb-orange-tint text-kb-orange-fg", disc: "fill-kb-orange-tint" },
@@ -22,7 +22,7 @@ const STAR_CLASS = {
 export type ErrorTone = keyof typeof TONE_CLASS;
 export type StarColor = keyof typeof STAR_CLASS;
 
-// Four-point sparkles in the corners of the 360×200 hero, as drawn in the canvas. Each blinks
+// Four-point sparkles in the corners of the 360×200 hero. Each blinks
 // (kb-sparkle, 2.4s) a third of a cycle after the previous one.
 const STAR_PATHS = [
   "M30 32l2 5.6 5.6 2.4-5.6 2.4-2 5.6-2-5.6-5.6-2.4 5.6-2.4Z",
@@ -47,7 +47,7 @@ type ErrorPageProps = {
   note?: ReactNode;
 };
 
-// Shared full-page layout for the 401 / 403 / 404 / 410 pages (spec §13), no sidebar.
+// Shared full-page layout for the 401 / 403 / 404 / 410 pages, no sidebar.
 // The dot grid is one static image (public/error-grid.svg) used as a CSS background.
 // Everything animated stops under prefers-reduced-motion (kb-anim).
 export default function ErrorPage({

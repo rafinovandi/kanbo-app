@@ -5,7 +5,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import AppSidebarLoader from "./_components/app-sidebar-loader";
 
-// App shell: sidebar (248px, spec §4) + content. The sidebar reads the session, so with
+// App shell: sidebar (248px) + content. The sidebar reads the session, so with
 // Cache Components it streams in behind <Suspense>; the page content renders right away.
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (

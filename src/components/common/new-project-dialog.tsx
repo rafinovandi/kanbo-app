@@ -53,7 +53,7 @@ function Field({
   );
 }
 
-// Live preview (spec §7): the project's initial, name and description as the user types.
+// Live preview: the project's initial, name and description as the user types.
 function ProjectPreview({ fields }: { fields: ProjectFields }) {
   const name = fields.name.trim();
   return (

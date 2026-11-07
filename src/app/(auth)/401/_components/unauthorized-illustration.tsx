@@ -1,6 +1,6 @@
 import { kbAnimation } from "@/lib/utils";
 
-// The "0" of the 401 page (spec §13): a key slides toward a keyhole. SVG elements in the error
+// The "0" of the 401 page: a key slides toward a keyhole. SVG elements in the error
 // hero's 360×200 coordinates (disc center 180,108), theme tokens only. The slide stops under
 // prefers-reduced-motion (the key rests next to the keyhole).
 export default function UnauthorizedIllustration() {

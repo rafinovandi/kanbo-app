@@ -148,7 +148,7 @@ function CategoryForm({
   );
 }
 
-// Add or edit a category (spec §10). The form lives inside the dialog content, so it starts fresh
+// Add or edit a category. The form lives inside the dialog content, so it starts fresh
 // every time the dialog opens.
 export default function CategoryDialog({ open, onOpenChange, ...form }: CategoryDialogProps) {
   return (

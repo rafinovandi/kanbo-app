@@ -5,7 +5,7 @@ import { PROJECT_TONE } from "@/constants/profile-constant";
 import { cn, formatShortDate } from "@/lib/utils";
 import type { ProjectTask } from "@/types/project";
 
-// One task per row: status pill, title, priority chip, due date (spec §6). A row opens the task modal.
+// One task per row: status pill, title, priority chip, due date. A row opens the task modal.
 export default function MyTasksTaskTable({
   tasks,
   onOpenTask,

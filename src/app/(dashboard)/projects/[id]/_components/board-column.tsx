@@ -25,7 +25,7 @@ import CategoryDialog from "./category-dialog";
 const animateLayoutChanges: AnimateLayoutChanges = (args) =>
   defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
-// One column (spec §9): header with color bar, name, count and a hover + button, then its cards and
+// One column: header with color bar, name, count and a hover + button, then its cards and
 // an "Add New" card. The card list is the drop target, so empty columns accept drops too.
 export default function BoardColumn({
   project,

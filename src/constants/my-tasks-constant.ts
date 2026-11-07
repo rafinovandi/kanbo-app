@@ -29,10 +29,10 @@ export const MY_TASKS_STEPS: {
   },
 ];
 
-// Task rows shown per project before "See More" (spec §6).
+// Task rows shown per project before "See More".
 export const MAX_TASK_ROWS = 5;
 
-// Sort order of a task's status: Review, In Progress, custom columns, To Do, Done (spec §6).
+// Sort order of a task's status: Review, In Progress, custom columns, To Do, Done.
 export const TASK_STATUS_ORDER = { review: 0, progress: 1, custom: 2, todo: 3, done: 4 } as const;
 
 export const TASK_PRIORITY_CHIP: Record<TaskPriority, { label: string; className: string }> = {

@@ -20,7 +20,7 @@ import { boardKey } from "@/hooks/use-board";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
 import type { BoardCategory } from "@/types/board";
 
-// The ⋯ menu of a column (admins only, spec §9): edit it, or delete it and move its tasks to the
+// The ⋯ menu of a column (admins only): edit it, or delete it and move its tasks to the
 // next column (the previous one when it is the last). Done and the last remaining column stay.
 export default function BoardColumnMenu({
   projectId,

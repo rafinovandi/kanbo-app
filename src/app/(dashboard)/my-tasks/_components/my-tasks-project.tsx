@@ -21,7 +21,7 @@ import MyTasksTaskTable from "./my-tasks-task-table";
 
 const MAX_AVATARS = 5;
 
-// One project (spec §6): its header, then the task table once it has tasks. Only the first rows
+// One project: its header, then the task table once it has tasks. Only the first rows
 // are visible until "See More".
 export default function MyTasksProject({ project }: { project: ProjectOverview }) {
   const [expanded, setExpanded] = useState(false);

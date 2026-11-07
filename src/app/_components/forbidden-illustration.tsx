@@ -1,6 +1,6 @@
 import { kbAnimation } from "@/lib/utils";
 
-// The "0" of the 403 page (spec §13): a padlock that wiggles now and then. SVG elements in the error hero's
+// The "0" of the 403 page: a padlock that wiggles now and then. SVG elements in the error hero's
 // 360×200 coordinates (disc center 180,108), theme tokens only. The wiggle stops under prefers-reduced-motion.
 export default function ForbiddenIllustration() {
   return (

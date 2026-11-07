@@ -40,7 +40,7 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Kanbo palette (Kanban Board canvas): solid · fg (text on tint) · tint (chip bg) */
+  /* Kanbo palette: solid · fg (text on tint) · tint (chip bg) */
   --color-kb-blue: var(--kb-blue);
   --color-kb-blue-fg: var(--kb-blue-fg);
   --color-kb-blue-tint: var(--kb-blue-tint);
@@ -81,7 +81,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Light theme = Kanbo design ("Kanban Board" canvas). Values are exact hexes from the design. */
+/* Light theme */
 :root {
   --background: #ffffff;
   --foreground: #111318;
@@ -100,7 +100,7 @@
   --destructive: #e5484d;
   --border: #e7e8ec;
   --input: #e7e8ec;
-  --ring: var(--kb-placeholder); /* focus ring: neutral gray (spec §15 says accent-strong; gray by request) */
+  --ring: var(--kb-placeholder); /* focus ring: neutral gray */
   --chart-1: #2f9bff;
   --chart-2: #2fc85a;
   --chart-3: #e4703b;
@@ -149,8 +149,7 @@
   --kb-faint: #c4c7ce; /* disabled / empty-state numbers ("0", "0%") */
 }
 
-/* Dark theme = Kanbo dark design ("Dashboard · Dark mode" / "Board · Dark mode" in the canvas).
-   Exact hexes from the design. The solid kb-* hues (blue, green, ...) stay the same as in light. */
+/* Dark theme. The solid kb-* hues (blue, green, ...) stay the same as in light. */
 .dark {
   --background: #1b1c1f;
   --foreground: #f2f3f5;

@@ -1,6 +1,6 @@
 import { kbAnimation } from "@/lib/utils";
 
-// The "0" of the 404 page (spec §13): a floating card with "?" and a magnifier orbiting it.
+// The "0" of the 404 page: a floating card with "?" and a magnifier orbiting it.
 // SVG elements in the error hero's 360×200 coordinates (disc center 180,108), theme tokens only.
 // Both animations stop under prefers-reduced-motion.
 export default function NotFoundIllustration() {

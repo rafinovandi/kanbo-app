@@ -1,6 +1,6 @@
 import type { TaskPriority } from "@/types/task";
 
-// Priority slider (canvas "Priority slider"): one entry per stop, left to right. Classes are theme tokens.
+// Priority slider: one entry per stop, left to right. Classes are theme tokens.
 export const PRIORITY_LEVELS: {
   value: TaskPriority;
   caption: string;

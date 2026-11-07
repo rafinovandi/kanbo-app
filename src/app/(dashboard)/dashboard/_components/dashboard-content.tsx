@@ -9,7 +9,7 @@ import DashboardProgress from "./dashboard-progress";
 import DashboardProjects from "./dashboard-projects";
 import DashboardStatBoxes from "./dashboard-stats";
 
-// With projects: stat boxes and the two cards. Without: the empty state (spec §5).
+// With projects: stat boxes and the two cards. Without: the empty state.
 export default function DashboardContent() {
   const { data: stats, isLoading, isError } = useDashboardStats();
 

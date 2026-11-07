@@ -7,7 +7,7 @@ import NotFoundIllustration from "./not-found-illustration";
 
 const BUTTON_CLASS = "h-12 w-full rounded-xl text-[15px] font-medium";
 
-// 404: the route or resource doesn't exist (spec §13). Full page, no sidebar.
+// 404: the route or resource doesn't exist. Full page, no sidebar.
 export default function NotFound() {
   return (
     <ErrorPage

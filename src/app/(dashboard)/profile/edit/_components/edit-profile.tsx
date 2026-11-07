@@ -12,7 +12,7 @@ async function EditProfileLoader() {
   return <EditProfileForm me={me} initial={fields} />;
 }
 
-// Edit Profile (spec §12): photo, profile fields, account and a sticky save bar.
+// Edit Profile: photo, profile fields, account and a sticky save bar.
 export default function EditProfile() {
   return (
     <PageTransition>

@@ -377,7 +377,7 @@ type TaskDialogProps = {
     }
 );
 
-// One dialog for adding a task and for opening one (task modal, spec §11). Adding: wraps any element (a column's +
+// One dialog for adding a task and for opening one (task modal). Adding: wraps any element (a column's +
 // button or its "Add New" card) and opens an empty form for that column. Opening: controlled, for a card.
 export default function TaskDialog({
   project,

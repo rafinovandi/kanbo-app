@@ -10,7 +10,7 @@ import GoogleSignInButton, {
 
 import UnauthorizedIllustration from "./unauthorized-illustration";
 
-// 401: not signed in, or the session expired (spec §13).
+// 401: not signed in, or the session expired.
 export default function Unauthorized() {
   return (
     <ErrorPage

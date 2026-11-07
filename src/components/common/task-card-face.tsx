@@ -9,7 +9,7 @@ import type { BoardTask } from "@/types/board";
 
 const MAX_AVATARS = 3;
 
-// What a task card looks like on the Board (spec §9): priority, title, assignees and due date.
+// What a task card looks like on the Board: priority, title, assignees and due date.
 // `menu` is the hover button in the top right corner; `isOverlay` is the copy that follows the pointer.
 export default function TaskCardFace({
   task,

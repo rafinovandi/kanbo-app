@@ -16,7 +16,7 @@ export const EMPTY_PROJECT_ROWS = [
   { y: 48, nameWidth: 70, bar: 0.318, delay: 0.6, fillClass: "fill-kb-lilac" },
 ];
 
-// Task statuses shown in the stat boxes and the progress legend (spec §5). Custom columns of all
+// Task statuses shown in the stat boxes and the progress legend. Custom columns of all
 // projects are summed into "other".
 export const DASHBOARD_STATUSES = [
   { key: "todo", label: "To Do", dotClass: "bg-kb-gray" },

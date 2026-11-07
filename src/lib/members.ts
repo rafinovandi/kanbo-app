@@ -10,7 +10,7 @@ export type MemberPermissions = {
   hasMenu: boolean;
 };
 
-// What the signed-in user may do on one row (spec §3, §8). The database enforces the same rules;
+// What the signed-in user may do on one row. The database enforces the same rules;
 // this only decides which actions to show.
 export function getMemberPermissions({
   meId,

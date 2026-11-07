@@ -203,7 +203,7 @@ export default function EditProfileForm({
               Permanently remove your account and leave all projects. Projects you own must be handed over first.
             </p>
           </div>
-          {/* No behavior yet (not in the spec's scope), so the action stays disabled. */}
+          {/* No behavior yet (not built yet), so the action stays disabled. */}
           <Button type="button" variant="destructive" disabled>
             Delete Account
           </Button>

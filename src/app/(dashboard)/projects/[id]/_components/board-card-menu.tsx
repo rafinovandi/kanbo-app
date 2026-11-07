@@ -17,7 +17,7 @@ import { PROJECT_TONE } from "@/constants/profile-constant";
 import { cn } from "@/lib/utils";
 import type { BoardCategory } from "@/types/board";
 
-// The ⋯ menu of a task card (spec §9): every member can move it, only admins delete it.
+// The ⋯ menu of a task card: every member can move it, only admins delete it.
 export default function BoardCardMenu({
   categories,
   categoryId,

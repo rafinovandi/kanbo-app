@@ -9,7 +9,7 @@ import { isValidEmail, MAX_INVITES, type InviteDraft } from "@/validations/proje
 
 import { AddRoleButton, RoleChip, RolePicker } from "./role-picker";
 
-// "Invite members (optional)" in the New Project dialog (spec §7). The list is sent with the form
+// "Invite members (optional)" in the New Project dialog. The list is sent with the form
 // as JSON; the server validates it again.
 export default function InviteMembersField({
   invites,

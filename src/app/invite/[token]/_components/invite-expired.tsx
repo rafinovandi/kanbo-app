@@ -7,7 +7,7 @@ import InviteExpiredIllustration from "./invite-expired-illustration";
 
 const BUTTON_CLASS = "h-12 w-full rounded-xl text-[15px] font-medium";
 
-// 410: the invite link is expired, already used or cancelled (spec §13).
+// 410: the invite link is expired, already used or cancelled.
 export default function InviteExpired() {
   return (
     <ErrorPage

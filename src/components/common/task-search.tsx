@@ -7,7 +7,7 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "
 import { Kbd } from "@/components/ui/kbd";
 import { useHydrated } from "@/hooks/use-hydrated";
 
-// Search field with a ⌘K / Ctrl K shortcut that focuses it (My Tasks and Board, spec §6, §9). The key label depends on the
+// Search field with a ⌘K / Ctrl K shortcut that focuses it (My Tasks and Board). The key label depends on the
 // platform, so it renders after hydration.
 export default function TaskSearch({ onChange }: { onChange: (value: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);

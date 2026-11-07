@@ -6,7 +6,7 @@ export const PROJECT_LIMITS = {
   description: 500,
 } as const;
 
-// The 6 colors of the project color picker (spec §7), in picker order. `tile` is the pastel
+// The 6 colors of the project color picker, in picker order. `tile` is the pastel
 // square behind a project's initial; the solid swatch/dot comes from PROJECT_TONE (profile-constant).
 export const PROJECT_COLORS: { value: ProjectColor; label: string; tile: string }[] = [
   { value: "gray", label: "Gray", tile: "bg-kb-gray-tint text-kb-gray-fg" },
@@ -22,7 +22,7 @@ export const INVITE_TTL_DAYS = 7;
 
 export const ROLE_LIMITS = { maxRoles: 20, maxLength: 30 } as const;
 
-// Role chip colors (spec §1). Default roles have fixed colors; custom roles get one by name hash.
+// Role chip colors. Default roles have fixed colors; custom roles get one by name hash.
 export const ROLE_CHIP_CLASS = {
   lilac: "bg-kb-lilac-tint text-kb-lilac-fg",
   blue: "bg-kb-blue-tint text-kb-blue-fg",

@@ -18,7 +18,7 @@ function NoResults({ search }: { search: string }) {
 }
 
 // With projects: search, the header New Project button and one section per project. Without: the
-// empty state, where search and the button stay hidden (spec §6).
+// empty state, where search and the button stay hidden.
 export default function MyTasksContent() {
   const debounce = useDebounce();
   const [search, setSearch] = useState("");

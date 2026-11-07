@@ -1,14 +1,5 @@
 import { kbAnimation } from "@/lib/utils";
 
-// Sign In visual, "Variant B · Grid" (spec §2).
-// - Background (grid fading from the top left, ~110 white cells, soft glow) is ONE static image,
-//   public/login-grid.svg, used as a CSS background: no DOM nodes for decoration. It is not
-//   animated (user request). Same viewBox (560×720, slice) as the foreground SVG so they line up.
-// - Foreground (floating cards, ring, pill, sparkle) is inline SVG and animates with the kb-*
-//   keyframes in globals.css; it stops under prefers-reduced-motion (static frame).
-// Foreground colors come from theme tokens: fill-*/stroke-* classes, and var(--…) where SVG
-// needs a CSS property (drop shadow).
-
 const AVATARS = [
   { cx: 172, bg: "fill-kb-blue-tint", fg: "fill-kb-blue-fg", label: "AP" },
   { cx: 188, bg: "fill-kb-orange-tint", fg: "fill-kb-orange-fg", label: "BS" },
