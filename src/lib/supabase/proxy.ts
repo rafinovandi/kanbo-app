@@ -4,8 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { environment } from "@/configs/environment";
 import type { Database } from "@/types/database.types";
 
-// Pages reachable without a session (PRD §6.7).
-const PUBLIC_PATHS = ["/login", "/401", "/auth", "/invite", "/privacy", "/terms"];
+// Pages reachable without a session. /api/agent authenticates with its own bearer token, not a cookie.
+const PUBLIC_PATHS = ["/login", "/401", "/auth", "/invite", "/privacy", "/terms", "/api/agent"];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -40,7 +40,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!isSignedIn && !isPublicPath(pathname)) {
     // Opening the bare root goes to the sign-in page; any other private page shows the 401 page
-    // ("Your session has ended", spec §13) and returns here after sign-in.
+    // ("Your session has ended") and returns here after sign-in.
     const url = request.nextUrl.clone();
     url.search = "";
     if (pathname === "/") {
