@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice">
+<!-- Kanbo error pages background, as drawn in the canvas: a faint dot grid, visible around the center and fading out toward the edges. Static decoration, used as a CSS background. Dot color = theme token kb-placeholder (#8A8B92) at low opacity so it works in light and dark. -->
+<defs>
+<pattern id="d" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.2" fill="#8A8B92"/></pattern>
+<radialGradient id="f" cx="50%" cy="45%" r="60%">
+<stop offset="0" stop-color="#fff"/>
+<stop offset="1" stop-color="#000"/>
+</radialGradient>
+<mask id="m"><rect width="1440" height="900" fill="url(#f)"/></mask>
+</defs>
+<rect width="1440" height="900" fill="url(#d)" opacity=".3" mask="url(#m)"/>
+</svg>

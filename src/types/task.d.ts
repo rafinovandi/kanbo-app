@@ -10,6 +10,8 @@ export type TaskWithAssignees = Task & {
 
 export type TaskFormState = {
   status?: string;
+  // Set on success when the task was saved but its assignees were not.
+  assigneesFailed?: boolean;
   errors?: {
     title?: string[];
     description?: string[];

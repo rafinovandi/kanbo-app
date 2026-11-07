@@ -100,7 +100,7 @@
   --destructive: #e5484d;
   --border: #e7e8ec;
   --input: #e7e8ec;
-  --ring: #1a63c7; /* focus ring: accent-strong (spec §15) */
+  --ring: var(--kb-placeholder); /* focus ring: neutral gray (spec §15 says accent-strong; gray by request) */
   --chart-1: #2f9bff;
   --chart-2: #2fc85a;
   --chart-3: #e4703b;
@@ -114,7 +114,7 @@
   --sidebar-accent: #f5f6f8;
   --sidebar-accent-foreground: #111318;
   --sidebar-border: #e7e8ec;
-  --sidebar-ring: #1a63c7;
+  --sidebar-ring: var(--kb-placeholder);
 
   /* Kanbo palette */
   --kb-blue: #2f9bff;
@@ -169,7 +169,7 @@
   --destructive: #ff8a86;
   --border: #2f3035;
   --input: #2f3035;
-  --ring: #7db8ff;
+  --ring: var(--kb-placeholder);
   --chart-1: #2f9bff;
   --chart-2: #2fc85a;
   --chart-3: #e4703b;
@@ -182,7 +182,7 @@
   --sidebar-accent: #2b2c31;
   --sidebar-accent-foreground: #f2f3f5;
   --sidebar-border: #2f3035;
-  --sidebar-ring: #7db8ff;
+  --sidebar-ring: var(--kb-placeholder);
 
   /* Kanbo palette (fg = lighter text, tint = dark chip background) */
   --kb-blue-fg: #7db8ff;
@@ -348,6 +348,70 @@
   }
   50% {
     opacity: 1;
+  }
+}
+/* Error pages (403): the padlock rests, then wiggles. */
+@keyframes kb-wiggle {
+  0%,
+  60%,
+  92%,
+  100% {
+    transform: rotate(0deg);
+  }
+  68% {
+    transform: rotate(-10deg);
+  }
+  76% {
+    transform: rotate(9deg);
+  }
+  84% {
+    transform: rotate(-6deg);
+  }
+}
+/* Error pages: a key slides toward the keyhole (401), rests, then slides back. */
+@keyframes kb-key-slide {
+  0%,
+  100% {
+    transform: translateX(-28px);
+  }
+  45%,
+  60% {
+    transform: translateX(0);
+  }
+  85% {
+    transform: translateX(-28px);
+  }
+}
+/* Error pages (410): two chain links pull apart (--kb-pull-x/y) and a spark flashes. */
+@keyframes kb-pull {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  40%,
+  60% {
+    transform: translate(var(--kb-pull-x, -7px), var(--kb-pull-y, 4px));
+  }
+}
+@keyframes kb-spark {
+  0%,
+  35%,
+  70%,
+  100% {
+    opacity: 0;
+  }
+  45%,
+  60% {
+    opacity: 1;
+  }
+}
+/* Error pages: something circles around the middle of its SVG (404 magnifier). */
+@keyframes kb-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 @media (prefers-reduced-motion: reduce) {

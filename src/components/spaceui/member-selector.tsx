@@ -32,7 +32,43 @@ export interface MemberSelectorProps {
   maxVisible?: number
   label?: string
   className?: string
+  // Element the popup renders into; pass a Dialog's content when used inside one.
+  portalContainer?: HTMLElement | null
+  size?: MemberSelectorSize
+  // Note shown under the member list inside the popup.
+  footer?: React.ReactNode
 }
+
+type MemberSelectorSize = 'default' | 'sm'
+
+const SIZES = {
+  default: {
+    avatar: 'size-12',
+    initials: 'text-sm',
+    plus: 'size-5',
+    badge: 'size-4',
+    badgeIcon: 'size-2.5',
+    gap: 'gap-4',
+    popup: 'w-72',
+    item: 'px-3 py-2.5',
+    itemAvatar: 'size-9',
+    name: 'text-sm',
+    email: 'text-xs',
+  },
+  sm: {
+    avatar: 'size-9',
+    initials: 'text-xs',
+    plus: 'size-4',
+    badge: 'size-3.5',
+    badgeIcon: 'size-2',
+    gap: 'gap-3',
+    popup: 'w-64',
+    item: 'px-2.5 py-1.5',
+    itemAvatar: 'size-8',
+    name: 'text-[13px]',
+    email: 'text-[11px]',
+  },
+} as const
 
 export function getInitials(name: string): string {
   return name
@@ -50,9 +86,11 @@ interface MemberBubbleProps {
   member: Member
   isSelected: boolean
   onClick: () => void
+  size: MemberSelectorSize
 }
 
-function MemberBubble({ member, isSelected, onClick }: MemberBubbleProps) {
+function MemberBubble({ member, isSelected, onClick, size }: MemberBubbleProps) {
+  const dim = SIZES[size]
   return (
     <motion.button
       type="button"
@@ -73,7 +111,8 @@ function MemberBubble({ member, isSelected, onClick }: MemberBubbleProps) {
     >
       <div
         className={cn(
-          'relative size-12 rounded-full overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          'relative rounded-full overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          dim.avatar,
           'group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2',
           !isSelected && 'opacity-50 hover:opacity-75',
         )}
@@ -90,7 +129,8 @@ function MemberBubble({ member, isSelected, onClick }: MemberBubbleProps) {
         ) : (
           <div
             className={cn(
-              'size-full flex items-center justify-center text-sm font-medium transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              'size-full flex items-center justify-center font-medium transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+              dim.initials,
               isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
             )}
           >
@@ -109,9 +149,9 @@ function MemberBubble({ member, isSelected, onClick }: MemberBubbleProps) {
               duration: 0.2,
               ease: MOTION_EASE,
             }}
-            className="absolute bottom-5 right-0 size-4 rounded-full bg-foreground flex items-center justify-center shadow-xs pointer-events-none"
+            className={cn('absolute bottom-5 right-0 rounded-full bg-foreground flex items-center justify-center shadow-xs pointer-events-none', dim.badge)}
           >
-            <IconPlus className="size-2.5 text-background" strokeWidth={2.5} />
+            <IconPlus className={cn('text-background', dim.badgeIcon)} strokeWidth={2.5} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -130,9 +170,11 @@ function MemberBubble({ member, isSelected, onClick }: MemberBubbleProps) {
 
 interface AddButtonProps extends React.ComponentPropsWithoutRef<typeof motion.button> {
   isOpen: boolean
+  size: MemberSelectorSize
 }
 
-const AddButton = React.forwardRef<HTMLButtonElement, AddButtonProps>(({ isOpen, className, ...props }, ref) => {
+const AddButton = React.forwardRef<HTMLButtonElement, AddButtonProps>(({ isOpen, size, className, ...props }, ref) => {
+  const dim = SIZES[size]
   return (
     <motion.button
       ref={ref}
@@ -145,7 +187,8 @@ const AddButton = React.forwardRef<HTMLButtonElement, AddButtonProps>(({ isOpen,
     >
       <div
         className={cn(
-          'size-12 rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          'rounded-full border-2 border-dashed flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+          dim.avatar,
           'group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2',
           isOpen
             ? 'border-primary bg-primary/10'
@@ -154,7 +197,7 @@ const AddButton = React.forwardRef<HTMLButtonElement, AddButtonProps>(({ isOpen,
       >
         <motion.div animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.25, ease: MOTION_EASE }}>
           <IconPlus
-            className={cn('size-5 transition-colors duration-200', isOpen ? 'text-primary' : 'text-muted-foreground')}
+            className={cn('transition-colors duration-200', dim.plus, isOpen ? 'text-primary' : 'text-muted-foreground')}
           />
         </motion.div>
       </div>
@@ -172,7 +215,8 @@ const AddButton = React.forwardRef<HTMLButtonElement, AddButtonProps>(({ isOpen,
 AddButton.displayName = 'AddButton'
 
 export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorProps>(
-  ({ members, selected, onChange, max, maxVisible = 5, label, className }, ref) => {
+  ({ members, selected, onChange, max, maxVisible = 5, label, className, portalContainer, size = 'default', footer }, ref) => {
+    const dim = SIZES[size]
     const [open, setOpen] = React.useState(false)
     const triggerRef = React.useRef<HTMLButtonElement>(null)
 
@@ -212,7 +256,7 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
         {label && (
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">{label}</div>
         )}
-        <div className="flex items-start gap-4 flex-wrap">
+        <div className={cn('flex items-start flex-wrap', dim.gap)}>
           <AnimatePresence mode="popLayout" initial={false}>
             {visibleMembers.map((member) => (
               <MemberBubble
@@ -220,6 +264,7 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
                 member={member}
                 isSelected={selected.includes(member.id)}
                 onClick={() => handleToggleSelect(member.id)}
+                size={size}
               />
             ))}
           </AnimatePresence>
@@ -242,8 +287,8 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
               itemToStringValue={(item) => item?.id ?? ''}
               isItemEqualToValue={(a, b) => a?.id === b?.id}
             >
-              <ComboboxTrigger render={<AddButton ref={triggerRef} isOpen={open} />} />
-              <ComboboxContent anchor={triggerRef} className="w-72">
+              <ComboboxTrigger render={<AddButton ref={triggerRef} isOpen={open} size={size} />} />
+              <ComboboxContent anchor={triggerRef} container={portalContainer} className={dim.popup}>
                 <div className="p-2 border-b border-border">
                   <ComboboxInput
                     placeholder="Search members..."
@@ -263,16 +308,19 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
                       <ComboboxItem
                         key={member.id}
                         value={member}
+                        indicator={false}
                         disabled={!isSel && max !== undefined && selected.length >= max}
                         className={cn(
-                          'w-full flex items-center gap-3 not-first:mt-2 px-3 py-2.5 cursor-pointer rounded-lg transition-colors select-none',
+                          'w-full flex items-center gap-3 not-first:mt-2 cursor-pointer rounded-lg transition-colors select-none',
+                          dim.item,
                           '[&>.col-start-1]:hidden [&>.col-start-2]:flex [&>.col-start-2]:items-center [&>.col-start-2]:gap-3 [&>.col-start-2]:w-full [&>.col-start-2]:min-w-0',
                           isSel ? 'bg-muted hover:bg-muted/90' : 'hover:bg-muted/80',
                         )}
                       >
                         <div
                           className={cn(
-                            'size-9 rounded-full overflow-hidden shrink-0 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                            'rounded-full overflow-hidden shrink-0 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+                            dim.itemAvatar,
                             !isSel && 'grayscale opacity-60',
                           )}
                         >
@@ -293,13 +341,14 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
                         <div className="flex-1 text-left min-w-0">
                           <div
                             className={cn(
-                              'text-sm font-medium truncate transition-colors duration-200',
+                              'font-medium truncate transition-colors duration-200',
+                              dim.name,
                               isSel ? 'text-foreground' : 'text-foreground/80',
                             )}
                           >
                             {member.name}
                           </div>
-                          {member.email && <div className="text-xs text-muted-foreground truncate">{member.email}</div>}
+                          {member.email && <div className={cn('text-muted-foreground truncate', dim.email)}>{member.email}</div>}
                         </div>
 
                         <div
@@ -322,6 +371,11 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
                     )
                   }}
                 </ComboboxList>
+                {footer && (
+                  <div className={cn('border-t border-border px-3 py-2 leading-snug text-muted-foreground', dim.email)}>
+                    {footer}
+                  </div>
+                )}
               </ComboboxContent>
             </Combobox>
           </motion.div>

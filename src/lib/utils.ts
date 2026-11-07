@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 
+import { DEFAULT_ROLES, ROLE_CHIP_CLASS } from "@/constants/project-constant";
+
 export { cn } from "cn";
 export { getSafeRedirectPath } from "./safe-redirect";
 
@@ -24,6 +26,15 @@ export function getInitials(name: string | null | undefined): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
+// Chip color of a role: fixed for the default roles, otherwise picked from a hash of the name.
+export function getRoleChipClass(role: string): string {
+  const fixed = DEFAULT_ROLES.find((r) => r.name === role);
+  if (fixed) return ROLE_CHIP_CLASS[fixed.tone];
+  const tones = Object.values(ROLE_CHIP_CLASS);
+  const hash = [...role].reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return tones[hash % tones.length];
+}
+
 // "Rafi Novandi" → "Rafi"
 export function getFirstName(name: string | null | undefined): string {
   return (name ?? "").trim().split(/\s+/)[0] || "there";
@@ -45,6 +56,45 @@ export function formatLongDate(date: Date, timeZone: string): string {
   }
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value;
   return `${part("weekday")}, ${part("day")} ${part("month")} ${part("year")}`;
+}
+
+// A date as "6 Nov 2026" (task modal: due date and created on).
+export function formatDisplayDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
+}
+
+// "2026-10-23" → "Oct 23" (a date without time, so it is read as UTC to avoid shifting the day).
+export function formatShortDate(date: string): string {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(
+    new Date(`${date}T00:00:00Z`),
+  );
+}
+
+// Makes user text safe inside an ilike pattern: %, _ and \ match themselves instead of acting as wildcards.
+export function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
+// Today as "YYYY-MM-DD" in a time zone (falls back to UTC for an unknown one).
+export function getTodayInTimeZone(timeZone: string): string {
+  const format = (zone: string) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: zone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  try {
+    return format(timeZone);
+  } catch {
+    return format("UTC");
+  }
+}
+
+// A local Date as "YYYY-MM-DD" (no UTC shift), and back to a local Date at midnight.
+export function toDateValue(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function fromDateValue(value: string): Date {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
 }
 
 // True when `pathname` is `href` itself or a page below it ("/profile" matches "/profile/edit").
