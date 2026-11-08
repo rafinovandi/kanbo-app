@@ -22,12 +22,14 @@ export interface Member {
   name: string
   email?: string
   avatar?: string
+  // What to print under the avatar when it is read-only; defaults to the first name, like the selectable bubbles.
+  label?: string
 }
 
 export interface MemberSelectorProps {
   members: Member[]
   selected: string[]
-  onChange: (selected: string[]) => void
+  onChange?: (selected: string[]) => void
   max?: number
   maxVisible?: number
   label?: string
@@ -37,6 +39,8 @@ export interface MemberSelectorProps {
   size?: MemberSelectorSize
   // Note shown under the member list inside the popup.
   footer?: React.ReactNode
+  // Only shows the selected members (photo and name): no add button, no popup, nothing to click.
+  readOnly?: boolean
 }
 
 type MemberSelectorSize = 'default' | 'sm'
@@ -82,6 +86,51 @@ export function getInitials(name: string): string {
 
 const MOTION_EASE = [0.22, 1, 0.36, 1] as const
 
+function MemberAvatarContent({
+  member,
+  isSelected,
+  dim,
+}: {
+  member: Member
+  isSelected: boolean
+  dim: (typeof SIZES)[MemberSelectorSize]
+}) {
+  return member.avatar ? (
+    <img
+      src={member.avatar}
+      alt={member.name}
+      referrerPolicy="no-referrer"
+      className={cn(
+        'size-full object-cover transition-[filter,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        !isSelected && 'grayscale',
+      )}
+    />
+  ) : (
+    <div
+      className={cn(
+        'size-full flex items-center justify-center font-medium transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        dim.initials,
+        isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
+      )}
+    >
+      {getInitials(member.name)}
+    </div>
+  )
+}
+
+// A member shown for reading only (photo and full name), used when the selector is `readOnly`.
+function MemberStatic({ member, size }: { member: Member; size: MemberSelectorSize }) {
+  const dim = SIZES[size]
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className={cn('relative rounded-full overflow-hidden', dim.avatar)}>
+        <MemberAvatarContent member={member} isSelected dim={dim} />
+      </div>
+      <span className="text-xs font-medium text-foreground truncate max-w-24">{member.label ?? member.name.split(' ')[0]}</span>
+    </div>
+  )
+}
+
 interface MemberBubbleProps {
   member: Member
   isSelected: boolean
@@ -117,27 +166,7 @@ function MemberBubble({ member, isSelected, onClick, size }: MemberBubbleProps) 
           !isSelected && 'opacity-50 hover:opacity-75',
         )}
       >
-        {member.avatar ? (
-          <img
-            src={member.avatar}
-            alt={member.name}
-            referrerPolicy="no-referrer"
-            className={cn(
-              'size-full object-cover transition-[filter,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-              !isSelected && 'grayscale',
-            )}
-          />
-        ) : (
-          <div
-            className={cn(
-              'size-full flex items-center justify-center font-medium transition-colors duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
-              dim.initials,
-              isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
-            )}
-          >
-            {getInitials(member.name)}
-          </div>
-        )}
+        <MemberAvatarContent member={member} isSelected={isSelected} dim={dim} />
       </div>
 
       <AnimatePresence>
@@ -216,7 +245,7 @@ const AddButton = React.forwardRef<HTMLButtonElement, AddButtonProps>(({ isOpen,
 AddButton.displayName = 'AddButton'
 
 export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorProps>(
-  ({ members, selected, onChange, max, maxVisible = 5, label, className, portalContainer, size = 'default', footer }, ref) => {
+  ({ members, selected, onChange, max, maxVisible = 5, label, className, portalContainer, size = 'default', footer, readOnly }, ref) => {
     const dim = SIZES[size]
     const [open, setOpen] = React.useState(false)
     const triggerRef = React.useRef<HTMLButtonElement>(null)
@@ -245,11 +274,23 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
 
     const handleToggleSelect = (id: string) => {
       if (selected.includes(id)) {
-        onChange(selected.filter((item) => item !== id))
+        onChange?.(selected.filter((item) => item !== id))
       } else {
         if (max && selected.length >= max) return
-        onChange([...selected, id])
+        onChange?.([...selected, id])
       }
+    }
+
+    if (readOnly) {
+      return (
+        <div ref={ref} className={cn('relative', className)}>
+          <div className={cn('flex items-start flex-wrap', dim.gap)}>
+            {selectedMembers.map((member) => (
+              <MemberStatic key={member.id} member={member} size={size} />
+            ))}
+          </div>
+        </div>
+      )
     }
 
     return (
@@ -277,7 +318,7 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
               value={selectedMembers}
               onValueChange={(newSelectedMembers) => {
                 if (max && newSelectedMembers.length > max) return
-                onChange(newSelectedMembers.map((m) => m.id))
+                onChange?.(newSelectedMembers.map((m) => m.id))
               }}
               open={open}
               onOpenChange={(nextOpen, details) => {

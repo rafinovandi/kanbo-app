@@ -111,6 +111,7 @@ export type Database = {
           bot_id: string | null
           channel: string
           chat_id: string
+          client_name: string | null
           created_at: string
           id: string
           kind: string
@@ -127,6 +128,7 @@ export type Database = {
           bot_id?: string | null
           channel?: string
           chat_id: string
+          client_name?: string | null
           created_at?: string
           id?: string
           kind?: string
@@ -143,6 +145,7 @@ export type Database = {
           bot_id?: string | null
           channel?: string
           chat_id?: string
+          client_name?: string | null
           created_at?: string
           id?: string
           kind?: string

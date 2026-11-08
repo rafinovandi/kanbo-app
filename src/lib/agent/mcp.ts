@@ -124,12 +124,23 @@ async function runTool(ctx: AgentLinkContext, name: string, args: Args): Promise
   }
 }
 
+// The MCP endpoint is stateless, so the client's name (sent once in `initialize`) is kept on the link.
+async function rememberClient(ctx: AgentLinkContext, clientInfo: unknown) {
+  if (ctx.kind !== "mcp") return;
+  const info = typeof clientInfo === "object" && clientInfo !== null ? (clientInfo as Args) : {};
+  const raw = typeof info.title === "string" && info.title.trim() ? info.title : typeof info.name === "string" ? info.name : "";
+  const name = raw.trim().slice(0, 64);
+  if (!name || name === ctx.clientName) return;
+  await ctx.admin.from("agent_links").update({ client_name: name }).eq("id", ctx.id);
+}
+
 async function handle(ctx: AgentLinkContext, message: Rpc) {
   const { id, method, params } = message;
   const input = typeof params === "object" && params !== null ? (params as Args) : {};
 
   switch (method) {
     case "initialize":
+      await rememberClient(ctx, input.clientInfo);
       return rpcResult(id, {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: { tools: {} },

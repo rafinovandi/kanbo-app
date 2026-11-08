@@ -122,8 +122,8 @@ export async function createTasks(ctx: AgentLinkContext, request: Request): Prom
             position,
             created_by: ctx.linkedBy,
             source: "agent" as const,
-            source_channel: "telegram",
-            source_sender: sender,
+            source_channel: ctx.kind === "mcp" ? "mcp" : "telegram",
+            source_sender: ctx.agentLabel.slice(0, 64),
           };
         }),
       )

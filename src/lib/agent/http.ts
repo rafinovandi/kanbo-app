@@ -3,11 +3,21 @@ import "server-only";
 import { NextResponse } from "next/server";
 
 import { environment } from "@/configs/environment";
+import { displayClientName } from "@/lib/agent/client-name";
 import { hashAgentSecret, CHAT_TOKEN_PREFIX } from "@/lib/agent/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AdminClient = ReturnType<typeof createAdminClient>;
-export type AgentLinkContext = { id: string; projectId: string; linkedBy: string; admin: AdminClient };
+// `agentLabel` is who created the tasks of this link: the bot's name for a Telegram chat, the client's name for MCP.
+export type AgentLinkContext = {
+  id: string;
+  projectId: string;
+  linkedBy: string;
+  kind: "chat" | "mcp";
+  clientName: string | null;
+  agentLabel: string;
+  admin: AdminClient;
+};
 export type ApiResult = { status: number; body: unknown; headers?: Record<string, string> };
 
 const MAX_BODY_BYTES = 400_000;
@@ -69,7 +79,7 @@ export async function authenticate(request: Request): Promise<AgentLinkContext |
   const admin = createAdminClient();
   const { data: link } = await admin
     .from("agent_links")
-    .select("id, project_id, linked_by")
+    .select("id, project_id, linked_by, kind, client_name, agent_bots(name)")
     .eq("token_hash", hashAgentSecret("chat-token", token))
     .is("revoked_at", null)
     .maybeSingle();
@@ -92,7 +102,9 @@ export async function authenticate(request: Request): Promise<AgentLinkContext |
   }
 
   await admin.from("agent_links").update({ last_used_at: new Date().toISOString() }).eq("id", link.id);
-  return { id: link.id, projectId: link.project_id, linkedBy: link.linked_by, admin };
+  const kind = link.kind === "mcp" ? "mcp" : "chat";
+  const agentLabel = (kind === "mcp" ? displayClientName(link.client_name) : link.agent_bots?.name) ?? "Agent";
+  return { id: link.id, projectId: link.project_id, linkedBy: link.linked_by, kind, clientName: link.client_name, agentLabel, admin };
 }
 
 export async function withAuth(request: Request, handler: (ctx: AgentLinkContext) => Promise<ApiResult>) {

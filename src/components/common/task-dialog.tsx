@@ -31,6 +31,7 @@ import { DUE_NOTIFICATIONS_KEY } from "@/hooks/use-due-notifications";
 import useProjectMembers from "@/hooks/use-project-members";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
 import useTask, { taskKey } from "@/hooks/use-task";
+import { getTaskCreator } from "@/lib/task-creator";
 import { cn, formatDisplayDate } from "@/lib/utils";
 import type { BoardCategory, BoardData, BoardTask } from "@/types/board";
 import type { TaskFormState, TaskPriority } from "@/types/task";
@@ -292,6 +293,22 @@ function TaskForm({
             )}
           </div>
 
+          {task && (
+            <>
+              <span className={cn(LABEL_CLASS, "self-start pt-3")}>Created by</span>
+              {detail ? (
+                <MemberSelector
+                  readOnly
+                  size="sm"
+                  members={[getTaskCreator(detail)]}
+                  selected={[getTaskCreator(detail).id]}
+                />
+              ) : (
+                <span>—</span>
+              )}
+            </>
+          )}
+
           <span className={LABEL_CLASS}>Due date</span>
           <div className="flex flex-col gap-1.5">
             <DatePicker
@@ -348,6 +365,7 @@ function TaskForm({
             submitLabel={saving ? "Saving…" : "Save"}
             onSubmit={save}
             submitDisabled={!dirty || saving}
+            singleRow
           />
         ) : (
           <ActionBar
