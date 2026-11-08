@@ -86,7 +86,8 @@ export default function ConnectChatDialog({
 
   useEffect(() => {
     if (waiting && links && links.length > linksAtGenerate.current) {
-      toast.success(code?.kind === "mcp" ? "MCP client connected" : "Chat connected");
+      if (code?.kind === "mcp") toast.success("Code used. Now add the server to your MCP client");
+      else toast.success("Chat connected");
       setCode(null);
     }
   }, [links, waiting, code?.kind]);

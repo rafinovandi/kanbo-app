@@ -50,7 +50,9 @@ export default function AgentLinkRow({
   const isChat = link.kind === "chat";
   const used = link.last_used_at
     ? `Used ${formatDistanceToNow(new Date(link.last_used_at), { addSuffix: true })}`
-    : "Never used";
+    : isChat
+      ? "Never used"
+      : "Waiting for the first request from your client";
 
   return (
     <li className="flex flex-col gap-3 rounded-xl border border-border p-3.5">
