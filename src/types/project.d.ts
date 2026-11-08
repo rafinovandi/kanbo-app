@@ -49,6 +49,7 @@ export type DashboardStats = {
 export type MemberPreview = {
   id: string;
   name: string;
+  username?: string;
   avatar_url: string | null;
   avatar_bg: string;
   avatar_fg: string;

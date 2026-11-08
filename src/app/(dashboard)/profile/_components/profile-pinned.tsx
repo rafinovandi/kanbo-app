@@ -56,11 +56,13 @@ function PinnedCard({ project }: { project: PinnedProject }) {
 export default function ProfilePinned({
   pinned,
   hidden,
+  isSelf = true,
 }: {
   pinned: PinnedProject[] | null;
   hidden: boolean;
+  isSelf?: boolean;
 }) {
-  if (!pinned) return null;
+  if (!pinned || (!isSelf && pinned.length === 0)) return null;
 
   return (
     <section aria-label="Pinned projects" className="flex flex-col gap-3">
@@ -70,7 +72,7 @@ export default function ProfilePinned({
       </div>
       {pinned.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          No pinned projects yet. Pin up to 4 projects from their menu.
+          No pinned projects yet. Pin up to 3 projects from their menu.
         </p>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(15rem,100%),1fr))] gap-3.5">

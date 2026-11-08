@@ -14,10 +14,12 @@ export default function ProfileRecent({
   tasks,
   timeZone,
   hidden,
+  isSelf = true,
 }: {
   tasks: RecentTask[];
   timeZone: string;
   hidden: boolean;
+  isSelf?: boolean;
 }) {
   return (
     <section aria-label="Recent activity" className="flex flex-col gap-3">
@@ -27,7 +29,7 @@ export default function ProfileRecent({
       </div>
       {tasks.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          Tasks you complete will show up here.
+          {isSelf ? "Tasks you complete will show up here." : "No completed tasks to show yet."}
         </p>
       ) : (
         <Card className="gap-0 py-0">

@@ -44,23 +44,30 @@ export default function ProfileIdentity({
       </Avatar>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl leading-tight font-semibold tracking-[-0.01em]">{profile.name}</h1>
-        <p className="text-[15px] text-muted-foreground">{profile.headline || "Add a headline"}</p>
+        {!profile.is_self && <p className="text-sm text-muted-foreground">@{profile.username}</p>}
+        {(profile.headline || profile.is_self) && (
+          <p className="text-[15px] text-muted-foreground">{profile.headline || "Add a headline"}</p>
+        )}
       </div>
-      <p className={profile.bio ? "text-sm leading-relaxed text-kb-text-2" : "text-sm leading-relaxed text-muted-foreground"}>
-        {profile.bio || "Add a short bio about yourself."}
-      </p>
+      {(profile.bio || profile.is_self) && (
+        <p className={profile.bio ? "text-sm leading-relaxed text-kb-text-2" : "text-sm leading-relaxed text-muted-foreground"}>
+          {profile.bio || "Add a short bio about yourself."}
+        </p>
+      )}
       {profile.location && (
         <p className="flex items-center gap-2 text-sm text-kb-text-2">
           <Location size={18} variant="Linear" color="currentColor" className="shrink-0 text-muted-foreground" aria-hidden />
           {profile.location}
         </p>
       )}
-      <Button asChild variant="outline">
-        <Link href="/profile/edit">
-          <Edit2 size={18} variant="Linear" color="currentColor" aria-hidden />
-          Edit Profile
-        </Link>
-      </Button>
+      {profile.is_self && (
+        <Button asChild variant="outline">
+          <Link href="/profile/edit">
+            <Edit2 size={18} variant="Linear" color="currentColor" aria-hidden />
+            Edit Profile
+          </Link>
+        </Button>
+      )}
       {stats && (
         <>
           <Separator />

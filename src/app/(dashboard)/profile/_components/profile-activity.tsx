@@ -9,10 +9,12 @@ export default function ProfileActivity({
   contributions,
   summary,
   hidden,
+  isSelf = true,
 }: {
   contributions: ContributionData;
   summary: ActivitySummary;
   hidden: boolean;
+  isSelf?: boolean;
 }) {
   return (
     <section aria-label="Activity" className="flex flex-col gap-3">
@@ -29,7 +31,7 @@ export default function ProfileActivity({
         <CardContent>
           <GitHubActivity
             contributions={contributions}
-            helperText="Every task you mark as done adds to a day."
+            helperText={isSelf ? "Every task you mark as done adds to a day." : "Every task marked as done adds to a day."}
           />
         </CardContent>
       </Card>

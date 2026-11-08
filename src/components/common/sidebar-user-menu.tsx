@@ -32,7 +32,7 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
   const pathname = usePathname();
   const [isSigningOut, startSignOut] = useTransition();
   const [botsOpen, setBotsOpen] = useState(false);
-  const onProfile = isPathActive(pathname, "/profile");
+  const onProfile = isPathActive(pathname, "/profile") || pathname === `/u/${profile.username}`;
 
   return (
     <SidebarMenu>

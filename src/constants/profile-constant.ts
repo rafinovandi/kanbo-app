@@ -21,7 +21,13 @@ export const PROFILE_LIMITS = {
   bio: 160,
   location: 80,
   website: 200,
+  usernameMin: 3,
+  username: 30,
+  telegramMin: 5,
+  telegram: 32,
 } as const;
+
+export const PRIVACY_KEYS = ["show_stats", "show_activity", "show_pinned", "show_recent_tasks"] as const;
 
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
 export const AVATAR_TYPES = ["image/png", "image/jpeg"];

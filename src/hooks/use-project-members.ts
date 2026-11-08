@@ -7,17 +7,18 @@ export const projectMembersKey = (projectId: string) => ["project-members", proj
 
 // The members and pending invites of one project, plus its creator. Order: creator, active members
 // (oldest first), then pending invites.
-export default function useProjectMembers(projectId: string) {
+export default function useProjectMembers(projectId: string, enabled = true) {
   const supabase = createClient();
   return useQuery({
     queryKey: projectMembersKey(projectId),
+    enabled,
     queryFn: async (): Promise<ProjectMembers> => {
       const [{ data: project, error: projectError }, { data: rows, error }] = await Promise.all([
         supabase.from("projects").select("owner_id").eq("id", projectId).single(),
         supabase
           .from("project_members")
           .select(
-            "id, user_id, email, status, is_admin, roles, invited_at, accepted_at, profiles!project_members_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg)",
+            "id, user_id, email, status, is_admin, roles, invited_at, accepted_at, profiles!project_members_user_id_fkey(id, name, username, avatar_url, avatar_bg, avatar_fg)",
           )
           .eq("project_id", projectId),
       ]);

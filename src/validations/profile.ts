@@ -1,4 +1,4 @@
-import { PROFILE_LIMITS } from "@/constants/profile-constant";
+import { PRIVACY_KEYS, PROFILE_LIMITS } from "@/constants/profile-constant";
 import type { ProfileFormState } from "@/types/auth";
 
 export type ProfileFields = {
@@ -7,7 +7,13 @@ export type ProfileFields = {
   bio: string;
   location: string;
   website: string;
-};
+  username: string;
+  telegram_username: string;
+} & Record<(typeof PRIVACY_KEYS)[number], boolean>;
+
+export type ProfileTextKey = {
+  [K in keyof ProfileFields]: ProfileFields[K] extends string ? K : never;
+}[keyof ProfileFields];
 
 // Pure validation shared by the form (live "Full name is required") and the server action.
 // Mirrors the CHECK constraints in 002_profiles.sql and 010_security_hardening.sql (website must be
@@ -22,6 +28,12 @@ export function validateProfile(input: ProfileFields): {
     bio: input.bio.trim(),
     location: input.location.trim(),
     website: input.website.trim(),
+    username: input.username.trim().toLowerCase(),
+    telegram_username: input.telegram_username.trim().replace(/^@/, ""),
+    show_stats: input.show_stats,
+    show_activity: input.show_activity,
+    show_pinned: input.show_pinned,
+    show_recent_tasks: input.show_recent_tasks,
   };
   const errors: NonNullable<ProfileFormState["errors"]> = {};
 
@@ -30,6 +42,12 @@ export function validateProfile(input: ProfileFields): {
   if (values.headline.length > PROFILE_LIMITS.headline) errors.headline = [`Max ${PROFILE_LIMITS.headline} characters`];
   if (values.bio.length > PROFILE_LIMITS.bio) errors.bio = [`Max ${PROFILE_LIMITS.bio} characters`];
   if (values.location.length > PROFILE_LIMITS.location) errors.location = [`Max ${PROFILE_LIMITS.location} characters`];
+  if (!/^[a-z0-9_-]+$/.test(values.username) || values.username.length < PROFILE_LIMITS.usernameMin || values.username.length > PROFILE_LIMITS.username) {
+    errors.username = [`Use ${PROFILE_LIMITS.usernameMin}–${PROFILE_LIMITS.username} lowercase letters, numbers, - or _`];
+  }
+  if (values.telegram_username && !/^[A-Za-z0-9_]{5,32}$/.test(values.telegram_username)) {
+    errors.telegram_username = [`Use ${PROFILE_LIMITS.telegramMin}–${PROFILE_LIMITS.telegram} letters, numbers or _`];
+  }
   if (values.website) {
     let ok = values.website.length <= PROFILE_LIMITS.website;
     try {

@@ -1,6 +1,7 @@
 "use client";
 
 import { More } from "iconsax-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -53,6 +54,7 @@ export default function MemberRow({
 
   const pending = row.status === "pending";
   const name = row.profile?.name ?? row.email;
+  const profileHref = !pending && row.profile?.username ? `/u/${row.profile.username}` : null;
 
   const run = async (task: () => Promise<MemberActionResult>, success?: string) => {
     setBusy(true);
@@ -99,17 +101,34 @@ export default function MemberRow({
   return (
     <li className="border-t border-kb-divider py-3">
       <div className="flex items-start gap-3">
-        <UserAvatar
-          name={name}
-          avatarUrl={row.profile?.avatar_url}
-          avatarBg={row.profile?.avatar_bg}
-          avatarFg={row.profile?.avatar_fg}
-          className={cn(pending && "opacity-50")}
-        />
+        {(() => {
+          const avatar = (
+            <UserAvatar
+              name={name}
+              avatarUrl={row.profile?.avatar_url}
+              avatarBg={row.profile?.avatar_bg}
+              avatarFg={row.profile?.avatar_fg}
+              className={cn(pending && "opacity-50")}
+            />
+          );
+          return profileHref ? (
+            <Link href={profileHref} tabIndex={-1} aria-hidden className="rounded-full">
+              {avatar}
+            </Link>
+          ) : (
+            avatar
+          );
+        })()}
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-sm font-semibold [overflow-wrap:anywhere]">
-              {name}
+              {profileHref ? (
+                <Link href={profileHref} className="rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50">
+                  {name}
+                </Link>
+              ) : (
+                name
+              )}
               {isSelf && <span className="font-normal text-muted-foreground"> (you)</span>}
             </span>
             {row.isAdmin && <Badge className="h-5 px-2 text-[11px] font-semibold">Admin</Badge>}
