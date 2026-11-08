@@ -2,7 +2,7 @@
 // Helper for the Kanbo skill. Talks to the Kanbo Agent API with Node's built-in fetch (no dependencies).
 // User text only ever arrives as JSON in a file (--input) or on stdin, never as a command-line argument.
 //
-// Usage: kanbo.mjs <command> --chat <telegramChatId> [--task <taskId>] [--status open|done|all] [--input <file.json>]
+// Usage: kanbo.mjs <command> --chat <telegramChatId> [--project <name>] [--task <taskId>] [--status open|done|all] [--input <file.json>]
 //        kanbo.mjs link --chat <telegramChatId> --code <8-character code>
 // Commands: link, unlink, context, list, preview-tasks, create-tasks, preview-update, update-task
 // Env: KANBO_API_URL (required), KANBO_LINKS_FILE (where chat tokens are kept; default: links.json beside this script)
@@ -100,12 +100,36 @@ async function readInput(flags, { required = false } = {}) {
   return fail("bad_input", "The input must be one JSON object.");
 }
 
+// { [chatId]: { projects: { [projectId]: { token, projectName } } } }; the older one-project-per-chat shape is converted on read.
 function loadLinks() {
+  let saved;
   try {
-    return JSON.parse(readFileSync(LINKS_FILE, "utf8"));
+    saved = JSON.parse(readFileSync(LINKS_FILE, "utf8"));
   } catch {
     return {};
   }
+  for (const [chatId, entry] of Object.entries(saved)) {
+    if (entry?.projects) continue;
+    saved[chatId] = entry?.token
+      ? {
+          projects: {
+            [entry.projectId]: {
+              token: entry.token,
+              projectName: entry.projectName,
+            },
+          },
+        }
+      : { projects: {} };
+  }
+  return saved;
+}
+
+const projectNames = (chatId) =>
+  Object.values(loadLinks()[chatId]?.projects ?? {}).map((p) => p.projectName);
+
+function dropLink(links, chatId, projectId) {
+  delete links[chatId].projects[projectId];
+  if (Object.keys(links[chatId].projects).length === 0) delete links[chatId];
 }
 
 function saveLinks(links) {
@@ -208,26 +232,51 @@ function requireChat(flags) {
   return flags.chat;
 }
 
-function requireLink(chatId) {
-  const link = loadLinks()[chatId];
-  if (!link?.token) {
+// The project this command acts on: the one named with --project, or the only one linked to the chat.
+function requireLink(chatId, flags) {
+  const entries = Object.entries(loadLinks()[chatId]?.projects ?? {});
+  if (entries.length === 0) {
     fail(
       "not_linked",
       "This chat is not linked to a Kanbo project. A project admin must generate a code in Kanbo (Connect Chat) and send: link kanbo CODE",
     );
   }
-  return link;
+  const wanted = (flags.project ?? "").trim().toLowerCase();
+  if (!wanted) {
+    if (entries.length === 1)
+      return { projectId: entries[0][0], ...entries[0][1] };
+    fail(
+      "project_required",
+      "This chat is linked to several projects. Ask the user which one, then pass --project <name>.",
+      { projects: entries.map(([, p]) => p.projectName) },
+    );
+  }
+  const name = ([, p]) => p.projectName.toLowerCase();
+  const matches =
+    [
+      entries.filter(([id]) => id.toLowerCase() === wanted),
+      entries.filter((e) => name(e) === wanted),
+      entries.filter((e) => name(e).includes(wanted)),
+    ].find((found) => found.length > 0) ?? [];
+  if (matches.length !== 1) {
+    fail(
+      matches.length === 0 ? "project_not_found" : "project_ambiguous",
+      `${matches.length === 0 ? "No project of this chat matches" : "Several projects match"} "${flags.project}". Ask the user which one.`,
+      { projects: entries.map(([, p]) => p.projectName) },
+    );
+  }
+  return { projectId: matches[0][0], ...matches[0][1] };
 }
 
 // Any response from Kanbo becomes the helper's output; a revoked token also clears the stale local entry.
-function finish(result, chatId) {
+function finish(result, chatId, projectId) {
   if (result.status === 401 && chatId) {
     const links = loadLinks();
-    delete links[chatId];
+    if (links[chatId]) dropLink(links, chatId, projectId);
     saveLinks(links);
     return fail(
       "not_linked",
-      "This chat's link was revoked. A project admin must generate a new code in Kanbo (Connect Chat).",
+      "This project's link was revoked. A project admin must generate a new code in Kanbo (Connect Chat).",
     );
   }
   if (!result.ok)
@@ -266,9 +315,9 @@ switch (command) {
       );
     }
     const links = loadLinks();
-    links[chatId] = {
+    links[chatId] ??= { projects: {} };
+    links[chatId].projects[result.data.project.id] = {
       token: result.data.token,
-      projectId: result.data.project.id,
       projectName: result.data.project.name,
     };
     saveLinks(links);
@@ -277,19 +326,26 @@ switch (command) {
   }
   case "unlink": {
     const chatId = requireChat(flags);
-    const link = requireLink(chatId);
+    const link = requireLink(chatId, flags);
     await call("DELETE", "/link", { token: link.token });
     const links = loadLinks();
-    delete links[chatId];
+    dropLink(links, chatId, link.projectId);
     saveLinks(links);
-    done({ ok: true, unlinked: true });
+    done({ ok: true, unlinked: true, project: link.projectName });
+    break;
+  }
+  case "projects": {
+    const chatId = requireChat(flags);
+    done({ ok: true, projects: projectNames(chatId) });
     break;
   }
   case "context": {
     const chatId = requireChat(flags);
+    const link = requireLink(chatId, flags);
     finish(
-      await call("GET", "/context", { token: requireLink(chatId).token }),
+      await call("GET", "/context", { token: link.token }),
       chatId,
+      link.projectId,
     );
     break;
   }
@@ -298,36 +354,42 @@ switch (command) {
     const { q = "" } = await readInput(flags);
     const params = new URLSearchParams({ status: flags.status ?? "open" });
     if (typeof q === "string" && q.trim()) params.set("q", q.trim());
+    const link = requireLink(chatId, flags);
     finish(
-      await call("GET", `/tasks?${params}`, {
-        token: requireLink(chatId).token,
-      }),
+      await call("GET", `/tasks?${params}`, { token: link.token }),
       chatId,
+      link.projectId,
     );
     break;
   }
   case "preview-tasks":
   case "create-tasks": {
     const chatId = requireChat(flags);
-    const link = requireLink(chatId);
+    const link = requireLink(chatId, flags);
     const payload = await readInput(flags, { required: true });
-    const key = previewKey("tasks", chatId, payload);
+    const key = previewKey("tasks", `${chatId}:${link.projectId}`, payload);
     if (command === "preview-tasks") {
       const result = await call("POST", "/tasks", {
         token: link.token,
         body: { ...payload, dryRun: true },
       });
       if (result.ok) recordPreview(key);
-      finish(result, chatId);
+      finish(result, chatId, link.projectId);
     } else {
       requirePreview(key);
       finish(
         await call("POST", "/tasks", {
           token: link.token,
           body: { ...payload, dryRun: false },
-          headers: { "Idempotency-Key": idempotencyKey(chatId, payload) },
+          headers: {
+            "Idempotency-Key": idempotencyKey(
+              `${chatId}:${link.projectId}`,
+              payload,
+            ),
+          },
         }),
         chatId,
+        link.projectId,
       );
     }
     break;
@@ -335,18 +397,22 @@ switch (command) {
   case "preview-update":
   case "update-task": {
     const chatId = requireChat(flags);
-    const link = requireLink(chatId);
+    const link = requireLink(chatId, flags);
     if (!UUID.test(flags.task ?? ""))
       fail("bad_usage", "--task must be a task id from the list command.");
     const payload = await readInput(flags, { required: true });
-    const key = previewKey("update", `${chatId}:${flags.task}`, payload);
+    const key = previewKey(
+      "update",
+      `${chatId}:${link.projectId}:${flags.task}`,
+      payload,
+    );
     if (command === "preview-update") {
       const result = await call("PATCH", `/tasks/${flags.task}`, {
         token: link.token,
         body: { ...payload, dryRun: true },
       });
       if (result.ok) recordPreview(key);
-      finish(result, chatId);
+      finish(result, chatId, link.projectId);
     } else {
       requirePreview(key);
       finish(
@@ -355,12 +421,13 @@ switch (command) {
           body: { ...payload, dryRun: false },
           headers: {
             "Idempotency-Key": idempotencyKey(
-              `${chatId}:${flags.task}`,
+              `${chatId}:${link.projectId}:${flags.task}`,
               payload,
             ),
           },
         }),
         chatId,
+        link.projectId,
       );
     }
     break;
@@ -368,6 +435,6 @@ switch (command) {
   default:
     fail(
       "bad_usage",
-      "Commands: link, unlink, context, list, preview-tasks, create-tasks, preview-update, update-task",
+      "Commands: link, unlink, projects, context, list, preview-tasks, create-tasks, preview-update, update-task",
     );
 }

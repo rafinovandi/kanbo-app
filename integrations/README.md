@@ -42,7 +42,7 @@ echo '{"tasks":[{"title":"Test task"}]}' > input.json
 node kanbo.mjs preview-tasks --chat -1001234567890 --input input.json
 ```
 
-Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. A Telegram chat that is already linked to another project answers `409 chat_already_linked` (revoke it there first). MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
+Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. One Telegram chat can be linked to several projects (one token per project); linking the same project again replaces its token. MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
 
 ## 4. Claude Code and other MCP clients
 
@@ -98,6 +98,10 @@ Ask the client, for example:
 - "List the open tasks."
 - "Preview a task 'Write the release notes', high priority, due next Friday, in the To Do column." (a dry run)
 - "Save it." (the client adds the `idempotencyKey`)
+
+### Who the tasks are credited to
+
+The task detail shows **Created by**. For an MCP client it is the name the client announces when it connects (for example "Claude" or "Codex"; an unknown client shows its own name). For a Telegram chat it is the name of the bot. Tasks added on the web show the person's photo and first name, like the assignees.
 
 ### Disconnect
 

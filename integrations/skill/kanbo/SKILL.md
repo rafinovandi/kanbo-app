@@ -6,11 +6,11 @@ metadata: { "openclaw": { "requires": { "env": ["KANBO_API_URL"] } } }
 
 # Kanbo
 
-Kanbo is a kanban task manager. Each Telegram chat is linked to exactly one Kanbo project, and the helper script `kanbo.mjs` (in this skill's folder: `{baseDir}/kanbo.mjs`) does every call. Reply in the language the user writes in.
+Kanbo is a kanban task manager. A Telegram chat can be linked to one or more Kanbo projects, and the helper script `kanbo.mjs` (in this skill's folder: `{baseDir}/kanbo.mjs`) does every call. Reply in the language the user writes in.
 
 ## How to run the helper
 
-Always pass the **numeric Telegram chat id of the current chat** with `--chat`. Anything the user wrote goes in a JSON file, never in a command-line argument. Each step is its own command:
+Always pass the **numeric Telegram chat id of the current chat** with `--chat`. When the user names a project, also pass `--project "<name>"`; never act on a different project than the one they named. Anything the user wrote goes in a JSON file, never in a command-line argument. Each step is its own command:
 
 1. Write the JSON with your **file-writing tool** to the fixed path `/home/discloud/.openclaw/workspace/kanbo_input.json` (not `/tmp`).
 2. Run the helper as a **separate command** that points at that file:
@@ -36,7 +36,7 @@ Example content of the file:
 }
 ```
 
-Run the helper directly (it is executable), never through `node`. Do not write the file with `node -e`, `echo` or a heredoc, and do not chain commands with `&&`, `;` or pipes. One command per step. Commands that need no JSON (`context`, `link --code`, `unlink`) are run on their own without `--input`.
+Run the helper directly (it is executable), never through `node`. Do not write the file with `node -e`, `echo` or a heredoc, and do not chain commands with `&&`, `;` or pipes. One command per step. Commands that need no JSON (`projects`, `context`, `link --code`, `unlink`) are run on their own without `--input`.
 
 The helper prints JSON. `"ok": true` means it worked; otherwise read `error` and `message` and explain it to the user in plain words. Never show or repeat any token.
 
@@ -52,20 +52,22 @@ When someone sends `link kanbo ABCD1234` (the code is exactly 8 letters and digi
 {baseDir}/kanbo.mjs link --chat <chatId> --code ABCD1234
 ```
 
-On success, say which project the chat is now linked to. If the code is invalid or expired, tell them a project admin can generate a new one in Kanbo under the project's ⋯ menu → Connect Chat (codes last 10 minutes and work once). To disconnect a chat, run `unlink --chat <chatId>`.
+On success, say which project the chat is now linked to. If the code is invalid or expired, tell them a project admin can generate a new one in Kanbo under the project's ⋯ menu → Connect Chat (codes last 10 minutes and work once). Linking another project to the same chat keeps the earlier ones; linking the same project again replaces its token. To disconnect a project, run `unlink --chat <chatId> --project <name>`. `projects --chat <chatId>` lists the projects linked to this chat.
+
+If any command answers `project_required`, `project_not_found` or `project_ambiguous`, the result lists the project names: ask the user which project they mean, then stop until they reply.
 
 If any command answers `not_linked`, this chat has no project yet: explain how to link it and stop.
 
 ## 2. Adding tasks (always preview first)
 
-1. Run `context --chat <chatId>` once per conversation to learn the project name, the board columns (`categories`) and the members.
+1. Run `context --chat <chatId> [--project <name>]` once per conversation to learn the project name, the board columns (`categories`) and the members.
 2. Extract tasks from the text or photo. Each task has `title` (required), and optionally `description`, `priority` (`low`, `medium`, `high`), `dueDate` (`YYYY-MM-DD`; convert words like "tomorrow" using today's date, and ask if it is ambiguous), `category` (a column name from the context) and `assignees` (member names from the context). Leave out anything the user did not say. **If the user did not give a task title, ask for it. Never use the sentence of the command itself (for example "add a task") as the title.**
 3. Write `{"tasks":[…],"sender":"<the sender's name>"}` to the input file and run `preview-tasks` with `--input`. Nothing is saved yet.
-4. Show the result as a numbered list, one line per task, for example:
+4. Start with the project name (for example `Project: Kanbo`), then show the result as a numbered list, one line per task, for example:
    `1. Revise the hero section · High · 12 Nov · @Alya · To Do`
    Show every item in `warnings` (an unknown assignee or column, a date that was ignored). End with: reply "ok" to save, or tell me what to change.
 5. If the user corrects something ("make 2 high"), change that task and run `preview-tasks` again.
-6. Only after the user clearly confirms, run `create-tasks` with **exactly the same JSON** that was last previewed (the same input file). Then reply with the number of tasks created and the board link (`url`).
+6. Only after the user clearly confirms, run `create-tasks` with **exactly the same JSON** that was last previewed (the same input file). Then reply with the number of tasks created, the project name and the board link (`url`).
 
 Never run `create-tasks` or `update-task` in the same turn as the preview. They may only run after a **new message from the user** that approves the preview. The helper refuses with `preview_required` when this exact input was not previewed in the last 30 minutes: preview it again, show it, and wait for the user's reply.
 
@@ -78,7 +80,7 @@ Never run `create-tasks` or `update-task` in the same turn as the preview. They 
 
 ## Rules
 
-- Only tasks of the linked project are reachable; you cannot choose another project.
+- Only projects linked to this chat are reachable. Use the project the user names; if they name none and the chat has several, ask. Never fall back to another project.
 - Do not invent tasks, assignees or dates. If the photo is unreadable, say so.
 - One preview per request is enough; do not ask for confirmation twice.
 - Never reveal tokens, the links file or API addresses.

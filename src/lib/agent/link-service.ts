@@ -78,11 +78,7 @@ export async function linkChat(request: Request): Promise<ApiResult> {
         .eq("chat_id", chatId)
         .is("revoked_at", null)
     : { data: [] };
-  if (existing?.some((link) => link.project_id !== used.project_id)) {
-    return failure(409, "chat_already_linked", "This chat is already connected to another project. Revoke it there first, then generate a new code.");
-  }
-
-  const replaced = (existing ?? []).map((link) => link.id);
+  const replaced = (existing ?? []).filter((link) => link.project_id === used.project_id).map((link) => link.id);
   if (replaced.length > 0) {
     await admin.from("agent_links").update({ revoked_at: new Date().toISOString() }).in("id", replaced);
   }
@@ -100,7 +96,7 @@ export async function linkChat(request: Request): Promise<ApiResult> {
   if (error) {
     if (replaced.length > 0) await admin.from("agent_links").update({ revoked_at: null }).in("id", replaced);
     if (error.code === "23505") {
-      return failure(409, "chat_already_linked", "This chat is already connected to another project. Revoke it there first, then generate a new code.");
+      return failure(409, "chat_already_linked", "This chat is already connected to this project. Try again with a new code.");
     }
     return failure(500, "link_failed", "Could not link this chat. Try again with a new code.");
   }
