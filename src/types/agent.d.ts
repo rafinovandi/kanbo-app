@@ -6,10 +6,15 @@ export type AgentBot = {
   created_at: string;
 };
 
+export type AgentLinkKind = "chat" | "mcp";
+
+export type NotifyKey = "notify_task_created" | "notify_task_completed";
+
 export type AgentLink = {
   id: string;
+  kind: AgentLinkKind;
   chat_id: string;
-  bot_username: string;
+  bot_username: string | null;
   last_used_at: string | null;
   created_at: string;
   notify_task_created: boolean;

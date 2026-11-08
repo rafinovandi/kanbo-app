@@ -42,7 +42,7 @@ echo '{"tasks":[{"title":"Test task"}]}' > input.json
 node kanbo.mjs preview-tasks --chat -1001234567890 --input input.json
 ```
 
-Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. A chat that is already linked to another project answers `409 chat_already_linked` (revoke it there first). MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
+Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. A Telegram chat that is already linked to another project answers `409 chat_already_linked` (revoke it there first). MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
 
 ## 4. Claude Code and other MCP clients
 
@@ -53,15 +53,19 @@ Kanbo also speaks MCP over plain HTTP, so Claude Code (or any MCP client that su
 
 ### Get a token
 
-1. Add your bot once: profile menu → **Agent Bots**.
-2. Open the project as an admin → ⋯ menu → **Connect Chat** → pick the bot → **Generate Code**. The code is valid for 10 minutes.
-3. Exchange the code for a token. Use a terminal of your own, not a shared one, because the token is shown only once:
+An MCP client needs **no Telegram bot**. You can do the whole thing from the dialog:
+
+1. Open the project as an admin → ⋯ menu → **Connect Chat**, choose **MCP Client**, then **Generate Code**. The code is valid for 10 minutes.
+2. The dialog shows two commands with Copy buttons. Run the first one in a terminal of your own, not a shared one, because the token it returns is shown only once:
    ```bash
    curl -i -X POST https://your-kanbo.vercel.app/api/agent/v1/link \
      -H "Content-Type: application/json" \
-     -d '{"code":"ABCD1234","channel":"telegram","chatId":"-100777001"}'
+     -d '{"code":"ABCD1234"}'
    ```
-   The reply contains `"token":"kbo_…"`. `chatId` is only an identifier here. Use a number that is not already linked to another project (a chat that is, answers `409 chat_already_linked`). With a made-up id Kanbo cannot post notifications to Telegram, and it switches them off for that link automatically. Use the real group id if you also want notifications there.
+   The reply contains `"token":"kbo_…"`. No `chatId` or `channel` is needed for an MCP code.
+3. Run the second command (below) with that token. The dialog then lists the connection as **MCP client**; it has no **Send Test** button and no notification switches, because there is no chat to post to. Use **Revoke** to disconnect it.
+
+Choose **Telegram Chat** instead if you want the agent to work from a Telegram group; that path needs a bot and shows **Send Test**.
 
 ### Add it to Claude Code
 

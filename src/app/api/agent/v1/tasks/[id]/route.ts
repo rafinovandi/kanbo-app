@@ -1,5 +1,5 @@
 import { withAuth } from "@/lib/agent/http";
-import { updateTask } from "@/lib/agent/service";
+import { updateTask } from "@/lib/agent/task-service";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

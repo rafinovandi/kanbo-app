@@ -94,6 +94,7 @@ async function sendNotifications(input: NotifyInput) {
     .from("agent_links")
     .select("id, bot_id, chat_id")
     .eq("project_id", input.projectId)
+    .eq("kind", "chat")
     .eq(flag, true)
     .is("revoked_at", null);
   if (input.exceptLinkId) linksQuery = linksQuery.neq("id", input.exceptLinkId);
@@ -130,7 +131,7 @@ async function sendNotifications(input: NotifyInput) {
 
 async function deliver(
   admin: ReturnType<typeof createAdminClient>,
-  link: { id: string; bot_id: string; chat_id: string },
+  link: { id: string; bot_id: string | null; chat_id: string },
   taskId: string,
   event: NotifyEvent,
   message: string,
@@ -150,6 +151,11 @@ async function deliver(
     .limit(1);
   if (recent && recent.length > 0) {
     await log("skipped", "Already sent in the last 10 minutes");
+    return;
+  }
+
+  if (!link.bot_id) {
+    await log("skipped", "This link has no bot");
     return;
   }
 

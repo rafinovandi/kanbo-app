@@ -1,7 +1,8 @@
 import "server-only";
 
 import { authenticate, failure, isApiResult, readBodyText, reply, type AgentLinkContext, type ApiResult } from "@/lib/agent/http";
-import { createTasks, getContext, listTasks, updateTask } from "@/lib/agent/service";
+import { getContext } from "@/lib/agent/project-context";
+import { createTasks, listTasks, updateTask } from "@/lib/agent/task-service";
 
 // MCP over plain HTTP (JSON-RPC, one JSON reply per POST, no sessions). It reuses the REST handlers,
 // so the token, rate limit, validation and idempotency rules are the same as /api/agent/v1.
