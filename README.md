@@ -2,7 +2,7 @@
 
 Kanban task manager for small teams: projects with members, roles and admins, a board per project, task assignees, and a personal profile with an activity graph.
 
-> Status: **starter**. Project structure, UI theme and database schema are in place; app features are not built yet.
+> Status: **in development**. Sign in, projects and members, boards, tasks, profiles, and the agent integration (Telegram and MCP) are built. Request Access on the 403 page and email invites are not.
 
 ## Stack
 
@@ -30,14 +30,28 @@ See [`env.example`](./env.example). Minimum to run locally:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys (`sb_publishable_…`) |
 | `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys (`sb_secret_…`, server only) |
 
-Invites also need `TOKEN_HASH_PEPPER` (`openssl rand -hex 32`). Invite links are copied from the app and shared by hand; no email service is required.
+Invites and the agent integration also need these (both are in `env.example`):
+
+| Key | Purpose |
+|---|---|
+| `TOKEN_HASH_PEPPER` | Secret used to hash invite tokens, agent chat tokens and link codes. Generate with `openssl rand -hex 32`. Use a different value per environment; changing it invalidates existing tokens. |
+| `AGENT_ENABLED` | Set to `true` to turn on the agent endpoints (`/api/agent/v1` and `/api/agent/mcp`). Anything else makes them answer 404. |
+
+Invite links are copied from the app and shared by hand; no email service is required.
 Google OAuth credentials live in Supabase → Authentication → Providers → Google, not in `.env`.
+
+## Agent integration
+
+An AI agent can add and update tasks of a project through a Telegram chat, or directly from Claude Code and other MCP clients. Kanbo never needs an LLM key; the model runs on the agent's side.
+
+- Setup for the Telegram skill and the **Claude Code / MCP** steps (get a token, `claude mcp add`, the four tools): [`integrations/README.md`](./integrations/README.md).
+- Needs `AGENT_ENABLED=true` and `TOKEN_HASH_PEPPER` (see above).
 
 ## Project structure
 
 ```
 src/
-  app/            routes: (auth)/login, (dashboard)/…, auth/callback, invite/[token]
+  app/            routes: (auth)/login, (dashboard)/…, auth/callback, invite/[token], api/agent (REST + MCP)
   actions/        shared server actions
   components/
     ui/           shadcn components (themed)
@@ -52,7 +66,7 @@ supabase/
 
 ## Database
 
-Migrations in `supabase/migrations/` are already applied to the dev project. After a schema change, regenerate the types:
+Migrations in `supabase/migrations/` (001 to 020) are applied in order to each Supabase project; a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
 
 ```bash
 npx supabase gen types typescript --project-id <project-ref> > src/types/database.types.ts

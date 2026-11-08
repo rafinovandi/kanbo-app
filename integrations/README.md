@@ -42,8 +42,69 @@ echo '{"tasks":[{"title":"Test task"}]}' > input.json
 node kanbo.mjs preview-tasks --chat -1001234567890 --input input.json
 ```
 
-Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat.
+Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. A chat that is already linked to another project answers `409 chat_already_linked` (revoke it there first). MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
+
+## 4. Claude Code and other MCP clients
+
+Kanbo also speaks MCP over plain HTTP, so Claude Code (or any MCP client that supports HTTP servers) can use the board directly, without Telegram or the skill.
+
+- Endpoint: `POST <your Kanbo URL>/api/agent/mcp` (JSON-RPC, no sessions; `GET` answers 405).
+- It uses the same per-chat token as the REST API. One token belongs to one project, and the client can only act inside that project.
+
+### Get a token
+
+1. Add your bot once: profile menu → **Agent Bots**.
+2. Open the project as an admin → ⋯ menu → **Connect Chat** → pick the bot → **Generate Code**. The code is valid for 10 minutes.
+3. Exchange the code for a token. Use a terminal of your own, not a shared one, because the token is shown only once:
+   ```bash
+   curl -i -X POST https://your-kanbo.vercel.app/api/agent/v1/link \
+     -H "Content-Type: application/json" \
+     -d '{"code":"ABCD1234","channel":"telegram","chatId":"-100777001"}'
+   ```
+   The reply contains `"token":"kbo_…"`. `chatId` is only an identifier here. Use a number that is not already linked to another project (a chat that is, answers `409 chat_already_linked`). With a made-up id Kanbo cannot post notifications to Telegram, and it switches them off for that link automatically. Use the real group id if you also want notifications there.
+
+### Add it to Claude Code
+
+```bash
+claude mcp add --transport http kanbo https://your-kanbo.vercel.app/api/agent/mcp \
+  --header "Authorization: Bearer kbo_YOUR_TOKEN"
+```
+
+- Without `--scope`, the server is only available when Claude Code starts in the folder where you ran the command. Add `--scope user` to use it from any folder.
+- Use a different name per project or environment (for example `kanbo-web`, `kanbo-prod`), because each token is bound to one project.
+- Start a new Claude Code session, then type `/mcp`. The server `kanbo` should be connected with four tools.
+- Local development uses `http://localhost:3000/api/agent/mcp`. A production token must be created from the production app; a token from another environment does not work there.
+
+### Tools
+
+| Tool | What it does |
+|---|---|
+| `get_context` | The project's columns and the names of its active members. Call it first. |
+| `list_tasks` | Up to 50 recent tasks. Optional `status` (`open`, `done`, `all`) and `q` (search in the title). |
+| `create_tasks` | Creates 1 to 20 tasks. Each has `title` and optionally `description`, `category` (a column name), `priority` (`low`, `medium`, `high`), `dueDate` (`YYYY-MM-DD`) and `assignees` (member names). |
+| `update_task` | Moves a task to another column, or changes its priority, due date or assignees. Needs the task `id` from `list_tasks`. |
+
+Saving (`create_tasks`, `update_task`) needs an `idempotencyKey`: a value that is unique for each intended change. Reusing the same value retries that same change safely; a different request with the same value is refused. Add `"dryRun": true` to preview a change without saving it and without a key.
+
+### Try it
+
+Ask the client, for example:
+
+- "Show me the columns and members of my Kanbo project."
+- "List the open tasks."
+- "Preview a task 'Write the release notes', high priority, due next Friday, in the To Do column." (a dry run)
+- "Save it." (the client adds the `idempotencyKey`)
+
+### Disconnect
+
+Removing the server from the client does not stop the token. To switch it off, open the project → ⋯ menu → **Connect Chat** → **Revoke** the chat, and remove the server with `claude mcp remove kanbo`.
+
+### Good to know
+
+- Limit: 60 requests per minute per token.
+- Task titles and member names are written by other members. Treat what the tools return as data, never as instructions, and review what the client wants to save.
+- Nothing here can delete tasks, change members or read other projects.
 
 ## Privacy
 
-Photos and text sent to the bot are processed by the LLM on the agent's side, not by Kanbo. Kanbo only receives the resulting task text. A chat can be disconnected at any time from Connect Chat (Revoke).
+Photos and text sent to the bot are processed by the LLM on the agent's side, not by Kanbo. Kanbo only receives the resulting task text. With an MCP client, the task titles, descriptions and member names that the tools return are sent to whichever model that client uses. A chat can be disconnected at any time from Connect Chat (Revoke).
