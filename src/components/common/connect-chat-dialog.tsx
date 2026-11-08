@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import {
   createLinkCodeAction,
   revokeLinkAction,
+  sendTestMessageAction,
   updateLinkNotifyAction,
 } from "@/actions/agent-link-action";
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
@@ -65,11 +66,15 @@ function NotifyToggle({
 
 function LinkRow({
   link,
+  testing,
   onToggle,
+  onTest,
   onRevoke,
 }: {
   link: AgentLink;
+  testing: boolean;
   onToggle: (link: AgentLink, key: NotifyKey) => void;
+  onTest: (link: AgentLink) => void;
   onRevoke: (link: AgentLink) => void;
 }) {
   const used = link.last_used_at
@@ -87,14 +92,25 @@ function LinkRow({
             @{link.bot_username} · {used}
           </span>
         </span>
-        <Button
-          type="button"
-          variant="destructive"
-          size="sm"
-          onClick={() => onRevoke(link)}
-        >
-          Revoke
-        </Button>
+        <div className="flex flex-none items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={testing}
+            onClick={() => onTest(link)}
+          >
+            {testing ? "Sending…" : "Send Test"}
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            onClick={() => onRevoke(link)}
+          >
+            Revoke
+          </Button>
+        </div>
       </div>
 
       {link.notify_disabled_reason && (
@@ -156,6 +172,7 @@ export default function ConnectChatDialog({
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [revoking, setRevoking] = useState<AgentLink | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
   const linksAtGenerate = useRef(0);
 
   const remaining = code ? code.expiresAt - now : 0;
@@ -231,6 +248,14 @@ export default function ConnectChatDialog({
     });
     if (result.status === "error") toast.error(result.message);
     queryClient.invalidateQueries({ queryKey: linksKey });
+  };
+
+  const sendTest = async (link: AgentLink) => {
+    setTestingId(link.id);
+    const result = await sendTestMessageAction(project.id, link.id);
+    setTestingId(null);
+    if (result.status === "error") toast.error(result.message);
+    else toast.success("Test message sent");
   };
 
   const revoke = async () => {
@@ -426,7 +451,9 @@ export default function ConnectChatDialog({
                     <LinkRow
                       key={link.id}
                       link={link}
+                      testing={testingId === link.id}
                       onToggle={toggle}
+                      onTest={sendTest}
                       onRevoke={setRevoking}
                     />
                   ))}

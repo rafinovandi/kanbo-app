@@ -1,6 +1,7 @@
 "use server";
 
 import { environment } from "@/configs/environment";
+import { escapeHtml, sendMessage } from "@/lib/agent/telegram";
 import { hashAgentSecret, createLinkCode } from "@/lib/agent/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -131,6 +132,36 @@ export async function updateLinkNotifyAction(
     .is("revoked_at", null)
     .select("id");
   if (error || data.length === 0) return fail(FAILED);
+  return { status: "success" };
+}
+
+export async function sendTestMessageAction(projectId: string, linkId: string): Promise<AgentLinkActionResult> {
+  if (!UUID.test(linkId)) return fail(FAILED);
+
+  const session = await getAdminSession(projectId);
+  if (!session) return fail(NOT_ALLOWED);
+
+  const [{ data: link }, { data: project }] = await Promise.all([
+    session.admin
+      .from("agent_links")
+      .select("bot_id, chat_id")
+      .eq("id", linkId)
+      .eq("project_id", projectId)
+      .is("revoked_at", null)
+      .maybeSingle(),
+    session.admin.from("projects").select("name").eq("id", projectId).single(),
+  ]);
+  if (!link) return fail(FAILED);
+
+  const { data: token } = await session.admin.rpc("get_agent_bot_token", { p_bot_id: link.bot_id });
+  if (!token) return fail("The bot token is not available. Add the bot again.");
+
+  const result = await sendMessage(
+    token,
+    link.chat_id,
+    `✅ <b>Kanbo is connected</b> to ${escapeHtml(project?.name ?? "this project")}. Updates will appear here.`,
+  );
+  if (!result.ok) return fail(`Telegram refused the message: ${result.error}`);
   return { status: "success" };
 }
 
