@@ -116,7 +116,7 @@ export default function ErrorPage({
             {secondary}
           </div>
 
-          {note && <p className="text-[13px] leading-normal text-muted-foreground">{note}</p>}
+          {note && <div className="text-[13px] leading-normal text-muted-foreground">{note}</div>}
         </div>
       </div>
     </main>

@@ -89,6 +89,7 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
 
   const { errors: liveErrors } = validateProject(fields);
   const serverErrors = state.errors ?? {};
+  const invalidFieldCount = Object.keys(serverErrors).filter((key) => key !== "_form").length;
 
   useEffect(() => {
     if (state.status === "success") {
@@ -176,6 +177,13 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
 
       <InviteMembersField invites={invites} onChange={setInvites} error={serverErrors.invites?.[0]} />
       <input type="hidden" name="invites" value={JSON.stringify(invites)} />
+
+      {invalidFieldCount > 0 && (
+        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive">
+          {invalidFieldCount} {invalidFieldCount === 1 ? "field needs" : "fields need"} attention before the project
+          can be created.
+        </p>
+      )}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <DialogClose asChild>
