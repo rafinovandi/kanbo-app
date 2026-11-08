@@ -8,8 +8,8 @@ import EditProfileForm from "./edit-profile-form";
 import EditProfileSkeleton from "./edit-profile-skeleton";
 
 async function EditProfileLoader() {
-  const { me, fields } = await getEditableProfile();
-  return <EditProfileForm me={me} initial={fields} />;
+  const { me, fields, ownedProjects } = await getEditableProfile();
+  return <EditProfileForm me={me} initial={fields} ownedProjects={ownedProjects} />;
 }
 
 // Edit Profile: photo, profile fields, account and a sticky save bar.

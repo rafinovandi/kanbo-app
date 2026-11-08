@@ -27,6 +27,12 @@ export async function updateProfileAction(
     bio: text(formData, "bio"),
     location: text(formData, "location"),
     website: text(formData, "website"),
+    username: text(formData, "username"),
+    telegram_username: text(formData, "telegram_username"),
+    show_stats: formData.get("show_stats") === "on",
+    show_activity: formData.get("show_activity") === "on",
+    show_pinned: formData.get("show_pinned") === "on",
+    show_recent_tasks: formData.get("show_recent_tasks") === "on",
   });
 
   const avatar = formData.get("avatar");
@@ -58,10 +64,12 @@ export async function updateProfileAction(
   }
 
   let avatarUrl: string | undefined;
+  let avatarPath: string | undefined;
   if (file && avatarType) {
     const path = `${userId}/${crypto.randomUUID()}.${avatarType === "image/png" ? "png" : "jpg"}`;
     const { error } = await supabase.storage.from("avatars").upload(path, file, { contentType: avatarType });
     if (error) return { status: "error", errors: { avatar_url: ["Could not upload the photo. Try again."] } };
+    avatarPath = path;
     avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
   }
 
@@ -73,11 +81,21 @@ export async function updateProfileAction(
       bio: values.bio || null,
       location: values.location || null,
       website: values.website || null,
+      username: values.username,
+      telegram_username: values.telegram_username || null,
+      show_stats: values.show_stats,
+      show_activity: values.show_activity,
+      show_pinned: values.show_pinned,
+      show_recent_tasks: values.show_recent_tasks,
       ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     })
     .eq("id", userId);
 
-  if (error) return { status: "error", errors: { _form: ["Could not save your profile. Try again."] } };
+  if (error) {
+    if (avatarPath) await supabase.storage.from("avatars").remove([avatarPath]);
+    if (error.code === "23505") return { status: "error", errors: { username: ["That username is taken"] } };
+    return { status: "error", errors: { _form: ["Could not save your profile. Try again."] } };
+  }
 
   // Best effort: drop the old file, only when it is one of this user's own uploads
   // (a Google profile picture or a foreign URL is left alone). A failure must not fail the save.
