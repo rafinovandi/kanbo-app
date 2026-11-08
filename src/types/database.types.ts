@@ -63,26 +63,29 @@ export type Database = {
       }
       agent_link_codes: {
         Row: {
-          bot_id: string
+          bot_id: string | null
           code_hash: string
           created_by: string
           expires_at: string
+          kind: string
           project_id: string
           used_at: string | null
         }
         Insert: {
-          bot_id: string
+          bot_id?: string | null
           code_hash: string
           created_by: string
           expires_at?: string
+          kind?: string
           project_id: string
           used_at?: string | null
         }
         Update: {
-          bot_id?: string
+          bot_id?: string | null
           code_hash?: string
           created_by?: string
           expires_at?: string
+          kind?: string
           project_id?: string
           used_at?: string | null
         }
@@ -105,11 +108,12 @@ export type Database = {
       }
       agent_links: {
         Row: {
-          bot_id: string
+          bot_id: string | null
           channel: string
           chat_id: string
           created_at: string
           id: string
+          kind: string
           last_used_at: string | null
           linked_by: string
           notify_disabled_reason: string | null
@@ -120,11 +124,12 @@ export type Database = {
           token_hash: string
         }
         Insert: {
-          bot_id: string
+          bot_id?: string | null
           channel?: string
           chat_id: string
           created_at?: string
           id?: string
+          kind?: string
           last_used_at?: string | null
           linked_by: string
           notify_disabled_reason?: string | null
@@ -135,11 +140,12 @@ export type Database = {
           token_hash: string
         }
         Update: {
-          bot_id?: string
+          bot_id?: string | null
           channel?: string
           chat_id?: string
           created_at?: string
           id?: string
+          kind?: string
           last_used_at?: string | null
           linked_by?: string
           notify_disabled_reason?: string | null
