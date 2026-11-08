@@ -64,17 +64,20 @@ export default function ConnectChatDialog({
   const [generating, setGenerating] = useState(false);
   const [revoking, setRevoking] = useState<AgentLink | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
-  const linksAtGenerate = useRef(0);
+  const linkIdsAtGenerate = useRef<Set<string>>(new Set());
+  const [linkedId, setLinkedId] = useState<string | null>(null);
 
   const needsBot = kind === "chat";
   const remaining = code ? code.expiresAt - now : 0;
-  const waiting = code !== null && remaining > 0;
+  const waiting = code !== null && remaining > 0 && linkedId === null;
+  const polling = waiting || linkedId !== null;
   const { data: bots, isLoading: botsLoading } = useAgentBots(open);
   const { data: links, isLoading: linksLoading } = useAgentLinks(
     project.id,
     open,
-    waiting ? POLL_MS : false,
+    polling ? POLL_MS : false,
   );
+  const connected = linkedId !== null && !!links?.find((link) => link.id === linkedId)?.last_used_at;
   const selectedBot = bots?.find((bot) => bot.id === botId) ?? bots?.[0];
   const appUrl = typeof window === "undefined" ? "" : window.location.origin;
 
@@ -85,15 +88,27 @@ export default function ConnectChatDialog({
   }, [waiting]);
 
   useEffect(() => {
-    if (waiting && links && links.length > linksAtGenerate.current) {
-      if (code?.kind === "mcp") toast.success("Code used. Now add the server to your MCP client");
-      else toast.success("Chat connected");
+    if (!waiting || !links) return;
+    const created = links.find((link) => !linkIdsAtGenerate.current.has(link.id));
+    if (!created) return;
+    if (code?.kind === "mcp") {
+      toast.success("Code used. Now add the server to your MCP client");
+      setLinkedId(created.id);
+    } else {
+      toast.success("Chat connected");
       setCode(null);
     }
   }, [links, waiting, code?.kind]);
 
+  useEffect(() => {
+    if (connected) toast.success("MCP client connected");
+  }, [connected]);
+
   const handleOpenChange = (next: boolean) => {
-    if (!next) setCode(null);
+    if (!next) {
+      setCode(null);
+      setLinkedId(null);
+    }
     onOpenChange(next);
   };
 
@@ -106,7 +121,8 @@ export default function ConnectChatDialog({
       toast.error(result.message);
       return;
     }
-    linksAtGenerate.current = links?.length ?? 0;
+    linkIdsAtGenerate.current = new Set(links?.map((link) => link.id));
+    setLinkedId(null);
     setNow(Date.now());
     setCode({
       value: result.code,
@@ -175,7 +191,7 @@ export default function ConnectChatDialog({
             <section className="flex flex-col gap-3">
               <h3 className="text-sm font-semibold">Link a new connection</h3>
 
-              {!code && (
+              {(!code || connected) && (
                 <div role="group" aria-label="Connection type" className="flex gap-2">
                   {KIND_OPTIONS.map((option) => (
                     <Button
@@ -204,10 +220,11 @@ export default function ConnectChatDialog({
                     sidebar and choose Agent Bots.
                   </span>
                 </div>
-              ) : code ? (
+              ) : code && !connected ? (
                 <LinkCodeCard
                   code={code}
                   waiting={waiting}
+                  linked={linkedId !== null}
                   remaining={remaining}
                   generating={generating}
                   appUrl={appUrl}

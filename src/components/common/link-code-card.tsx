@@ -1,5 +1,7 @@
 "use client";
 
+import { TickCircle } from "iconsax-react";
+
 import CopyField from "@/components/common/copy-field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -15,6 +17,7 @@ const formatRemaining = (ms: number) => {
 export default function LinkCodeCard({
   code,
   waiting,
+  linked,
   remaining,
   generating,
   appUrl,
@@ -22,6 +25,7 @@ export default function LinkCodeCard({
 }: {
   code: { value: string; kind: AgentLinkKind; botUsername: string };
   waiting: boolean;
+  linked: boolean;
   remaining: number;
   generating: boolean;
   appUrl: string;
@@ -29,6 +33,25 @@ export default function LinkCodeCard({
 }) {
   const linkCommand = `curl -s -X POST ${appUrl}/api/agent/v1/link -H "Content-Type: application/json" -d '{"code":"${code.value}"}'`;
   const addCommand = `claude mcp add --transport http kanbo ${appUrl}/api/agent/mcp --header "Authorization: Bearer <token from step 1>"`;
+
+  if (linked) {
+    return (
+      <div className="flex flex-col gap-3">
+        <span className="flex items-center gap-2 text-[13px] font-medium text-kb-green-fg">
+          <TickCircle size={16} variant="Bold" color="currentColor" aria-hidden />
+          1. Code used, token issued
+        </span>
+        <CopyField label="2. Now add the server to Claude Code" value={addCommand} />
+        <span className="text-xs leading-normal text-muted-foreground">
+          Paste the token from the reply of step 1 into this command.
+        </span>
+        <span className="flex items-center gap-2 text-[13px] text-muted-foreground">
+          <span aria-hidden="true" className="size-2 flex-none rounded-full bg-kb-green" />
+          Waiting for the MCP client to connect…
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
