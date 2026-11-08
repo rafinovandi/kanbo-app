@@ -9,6 +9,7 @@ export type AgentBotActionResult = { status: "success" } | { status: "error"; me
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const TOKEN_FORMAT = /^\d{5,20}:[A-Za-z0-9_-]{30,}$/;
+const MAX_BOTS = 10;
 const NAME_MAX = 40;
 const FAILED = "Something went wrong. Try again.";
 
@@ -31,6 +32,12 @@ export async function addAgentBotAction(token: string, name: string): Promise<Ag
 
   const session = await getSession();
   if (!session) return fail("Your session expired. Sign in again.");
+
+  const { count } = await session.supabase
+    .from("agent_bots")
+    .select("id", { count: "exact", head: true })
+    .is("revoked_at", null);
+  if ((count ?? 0) >= MAX_BOTS) return fail(`You can add up to ${MAX_BOTS} bots. Remove one first.`);
 
   const bot = await getMe(botToken);
   if (!bot.ok) return fail("Telegram rejected this token. Check it and try again.");

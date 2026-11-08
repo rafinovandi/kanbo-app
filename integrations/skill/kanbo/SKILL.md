@@ -59,7 +59,7 @@ If any command answers `not_linked`, this chat has no project yet: explain how t
 ## 2. Adding tasks (always preview first)
 
 1. Run `context --chat <chatId>` once per conversation to learn the project name, the board columns (`categories`) and the members.
-2. Extract tasks from the text or photo. Each task has `title` (required), and optionally `description`, `priority` (`low`, `medium`, `high`), `dueDate` (`YYYY-MM-DD`; convert words like "tomorrow" using today's date, and ask if it is ambiguous), `category` (a column name from the context) and `assignees` (member names or emails from the context). Leave out anything the user did not say. **If the user did not give a task title, ask for it. Never use the sentence of the command itself (for example "add a task") as the title.**
+2. Extract tasks from the text or photo. Each task has `title` (required), and optionally `description`, `priority` (`low`, `medium`, `high`), `dueDate` (`YYYY-MM-DD`; convert words like "tomorrow" using today's date, and ask if it is ambiguous), `category` (a column name from the context) and `assignees` (member names from the context). Leave out anything the user did not say. **If the user did not give a task title, ask for it. Never use the sentence of the command itself (for example "add a task") as the title.**
 3. Write `{"tasks":[…],"sender":"<the sender's name>"}` to the input file and run `preview-tasks` with `--input`. Nothing is saved yet.
 4. Show the result as a numbered list, one line per task, for example:
    `1. Revise the hero section · High · 12 Nov · @Alya · To Do`

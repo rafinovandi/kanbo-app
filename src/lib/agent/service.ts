@@ -75,12 +75,20 @@ export async function linkChat(request: Request): Promise<ApiResult> {
   ]);
   if (!bot || !stillAdmin || !project) return gone;
 
-  await admin
+  const { data: existing } = await admin
     .from("agent_links")
-    .update({ revoked_at: new Date().toISOString() })
+    .select("id, project_id")
     .eq("channel", "telegram")
     .eq("chat_id", chatId)
     .is("revoked_at", null);
+  if (existing?.some((link) => link.project_id !== used.project_id)) {
+    return failure(409, "chat_already_linked", "This chat is already connected to another project. Revoke it there first, then generate a new code.");
+  }
+
+  const replaced = (existing ?? []).map((link) => link.id);
+  if (replaced.length > 0) {
+    await admin.from("agent_links").update({ revoked_at: new Date().toISOString() }).in("id", replaced);
+  }
 
   const token = createChatToken();
   const { error } = await admin.from("agent_links").insert({
@@ -91,7 +99,13 @@ export async function linkChat(request: Request): Promise<ApiResult> {
     token_hash: hashAgentSecret("chat-token", token),
     linked_by: used.created_by,
   });
-  if (error) return failure(500, "link_failed", "Could not link this chat. Try again with a new code.");
+  if (error) {
+    if (replaced.length > 0) await admin.from("agent_links").update({ revoked_at: null }).in("id", replaced);
+    if (error.code === "23505") {
+      return failure(409, "chat_already_linked", "This chat is already connected to another project. Revoke it there first, then generate a new code.");
+    }
+    return failure(500, "link_failed", "Could not link this chat. Try again with a new code.");
+  }
 
   return { status: 200, body: { token, project: { id: project.id, name: project.name, url: boardUrl(project.id) } } };
 }
@@ -132,7 +146,7 @@ export async function getContext(ctx: AgentLinkContext): Promise<ApiResult> {
     body: {
       project: { id: project.id, name: project.name, url: boardUrl(project.id) },
       categories: categories.map(({ id, name, key }) => ({ id, name, key })),
-      members: members.map(({ name, email }) => ({ name, email })),
+      members: members.map(({ name }) => ({ name })),
     },
   };
 }
@@ -156,12 +170,20 @@ function findMember(data: Project, value: string) {
 
 function resolveAssignees(data: Project, value: unknown, warn: (message: string) => void) {
   if (value === undefined) return undefined;
-  const names = Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+  if (!Array.isArray(value)) {
+    warn("assignees must be a list of member names, so the assignees were left unchanged.");
+    return undefined;
+  }
+  const names = value.filter((v): v is string => typeof v === "string");
   const found = new Map<string, { id: string; name: string }>();
   for (const name of names.slice(0, TASK_LIMITS.assignees)) {
     const member = findMember(data, name);
     if (member) found.set(member.id, { id: member.id, name: member.name });
     else warn(`"${name}" is not an active member, so they were not assigned.`);
+  }
+  if (names.length > 0 && found.size === 0) {
+    warn("None of the assignees matched an active member, so the assignees were left unchanged.");
+    return undefined;
   }
   return [...found.values()];
 }
@@ -175,20 +197,32 @@ function resolvePriority(value: unknown, warn: (message: string) => void): TaskP
 
 function resolveDueDate(data: Project, value: unknown, warn: (message: string) => void) {
   if (value === undefined) return undefined;
-  const checked = validateDueDate(typeof value === "string" ? value : "", data.today);
-  if (checked.error) warn(`Due date ${JSON.stringify(value)} was ignored: ${checked.error.toLowerCase()}.`);
+  if (value !== null && typeof value !== "string") {
+    warn("dueDate must be a YYYY-MM-DD string or null, so the due date was left unchanged.");
+    return undefined;
+  }
+  const checked = validateDueDate(value ?? "", data.today);
+  if (checked.error) {
+    warn(`Due date ${JSON.stringify(value)} was ignored: ${checked.error.toLowerCase()}.`);
+    return undefined;
+  }
   return checked.value;
 }
 
 // ── idempotency ──
 
-const hashPayload = (raw: string) => createHash("sha256").update(raw).digest("hex");
+const hashPayload = (scope: string, raw: string) => createHash("sha256").update(`${scope}\n${raw}`).digest("hex");
 
-// Real (non-dry-run) writes need an Idempotency-Key. A retry with the same key and body replays the first answer;
-// the same key with a different body is a conflict.
+const PENDING_STATUS = 0;
+const STALE_PENDING_MS = 2 * 60 * 1000;
+
+// Real (non-dry-run) writes need an Idempotency-Key. The key is claimed before the handler runs, so two
+// concurrent requests cannot both write. A retry with the same key and body replays the first answer; the
+// same key with another body or another target is a conflict. `scope` names the operation and its target.
 async function runIdempotent(
   ctx: AgentLinkContext,
   request: Request,
+  scope: string,
   raw: string,
   handler: () => Promise<ApiResult>,
 ): Promise<ApiResult> {
@@ -197,29 +231,49 @@ async function runIdempotent(
     return failure(422, "idempotency_key_required", "Send an Idempotency-Key header (1 to 128 characters) when saving.");
   }
 
-  const payloadHash = hashPayload(raw);
-  const { data: previous } = await ctx.admin
+  const payloadHash = hashPayload(scope, raw);
+  const row = { token_id: ctx.id, idempotency_key: key };
+  const { error: claimError } = await ctx.admin
     .from("agent_requests")
-    .select("payload_hash, response_status, response_body")
-    .eq("token_id", ctx.id)
-    .eq("idempotency_key", key)
-    .maybeSingle();
-  if (previous) {
+    .insert({ ...row, payload_hash: payloadHash, response_status: PENDING_STATUS, response_body: null });
+
+  if (claimError) {
+    if (claimError.code !== "23505") return failure(500, "idempotency_failed", "Could not record this request. Try again.");
+    const { data: previous } = await ctx.admin
+      .from("agent_requests")
+      .select("payload_hash, response_status, response_body, created_at")
+      .match(row)
+      .maybeSingle();
+    if (!previous) return failure(409, "idempotency_in_progress", "Try again shortly.", { "Retry-After": "1" });
     if (previous.payload_hash !== payloadHash) {
       return failure(409, "idempotency_conflict", "This Idempotency-Key was already used with a different request.");
+    }
+    if (previous.response_status === PENDING_STATUS) {
+      if (Date.now() - new Date(previous.created_at).getTime() > STALE_PENDING_MS) {
+        await ctx.admin.from("agent_requests").delete().match(row).eq("response_status", PENDING_STATUS);
+      }
+      return failure(409, "idempotency_in_progress", "The first request with this Idempotency-Key is still running. Try again shortly.", {
+        "Retry-After": "1",
+      });
     }
     return { status: previous.response_status, body: previous.response_body, headers: { "Idempotent-Replay": "true" } };
   }
 
-  const result = await handler();
+  let result: ApiResult;
+  try {
+    result = await handler();
+  } catch (error) {
+    await ctx.admin.from("agent_requests").delete().match(row);
+    throw error;
+  }
+
   if (result.status >= 200 && result.status < 300) {
-    await ctx.admin.from("agent_requests").insert({
-      token_id: ctx.id,
-      idempotency_key: key,
-      payload_hash: payloadHash,
-      response_status: result.status,
-      response_body: result.body as never,
-    });
+    await ctx.admin
+      .from("agent_requests")
+      .update({ response_status: result.status, response_body: result.body as never })
+      .match(row);
+  } else {
+    await ctx.admin.from("agent_requests").delete().match(row);
   }
   return result;
 }
@@ -308,7 +362,7 @@ export async function createTasks(ctx: AgentLinkContext, request: Request): Prom
   }));
   if (body.dryRun === true) return { status: 200, body: { dryRun: true, tasks: preview, warnings } };
 
-  return runIdempotent(ctx, request, raw, async () => {
+  return runIdempotent(ctx, request, "tasks.create", raw, async () => {
     const positions = await nextPositions(ctx.admin, prepared.map((t) => t.category.id));
     const sender = text(body.sender, 64) || null;
 
@@ -450,7 +504,7 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
   if (changes.length === 0) return { status: 200, body: { id: task.id, title: task.title, changes: [], warnings } };
   if (body.dryRun === true) return { status: 200, body: { dryRun: true, id: task.id, title: task.title, changes, warnings } };
 
-  return runIdempotent(ctx, request, raw, async () => {
+  return runIdempotent(ctx, request, `tasks.update:${task.id}`, raw, async () => {
     if (patch.category_id) {
       const positions = await nextPositions(ctx.admin, [patch.category_id]);
       patch.position = (positions.get(patch.category_id) ?? 0) + 1;

@@ -195,6 +195,14 @@ function requirePreview(key) {
 
 function requireChat(flags) {
   if (!API_URL) fail("not_configured", "KANBO_API_URL is not set.");
+  if (
+    !/^https:\/\//i.test(API_URL) &&
+    !/^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?(\/|$)/i.test(API_URL)
+  )
+    fail(
+      "not_configured",
+      "KANBO_API_URL must start with https:// (http:// is only allowed for localhost).",
+    );
   if (!CHAT_ID.test(flags.chat ?? ""))
     fail("bad_usage", "--chat must be the numeric Telegram chat id.");
   return flags.chat;

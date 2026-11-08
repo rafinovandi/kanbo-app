@@ -42,3 +42,7 @@ next-env.d.ts
 
 # local AI assistant instructions (not shared in the repo)
 CLAUDE.md
+
+# agent skill: live chat tokens
+integrations/skill/kanbo/links.json
+integrations/skill/kanbo/kanbo-previews.json

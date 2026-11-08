@@ -10,7 +10,7 @@ export type AdminClient = ReturnType<typeof createAdminClient>;
 export type AgentLinkContext = { id: string; projectId: string; linkedBy: string; admin: AdminClient };
 export type ApiResult = { status: number; body: unknown; headers?: Record<string, string> };
 
-const MAX_BODY_CHARS = 100_000;
+const MAX_BODY_BYTES = 400_000;
 
 export const reply = ({ status, body, headers }: ApiResult) => NextResponse.json(body, { status, headers });
 
@@ -22,10 +22,32 @@ export const failure = (status: number, error: string, message: string, headers?
 
 const disabled = () => failure(404, "agent_disabled", "Not found");
 
+// Reads the body without buffering more than the limit; null means it was too large.
+export async function readBodyText(request: Request, maxBytes = MAX_BODY_BYTES): Promise<string | null> {
+  const declared = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > maxBytes) return null;
+
+  const reader = request.body?.getReader();
+  if (!reader) return "";
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+
 // Reads a JSON object from the request; anything else is a 422.
 export async function readJson(request: Request): Promise<{ raw: string; data: Record<string, unknown> } | ApiResult> {
-  const raw = await request.text();
-  if (raw.length > MAX_BODY_CHARS) return failure(422, "validation_failed", "The request body is too large.");
+  const raw = await readBodyText(request);
+  if (raw === null) return failure(422, "validation_failed", "The request body is too large.");
   try {
     const data: unknown = raw ? JSON.parse(raw) : {};
     if (typeof data === "object" && data !== null && !Array.isArray(data)) return { raw, data: data as Record<string, unknown> };
@@ -52,6 +74,16 @@ export async function authenticate(request: Request): Promise<AgentLinkContext |
     .is("revoked_at", null)
     .maybeSingle();
   if (!link) return failure(401, "unauthorized", "Invalid or revoked token.");
+
+  const { data: stillAdmin } = await admin
+    .from("project_members")
+    .select("id")
+    .eq("project_id", link.project_id)
+    .eq("user_id", link.linked_by)
+    .eq("status", "active")
+    .eq("is_admin", true)
+    .maybeSingle();
+  if (!stillAdmin) return failure(401, "unauthorized", "Invalid or revoked token.");
 
   const { data: limit } = await admin.rpc("agent_rate_limit", { p_token_id: link.id });
   const verdict = limit?.[0];
