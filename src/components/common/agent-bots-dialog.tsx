@@ -66,7 +66,7 @@ function AddBotForm() {
           disabled={pending}
         />
       </div>
-      <Button type="submit" disabled={pending || token.trim() === ""} className="self-end">
+      <Button type="submit" disabled={pending || token.trim() === ""} className="w-full sm:w-auto sm:self-end">
         {pending ? "Checking…" : "Add Bot"}
       </Button>
     </form>

@@ -251,7 +251,7 @@ export default function ConnectChatDialog({
                     type="button"
                     onClick={generate}
                     disabled={generating}
-                    className="h-10 self-start px-4"
+                    className="h-10 w-full px-4 sm:w-auto sm:self-start"
                   >
                     {generating ? "Generating…" : "Generate Code"}
                   </Button>

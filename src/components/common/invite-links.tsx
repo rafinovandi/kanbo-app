@@ -66,8 +66,8 @@ export default function InviteLinks({
 
       {failed.length > 0 && <p className="text-xs text-destructive">Could not invite: {failed.join(", ")}</p>}
 
-      <div className="flex justify-end">
-        <Button type="button" onClick={onDone}>
+      <div className="flex sm:justify-end">
+        <Button type="button" onClick={onDone} className="w-full sm:w-auto">
           Done
         </Button>
       </div>
