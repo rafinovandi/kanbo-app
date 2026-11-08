@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import MembersDialog from "@/components/common/members-dialog";
+import ProjectMenu from "@/components/common/project-menu";
 import TaskDialogLoader from "@/components/common/task-dialog-loader";
 import UserAvatar from "@/components/common/user-avatar";
 import { AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
@@ -87,6 +88,7 @@ export default function MyTasksProject({ project }: { project: ProjectOverview }
             <ArrowRight size={16} variant="Linear" color="currentColor" aria-hidden />
           </Link>
         </Button>
+        <ProjectMenu project={{ id: project.id, name: project.name }} isAdmin={false} />
       </div>
 
       {tasks.length > 0 && (

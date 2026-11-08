@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import MembersDialog from "@/components/common/members-dialog";
+import ProjectMenu from "@/components/common/project-menu";
 import UserAvatar from "@/components/common/user-avatar";
 import { AvatarGroup } from "@/components/ui/avatar";
 import {
@@ -18,11 +19,9 @@ import useProjectMembers from "@/hooks/use-project-members";
 import { cn } from "@/lib/utils";
 import type { BoardData } from "@/types/board";
 
-import BoardProjectMenu from "./board-project-menu";
-
 const MAX_AVATARS = 4;
 
-// Breadcrumb, project tile and name, the Members button, and the ⋯ menu for admins.
+// Breadcrumb, project tile and name, the Members button, and the ⋯ menu.
 export default function BoardHeader({ project, isAdmin }: { project: BoardData["project"]; isAdmin: boolean }) {
   const { data } = useProjectMembers(project.id);
   const people = data?.members.filter((member) => member.status === "active" && member.profile) ?? [];
@@ -71,7 +70,7 @@ export default function BoardHeader({ project, isAdmin }: { project: BoardData["
             <span className="text-[13px] font-medium">Members</span>
           </button>
         </MembersDialog>
-        {isAdmin && <BoardProjectMenu project={{ id: project.id, name: project.name }} />}
+        <ProjectMenu project={{ id: project.id, name: project.name }} isAdmin={isAdmin} />
       </div>
     </div>
   );
