@@ -20,6 +20,8 @@ test("rejects values that resolve to another origin", () => {
     "/\t/evil.example",
     "/\n/evil.example",
     "/\r/evil.example",
+    "/.//evil.example",
+    "/a/..//evil.example",
     "https://evil.example",
     "javascript:alert(1)",
     "evil.example",
@@ -30,7 +32,7 @@ test("rejects values that resolve to another origin", () => {
 });
 
 test("every accepted value stays on the app origin", () => {
-  const inputs = ["/ok", "/a/../b", "/\\x", "//x", "/\t/x", "/%5Cx", "/a?next=//x", "/#//x"];
+  const inputs = ["/ok", "/a/../b", "/\\x", "//x", "/\t/x", "/%5Cx", "/a?next=//x", "/#//x", "/.//x", "/a/..//x"];
   for (const input of inputs) {
     const resolved = new URL(getSafeRedirectPath(input), APP_ORIGIN);
     assert.equal(resolved.origin, APP_ORIGIN, JSON.stringify(input));

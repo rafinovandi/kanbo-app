@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, type ReactNode } from "react";
 
+import { INITIAL_STATE_PROFILE } from "@/constants/auth-constant";
 import { useAuthStore } from "@/stores/auth-store";
 import type { AuthProfile } from "@/types/auth";
 
@@ -27,7 +28,10 @@ export default function AuthStoreProvider({
   useEffect(() => {
     clearTimeout(clearTimer.current);
     return () => {
-      clearTimer.current = setTimeout(() => queryClient.clear(), 0);
+      clearTimer.current = setTimeout(() => {
+        queryClient.clear();
+        useAuthStore.getState().setProfile(INITIAL_STATE_PROFILE);
+      }, 0);
     };
   }, [queryClient]);
 

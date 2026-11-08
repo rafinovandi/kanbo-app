@@ -8,5 +8,6 @@ export function getSafeRedirectPath(value: unknown, fallback = "/dashboard"): st
     return fallback;
   }
   const url = new URL(value, PLACEHOLDER_ORIGIN);
-  return url.origin === PLACEHOLDER_ORIGIN ? `${url.pathname}${url.search}${url.hash}` : fallback;
+  const path = `${url.pathname}${url.search}${url.hash}`;
+  return url.origin === PLACEHOLDER_ORIGIN && !path.startsWith("//") ? path : fallback;
 }

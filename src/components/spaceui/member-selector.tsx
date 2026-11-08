@@ -121,6 +121,7 @@ function MemberBubble({ member, isSelected, onClick, size }: MemberBubbleProps) 
           <img
             src={member.avatar}
             alt={member.name}
+            referrerPolicy="no-referrer"
             className={cn(
               'size-full object-cover transition-[filter,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]',
               !isSelected && 'grayscale',
@@ -325,7 +326,7 @@ export const MemberSelector = React.forwardRef<HTMLDivElement, MemberSelectorPro
                           )}
                         >
                           {member.avatar ? (
-                            <img src={member.avatar} alt={member.name} className="size-full object-cover" />
+                            <img src={member.avatar} alt={member.name} referrerPolicy="no-referrer" className="size-full object-cover" />
                           ) : (
                             <div
                               className={cn(
