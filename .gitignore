@@ -46,3 +46,7 @@ CLAUDE.md
 # agent skill: live chat tokens
 integrations/skill/kanbo/links.json
 integrations/skill/kanbo/kanbo-previews.json
+
+# local tooling
+.claude/
+.mcp.json

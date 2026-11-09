@@ -32,7 +32,7 @@ Example content of the file:
       "assignees": ["Alya"]
     }
   ],
-  "sender": "Rafi"
+  "sender": "Sam"
 }
 ```
 

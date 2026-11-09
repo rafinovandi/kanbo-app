@@ -66,13 +66,22 @@ supabase/
 
 ## Database
 
-Migrations in `supabase/migrations/` (001 to 020) are applied in order to each Supabase project; a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
+Migrations in `supabase/migrations/` (001 to 023) are applied in order to each Supabase project; a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
 
 ```bash
 npx supabase gen types typescript --project-id <project-ref> > src/types/database.types.ts
 ```
 
 Never edit `src/types/database.types.ts` by hand.
+
+## Deploy
+
+1. Create a Supabase project and apply every file in `supabase/migrations/` in order (SQL editor or `npx supabase db push`). Add the `private.app_config` row described under [Database](#database).
+2. In Supabase → Authentication → Providers → Google, add your Google OAuth client ID and secret. Add `https://<your-domain>/auth/callback` to the Google redirect URIs and to Supabase → Authentication → URL Configuration.
+3. Import the repo into [Vercel](https://vercel.com) and set the environment variables from [`env.example`](./env.example). Set `NEXT_PUBLIC_APP_URL` to your production URL and generate a fresh `TOKEN_HASH_PEPPER` for production.
+4. Deploy. Use a separate Supabase project for production; do not reuse your development keys.
+
+To report a security issue, see [`SECURITY.md`](./SECURITY.md).
 
 ## Scripts
 
