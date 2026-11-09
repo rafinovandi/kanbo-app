@@ -10,11 +10,15 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   detectLanguage,
   getTextareaCaretPosition,
+  bulletize,
+  continueList,
   hasInlineMarker,
+  indentEmptyItem,
   insertCodeBlock,
   looksLikeCode,
   parseDescription,
   parseInline,
+  parseText,
   toggleInlineMarker,
   type InlineMarker,
   type InlineToken,
@@ -34,6 +38,48 @@ function renderInline(tokens: InlineToken[]): ReactNode[] {
     if (token.type === "bold") return <strong key={index}>{children}</strong>;
     if (token.type === "italic") return <em key={index}>{children}</em>;
     return <s key={index}>{children}</s>;
+  });
+}
+
+function renderText(text: string): ReactNode[] {
+  return parseText(text).map((block, index) => {
+    if (block.type === "heading") {
+      const Heading = block.level === 1 ? "h2" : "h3";
+      return (
+        <Heading
+          key={index}
+          className={cn("font-semibold text-foreground", block.level === 1 ? "text-xl leading-snug" : "text-base")}
+        >
+          {renderInline(parseInline(block.text))}
+        </Heading>
+      );
+    }
+    if (block.type === "paragraph") {
+      return (
+        <p key={index} className="whitespace-pre-wrap">
+          {renderInline(parseInline(block.text))}
+        </p>
+      );
+    }
+    const List = block.ordered ? "ol" : "ul";
+    return (
+      <List
+        key={index}
+        start={block.ordered ? block.start : undefined}
+        className={cn("flex flex-col gap-1 pl-5 marker:text-muted-foreground", block.ordered ? "list-decimal" : "list-disc")}
+      >
+        {block.items.map((item, itemIndex) => (
+          <li key={itemIndex}>
+            {renderInline(parseInline(item.text))}
+            {item.description && (
+              <span className="block whitespace-pre-wrap text-muted-foreground">
+                {renderInline(parseInline(item.description))}
+              </span>
+            )}
+          </li>
+        ))}
+      </List>
+    );
   });
 }
 
@@ -119,6 +165,21 @@ export default function TaskDescription({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.nativeEvent.isComposing) return;
+    const { selectionStart, selectionEnd } = event.currentTarget;
+    if (selectionStart === selectionEnd && !event.metaKey && !event.ctrlKey && !event.altKey) {
+      const next =
+        event.key === "Enter"
+          ? continueList(value, selectionStart, event.shiftKey)
+          : event.key === "Tab" && !event.shiftKey
+            ? indentEmptyItem(value, selectionStart)
+            : null;
+      if (next) {
+        event.preventDefault();
+        apply(next);
+        return;
+      }
+    }
     if (!(event.metaKey || event.ctrlKey) || event.altKey) return;
     const marker = SHORTCUTS[event.key.toLowerCase()];
     if (!marker || (marker === "~~" && !event.shiftKey) || (marker !== "~~" && event.shiftKey)) return;
@@ -178,7 +239,12 @@ export default function TaskDescription({
             id="task-description"
             name={name}
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => {
+              const { value: typed, selectionStart } = event.target;
+              const bullet = bulletize(value, typed, selectionStart);
+              if (bullet) apply(bullet);
+              else onChange(typed);
+            }}
             onPaste={onPaste}
             onKeyDown={onKeyDown}
             onSelect={trackSelection}
@@ -211,16 +277,16 @@ export default function TaskDescription({
               block.type === "code" ? (
                 <DescriptionCodeBlock key={index} lang={block.lang} code={block.code} />
               ) : (
-                <p
+                <div
                   key={index}
                   role="button"
                   tabIndex={0}
                   onClick={edit}
                   onKeyDown={editOnKey}
-                  className={cn("cursor-text whitespace-pre-wrap [overflow-wrap:anywhere]", FOCUS_CLASS, TEXT_CLASS)}
+                  className={cn("flex cursor-text flex-col gap-2 [overflow-wrap:anywhere]", FOCUS_CLASS, TEXT_CLASS)}
                 >
-                  {renderInline(parseInline(block.text))}
-                </p>
+                  {renderText(block.text)}
+                </div>
               ),
             )}
             <button

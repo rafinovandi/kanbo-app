@@ -142,6 +142,121 @@ export function toggleInlineMarker(
   };
 }
 
+export type TextBlock =
+  | { type: "heading"; level: 1 | 2; text: string }
+  | { type: "paragraph"; text: string }
+  | { type: "list"; ordered: boolean; start: number; items: { text: string; description: string }[] };
+
+const HEADING = /^(#{1,2}) +(\S.*)$/;
+const ITEM = /^(-|•|\d+\.) (.*)$/;
+const DESCRIPTION = /^ {2,}\S/;
+
+// Splits a text block into headings (# and ##), lists (- and 1.) and paragraphs. A line indented by two spaces or
+// more under a list item is that item's description.
+export function parseText(text: string): TextBlock[] {
+  const blocks: TextBlock[] = [];
+  let paragraph: string[] = [];
+  let list: Extract<TextBlock, { type: "list" }> | null = null;
+
+  const flush = () => {
+    if (paragraph.length) blocks.push({ type: "paragraph", text: paragraph.join("\n") });
+    paragraph = [];
+    list = null;
+  };
+
+  for (const line of text.split("\n")) {
+    const heading = HEADING.exec(line);
+    const item = ITEM.exec(line);
+    if (heading) {
+      flush();
+      blocks.push({ type: "heading", level: heading[1].length as 1 | 2, text: heading[2] });
+    } else if (item) {
+      const ordered = /\d/.test(item[1]);
+      if (list && list.ordered !== ordered) list = null;
+      if (!list) {
+        if (paragraph.length) flush();
+        list = { type: "list", ordered, start: ordered ? parseInt(item[1], 10) : 1, items: [] };
+        blocks.push(list);
+      }
+      list.items.push({ text: item[2], description: "" });
+    } else if (list && DESCRIPTION.test(line)) {
+      const last = list.items[list.items.length - 1];
+      last.description = last.description ? `${last.description}\n${line.trim()}` : line.trim();
+    } else if (!line.trim()) {
+      flush();
+    } else {
+      list = null;
+      paragraph.push(line);
+    }
+  }
+  flush();
+  return blocks;
+}
+
+type Edit = { value: string; cursor: number };
+
+const lineStart = (value: string, cursor: number) => value.lastIndexOf("\n", cursor - 1) + 1;
+const nextMarker = (marker: string) => (/\d/.test(marker) ? `${parseInt(marker, 10) + 1}. ` : `${marker} `);
+
+// The list item a description line belongs to (the nearest line above that starts with - or 1.).
+function itemAbove(value: string, start: number): RegExpExecArray | null {
+  const lines = value.slice(0, Math.max(start - 1, 0)).split("\n");
+  for (let i = lines.length - 1; i >= 0 && start > 0; i--) {
+    const item = ITEM.exec(lines[i]);
+    if (item) return item;
+    if (!DESCRIPTION.test(lines[i])) return null;
+  }
+  return null;
+}
+
+// What Enter (or Shift+Enter) does on a list line, or null when the cursor is not at the end of one: a new item with
+// the next number, a description line with Shift+Enter, and on an empty item the list ends.
+export function continueList(value: string, cursor: number, shift: boolean): Edit | null {
+  const start = lineStart(value, cursor);
+  if (value.slice(cursor).split("\n")[0] !== "") return null;
+  const line = value.slice(start, cursor);
+
+  const item = ITEM.exec(line);
+  if (item) {
+    if (!item[2]) return shift ? null : { value: value.slice(0, start) + value.slice(cursor), cursor: start };
+    const insert = shift ? `\n${" ".repeat(item[1].length + 1)}` : `\n${nextMarker(item[1])}`;
+    return { value: value.slice(0, cursor) + insert + value.slice(cursor), cursor: cursor + insert.length };
+  }
+
+  if (/^ {2,}$/.test(line) || DESCRIPTION.test(line)) {
+    const parent = itemAbove(value, start);
+    if (!parent) return null;
+    if (shift && line.trim()) {
+      const insert = `\n${line.match(/^ */)![0]}`;
+      return { value: value.slice(0, cursor) + insert + value.slice(cursor), cursor: cursor + insert.length };
+    }
+    if (shift) return null;
+    const marker = nextMarker(parent[1]);
+    if (!line.trim()) return { value: value.slice(0, start) + marker + value.slice(cursor), cursor: start + marker.length };
+    const insert = `\n${marker}`;
+    return { value: value.slice(0, cursor) + insert + value.slice(cursor), cursor: cursor + insert.length };
+  }
+  return null;
+}
+
+// Typing a space after "-" at the start of a line turns it into a "•" right away (so the dot shows while typing).
+export function bulletize(previous: string, value: string, cursor: number): Edit | null {
+  if (value.length <= previous.length) return null;
+  const start = lineStart(value, cursor);
+  if (value.slice(start, cursor) !== "- ") return null;
+  return { value: `${value.slice(0, start)}• ${value.slice(cursor)}`, cursor };
+}
+
+// Tab on an empty item ("2. ") turns it into a description line of the item above.
+export function indentEmptyItem(value: string, cursor: number): Edit | null {
+  const start = lineStart(value, cursor);
+  if (value.slice(cursor).split("\n")[0] !== "") return null;
+  const item = ITEM.exec(value.slice(start, cursor));
+  if (!item || item[2] || !itemAbove(value, start)) return null;
+  const indent = " ".repeat(item[1].length + 1);
+  return { value: value.slice(0, start) + indent + value.slice(cursor), cursor: start + indent.length };
+}
+
 const MIRRORED_STYLES = [
   "boxSizing",
   "width",

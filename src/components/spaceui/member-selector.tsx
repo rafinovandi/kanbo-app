@@ -60,7 +60,7 @@ const SIZES = {
     email: 'text-xs',
   },
   sm: {
-    avatar: 'size-9',
+    avatar: 'size-8',
     initials: 'text-xs',
     plus: 'size-4',
     badge: 'size-3.5',
