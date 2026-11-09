@@ -251,8 +251,8 @@ export default function EditProfileForm({
         </CardHeader>
         <CardContent className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border">
-              <Image src="/Google_Symbol.webp" alt="" width={20} height={20} />
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#8E918F] bg-[#131314]">
+              <Image src="/google-g.svg" alt="" width={20} height={20} />
             </span>
             <div className="flex flex-col gap-0.5">
               <span className="text-sm font-medium">Signed in with Google</span>
