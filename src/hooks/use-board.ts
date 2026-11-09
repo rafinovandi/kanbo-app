@@ -25,7 +25,7 @@ export default function useBoard(projectId: string, search = "", enabled = true)
         .order("position");
 
       const [project, categories, tasks] = await Promise.all([
-        supabase.from("projects").select("id, name, color, owner_id").eq("id", projectId).maybeSingle(),
+        supabase.from("projects").select("id, name, description, color, owner_id").eq("id", projectId).maybeSingle(),
         supabase.from("categories").select("id, key, name, color").eq("project_id", projectId).order("position").order("created_at"),
         search ? tasksQuery.ilike("title", `%${escapeLikePattern(search)}%`) : tasksQuery,
       ]);
@@ -38,6 +38,7 @@ export default function useBoard(projectId: string, search = "", enabled = true)
         project: {
           id: project.data.id,
           name: project.data.name,
+          description: project.data.description,
           color: project.data.color as ProjectColor,
           ownerId: project.data.owner_id,
         },

@@ -67,6 +67,7 @@ export type ProjectTask = {
 export type ProjectOverview = ProjectSummary & {
   description: string;
   members: MemberPreview[];
+  adminIds: string[];
   pending: number;
   total: number;
   done: number;

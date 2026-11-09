@@ -16,6 +16,7 @@ import { getProgressPercent } from "@/constants/dashboard-constant";
 import { MAX_TASK_ROWS } from "@/constants/my-tasks-constant";
 import { PROJECT_TILE } from "@/constants/project-constant";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import type { ProjectOverview } from "@/types/project";
 
 import MyTasksTaskTable from "./my-tasks-task-table";
@@ -25,6 +26,7 @@ const MAX_AVATARS = 5;
 // One project: its header, then the task table once it has tasks. Only the first rows
 // are visible until "See More".
 export default function MyTasksProject({ project }: { project: ProjectOverview }) {
+  const me = useAuthStore((state) => state.profile);
   const [expanded, setExpanded] = useState(false);
   const [openTaskId, setOpenTaskId] = useState<string | null>(null);
 
@@ -88,7 +90,10 @@ export default function MyTasksProject({ project }: { project: ProjectOverview }
             <ArrowRight size={16} variant="Linear" color="currentColor" aria-hidden />
           </Link>
         </Button>
-        <ProjectMenu project={{ id: project.id, name: project.name }} isAdmin={false} />
+        <ProjectMenu
+          project={{ id: project.id, name: project.name, description: project.description, color: project.color }}
+          isAdmin={project.adminIds.includes(me.id)}
+        />
       </div>
 
       {tasks.length > 0 && (

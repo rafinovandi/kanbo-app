@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bookmark, Link21, More, Trash } from "iconsax-react";
+import { Bookmark, Edit2, Link21, More, Trash } from "iconsax-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { pinProjectAction, unpinProjectAction } from "@/actions/pin-action";
 import { deleteProjectAction } from "@/actions/project-action";
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import ConnectChatDialog from "@/components/common/connect-chat-dialog";
+import NewProjectDialog, { type EditableProject } from "@/components/common/new-project-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -34,13 +35,14 @@ export default function ProjectMenu({
   project,
   isAdmin,
 }: {
-  project: { id: string; name: string };
+  project: EditableProject;
   isAdmin: boolean;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [connectOpen, setConnectOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const { data: members } = useProjectMembers(project.id, isAdmin);
   const { data: pins } = useProjectPins();
   const pinned = pins?.includes(project.id) ?? false;
@@ -131,6 +133,24 @@ export default function ProjectMenu({
           {isAdmin && (
             <>
               <DropdownMenuItem
+                onSelect={() => setEditOpen(true)}
+                className="items-start gap-2.5"
+              >
+                <Edit2
+                  size={18}
+                  variant="Linear"
+                  color="currentColor"
+                  className="mt-0.5"
+                  aria-hidden
+                />
+                <span className="flex flex-col gap-0.5">
+                  <span>Edit Project</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    Change the name, description or color.
+                  </span>
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onSelect={() => setConnectOpen(true)}
                 className="items-start gap-2.5"
               >
@@ -173,6 +193,7 @@ export default function ProjectMenu({
       </DropdownMenu>
       {isAdmin && (
         <>
+          <NewProjectDialog project={project} open={editOpen} onOpenChange={setEditOpen} />
           <ConnectChatDialog
             open={connectOpen}
             onOpenChange={setConnectOpen}

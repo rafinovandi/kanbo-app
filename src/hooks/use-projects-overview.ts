@@ -27,7 +27,7 @@ export default function useProjectsOverview(search = "") {
       const query = supabase
         .from("projects")
         .select(
-          "id, name, description, color, project_members(status, profiles!project_members_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg)), tasks(id, title, priority, due_date, categories!tasks_category_same_project_fk(key, name, color))",
+          "id, name, description, color, project_members(status, user_id, is_admin, profiles!project_members_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg)), tasks(id, title, priority, due_date, categories!tasks_category_same_project_fk(key, name, color))",
         )
         .order("created_at", { ascending: false });
 
@@ -40,8 +40,10 @@ export default function useProjectsOverview(search = "") {
       const progress = new Map(stats.projects.map((p) => [p.id, p]));
       return rows.filter((row) => !search || row.tasks.length > 0).map((row) => {
         const members: MemberPreview[] = [];
+        const adminIds: string[] = [];
         let pending = 0;
         for (const member of row.project_members) {
+          if (member.is_admin && member.user_id) adminIds.push(member.user_id);
           if (member.status === "pending") pending += 1;
           else if (member.profiles) members.push(member.profiles);
         }
@@ -68,6 +70,7 @@ export default function useProjectsOverview(search = "") {
           description: row.description,
           color: row.color as ProjectColor,
           members,
+          adminIds,
           pending,
           total: stat?.total ?? 0,
           done: stat?.done ?? 0,

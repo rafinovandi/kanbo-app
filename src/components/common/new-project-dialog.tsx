@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { createProjectAction } from "@/actions/project-action";
+import { createProjectAction, updateProjectAction } from "@/actions/project-action";
 import InviteLinks from "@/components/common/invite-links";
 import InviteMembersField from "@/components/common/invite-members-field";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
+import { boardKey } from "@/hooks/use-board";
 import { DASHBOARD_STATS_KEY } from "@/hooks/use-dashboard-stats";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
 import { PROJECT_TONE } from "@/constants/profile-constant";
 import { PROJECT_COLORS, PROJECT_LIMITS, PROJECT_TILE } from "@/constants/project-constant";
 import { cn } from "@/lib/utils";
-import type { ProjectFormState } from "@/types/project";
+import type { ProjectColor, ProjectFormState } from "@/types/project";
 import { validateProject, type InviteDraft, type ProjectFields } from "@/validations/project";
 
 function Field({
@@ -78,12 +79,19 @@ function ProjectPreview({ fields }: { fields: ProjectFields }) {
   );
 }
 
-function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
-  const [fields, setFields] = useState<ProjectFields>({ name: "", description: "", color: "gray" });
+export type EditableProject = { id: string; name: string; description: string; color: ProjectColor };
+
+function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void; project?: EditableProject }) {
+  const editing = !!project;
+  const [fields, setFields] = useState<ProjectFields>({
+    name: project?.name ?? "",
+    description: project?.description ?? "",
+    color: project?.color ?? "gray",
+  });
   const queryClient = useQueryClient();
   const [invites, setInvites] = useState<InviteDraft[]>([]);
   const [state, formAction, pending] = useActionState<ProjectFormState, FormData>(
-    createProjectAction,
+    editing ? updateProjectAction : createProjectAction,
     INITIAL_STATE_ACTION,
   );
 
@@ -95,6 +103,12 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
     if (state.status === "success") {
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_KEY });
       queryClient.invalidateQueries({ queryKey: PROJECTS_OVERVIEW_KEY });
+      if (project) {
+        queryClient.invalidateQueries({ queryKey: boardKey(project.id) });
+        toast.success("Project updated");
+        setOpen(false);
+        return;
+      }
       toast.success("Project created");
       if (state.inviteLinks?.length) return;
       if (state.failedInvites?.length) {
@@ -104,7 +118,7 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
     } else if (state.status === "error" && state.errors?._form?.[0]) {
       toast.error(state.errors._form[0]);
     }
-  }, [state, setOpen, queryClient]);
+  }, [state, setOpen, queryClient, project]);
 
   if (state.status === "success" && state.inviteLinks?.length) {
     return (
@@ -113,12 +127,15 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-5">
+    <form action={formAction} className="flex min-w-0 flex-col gap-5">
       <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
-        <DialogDescription>A project holds your board, tasks and team.</DialogDescription>
+        <DialogTitle className="text-lg font-semibold">{editing ? "Edit Project" : "New Project"}</DialogTitle>
+        <DialogDescription>
+          {editing ? "Change the name, description or color." : "A project holds your board, tasks and team."}
+        </DialogDescription>
       </DialogHeader>
 
+      {project && <input type="hidden" name="id" value={project.id} />}
       <ProjectPreview fields={fields} />
 
       <Field id="np-name" label="Project name" error={serverErrors.name?.[0]}>
@@ -145,6 +162,7 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
           maxLength={PROJECT_LIMITS.description}
           placeholder="What is this project about?"
           rows={3}
+          className="[overflow-wrap:anywhere]"
           aria-invalid={!!serverErrors.description}
         />
       </Field>
@@ -175,8 +193,12 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
         {serverErrors.color?.[0] && <p className="text-xs text-destructive">{serverErrors.color[0]}</p>}
       </fieldset>
 
-      <InviteMembersField invites={invites} onChange={setInvites} error={serverErrors.invites?.[0]} />
-      <input type="hidden" name="invites" value={JSON.stringify(invites)} />
+      {!editing && (
+        <>
+          <InviteMembersField invites={invites} onChange={setInvites} error={serverErrors.invites?.[0]} />
+          <input type="hidden" name="invites" value={JSON.stringify(invites)} />
+        </>
+      )}
 
       {invalidFieldCount > 0 && (
         <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive">
@@ -192,23 +214,36 @@ function NewProjectForm({ setOpen }: { setOpen: (open: boolean) => void }) {
           </Button>
         </DialogClose>
         <Button type="submit" disabled={pending || !!liveErrors.name}>
-          {pending ? "Creating…" : "Create Project"}
+          {editing ? (pending ? "Saving…" : "Save Changes") : pending ? "Creating…" : "Create Project"}
         </Button>
       </div>
     </form>
   );
 }
 
-// Wraps any element (usually a "New Project" button) and opens the New Project dialog from it.
-// The form lives inside the dialog content, so it starts empty every time the dialog opens.
-export default function NewProjectDialog({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
+// Wraps any element (usually a "New Project" button) and opens the New Project dialog from it. Pass
+// `project` to edit it instead; then the dialog is opened from outside (open / onOpenChange), e.g. from
+// a menu item. The form lives inside the dialog content, so it starts fresh every time the dialog opens.
+export default function NewProjectDialog({
+  children,
+  project,
+  open: controlledOpen,
+  onOpenChange,
+}: {
+  children?: ReactNode;
+  project?: EditableProject;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}) {
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = controlledOpen ?? innerOpen;
+  const setOpen = onOpenChange ?? setInnerOpen;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[calc(100svh-2rem)] gap-0 overflow-y-auto p-6 sm:max-w-[520px]">
-        <NewProjectForm setOpen={setOpen} />
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
+      <DialogContent className="max-h-[calc(100svh-2rem)] gap-0 overflow-x-hidden overflow-y-auto p-6 sm:max-w-[520px]">
+        <NewProjectForm setOpen={setOpen} project={project} />
       </DialogContent>
     </Dialog>
   );

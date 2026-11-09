@@ -20,7 +20,7 @@ export type BoardTask = {
 };
 
 export type BoardData = {
-  project: { id: string; name: string; color: ProjectColor; ownerId: string };
+  project: { id: string; name: string; description: string; color: ProjectColor; ownerId: string };
   categories: BoardCategory[];
   tasks: BoardTask[];
 };

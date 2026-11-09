@@ -12,6 +12,8 @@ const text = (formData: FormData, key: string) => {
   return typeof value === "string" ? value : "";
 };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // The database does most of the work: owner_id defaults to auth.uid(), the on_project_created
 // trigger makes the creator an active admin and seeds the four columns, and RLS only lets people
 // create projects they own. Invites are best effort: the project exists even if one fails. The
@@ -60,9 +62,34 @@ export async function createProjectAction(
   };
 }
 
-export type DeleteProjectResult = { status: "success" } | { status: "error"; message: string };
+// Only the name, description and color are editable (column grants), and RLS limits it to admins,
+// so no updated row means the caller isn't one.
+export async function updateProjectAction(
+  _prev: ProjectFormState,
+  formData: FormData,
+): Promise<ProjectFormState> {
+  const projectId = text(formData, "id");
+  const { values, errors } = validateProject({
+    name: text(formData, "name"),
+    description: text(formData, "description"),
+    color: text(formData, "color"),
+  });
+  if (Object.keys(errors).length > 0) return { status: "error", errors };
+  if (!UUID.test(projectId)) return { status: "error", errors: { _form: ["Something went wrong. Try again."] } };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const supabase = await createClient();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  if (!claimsData?.claims?.sub) return { status: "error", errors: { _form: ["Your session expired. Sign in again."] } };
+
+  const { data, error } = await supabase.from("projects").update(values).eq("id", projectId).select("id");
+  if (error) return { status: "error", errors: { _form: ["Could not update the project. Try again."] } };
+  if (data.length === 0) return { status: "error", errors: { _form: ["You don't have permission to do that."] } };
+
+  revalidatePath("/", "layout");
+  return { status: "success", projectId };
+}
+
+export type DeleteProjectResult = { status: "success" } | { status: "error"; message: string };
 
 // Deletes the project and everything in it (cascade). RLS only lets admins do it, so no deleted
 // row means the caller isn't one.

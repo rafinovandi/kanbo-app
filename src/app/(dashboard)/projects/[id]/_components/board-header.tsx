@@ -70,7 +70,10 @@ export default function BoardHeader({ project, isAdmin }: { project: BoardData["
             <span className="text-[13px] font-medium">Members</span>
           </button>
         </MembersDialog>
-        <ProjectMenu project={{ id: project.id, name: project.name }} isAdmin={isAdmin} />
+        <ProjectMenu
+          project={{ id: project.id, name: project.name, description: project.description, color: project.color }}
+          isAdmin={isAdmin}
+        />
       </div>
     </div>
   );
