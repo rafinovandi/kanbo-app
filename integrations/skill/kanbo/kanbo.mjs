@@ -4,7 +4,7 @@
 //
 // Usage: kanbo.mjs <command> --chat <telegramChatId> [--project <name>] [--task <taskId>] [--status open|done|all] [--input <file.json>]
 //        kanbo.mjs link --chat <telegramChatId> --code <8-character code>
-// Commands: link, unlink, context, list, preview-tasks, create-tasks, preview-update, update-task
+// Commands: link, unlink, projects, context, list, get, preview-tasks, create-tasks, preview-update, update-task, preview-delete, delete-task
 // Env: KANBO_API_URL (required), KANBO_LINKS_FILE (where chat tokens are kept; default: links.json beside this script)
 
 import { createHash } from "node:crypto";
@@ -362,6 +362,18 @@ switch (command) {
     );
     break;
   }
+  case "get": {
+    const chatId = requireChat(flags);
+    const link = requireLink(chatId, flags);
+    if (!UUID.test(flags.task ?? ""))
+      fail("bad_usage", "--task must be a task id from the list command.");
+    finish(
+      await call("GET", `/tasks/${flags.task}`, { token: link.token }),
+      chatId,
+      link.projectId,
+    );
+    break;
+  }
   case "preview-tasks":
   case "create-tasks": {
     const chatId = requireChat(flags);
@@ -432,9 +444,43 @@ switch (command) {
     }
     break;
   }
+  case "preview-delete":
+  case "delete-task": {
+    const chatId = requireChat(flags);
+    const link = requireLink(chatId, flags);
+    if (!UUID.test(flags.task ?? ""))
+      fail("bad_usage", "--task must be a task id from the list command.");
+    const payload = { task: flags.task };
+    const key = previewKey("delete", `${chatId}:${link.projectId}`, payload);
+    if (command === "preview-delete") {
+      const result = await call("DELETE", `/tasks/${flags.task}`, {
+        token: link.token,
+        body: { dryRun: true },
+      });
+      if (result.ok) recordPreview(key);
+      finish(result, chatId, link.projectId);
+    } else {
+      requirePreview(key);
+      finish(
+        await call("DELETE", `/tasks/${flags.task}`, {
+          token: link.token,
+          body: { dryRun: false },
+          headers: {
+            "Idempotency-Key": idempotencyKey(
+              `${chatId}:${link.projectId}:delete`,
+              payload,
+            ),
+          },
+        }),
+        chatId,
+        link.projectId,
+      );
+    }
+    break;
+  }
   default:
     fail(
       "bad_usage",
-      "Commands: link, unlink, projects, context, list, preview-tasks, create-tasks, preview-update, update-task",
+      "Commands: link, unlink, projects, context, list, get, preview-tasks, create-tasks, preview-update, update-task, preview-delete, delete-task",
     );
 }

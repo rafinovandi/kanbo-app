@@ -77,7 +77,9 @@ export default function ConnectChatDialog({
     open,
     polling ? POLL_MS : false,
   );
-  const connected = linkedId !== null && !!links?.find((link) => link.id === linkedId)?.last_used_at;
+  const connected =
+    linkedId !== null &&
+    !!links?.find((link) => link.id === linkedId)?.last_used_at;
   const selectedBot = bots?.find((bot) => bot.id === botId) ?? bots?.[0];
   const appUrl = typeof window === "undefined" ? "" : window.location.origin;
 
@@ -89,7 +91,9 @@ export default function ConnectChatDialog({
 
   useEffect(() => {
     if (!waiting || !links) return;
-    const created = links.find((link) => !linkIdsAtGenerate.current.has(link.id));
+    const created = links.find(
+      (link) => !linkIdsAtGenerate.current.has(link.id),
+    );
     if (!created) return;
     if (code?.kind === "mcp") {
       toast.success("Code used. Now add the server to your MCP client");
@@ -115,7 +119,11 @@ export default function ConnectChatDialog({
   const generate = async () => {
     if (needsBot && !selectedBot) return;
     setGenerating(true);
-    const result = await createLinkCodeAction(project.id, kind, needsBot ? selectedBot?.id : undefined);
+    const result = await createLinkCodeAction(
+      project.id,
+      kind,
+      needsBot ? selectedBot?.id : undefined,
+    );
     setGenerating(false);
     if (result.status === "error") {
       toast.error(result.message);
@@ -192,7 +200,11 @@ export default function ConnectChatDialog({
               <h3 className="text-sm font-semibold">Link a new connection</h3>
 
               {(!code || connected) && (
-                <div role="group" aria-label="Connection type" className="flex gap-2">
+                <div
+                  role="group"
+                  aria-label="Connection type"
+                  className="flex gap-2"
+                >
                   {KIND_OPTIONS.map((option) => (
                     <Button
                       key={option.value}
@@ -233,32 +245,62 @@ export default function ConnectChatDialog({
               ) : (
                 <>
                   {needsBot ? (
-                    <div className="flex flex-col gap-2">
-                      <label
-                        htmlFor="connect-chat-bot"
-                        className="text-[13px] font-medium text-kb-text-2"
-                      >
-                        Bot
-                      </label>
-                      <Select value={selectedBot?.id} onValueChange={setBotId}>
-                        <SelectTrigger
-                          id="connect-chat-bot"
-                          className="h-10 w-full rounded-[10px] px-3 text-sm"
+                    <>
+                      <div className="flex flex-col gap-2">
+                        <label
+                          htmlFor="connect-chat-bot"
+                          className="text-[13px] font-medium text-kb-text-2"
                         >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {bots?.map((bot) => (
-                            <SelectItem key={bot.id} value={bot.id}>
-                              {bot.name} · @{bot.bot_username}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <span className="text-xs text-muted-foreground">
-                        The bot must already be in your Telegram group.
-                      </span>
-                    </div>
+                          Bot
+                        </label>
+                        <Select
+                          value={selectedBot?.id}
+                          onValueChange={setBotId}
+                        >
+                          <SelectTrigger
+                            id="connect-chat-bot"
+                            className="h-10 w-full rounded-[10px] px-3 text-sm"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {bots?.map((bot) => (
+                              <SelectItem key={bot.id} value={bot.id}>
+                                {bot.name} · @{bot.bot_username}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="text-xs text-muted-foreground">
+                          The bot must already be in your Telegram group.
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-2.5 rounded-xl bg-muted p-3.5">
+                        <span className="text-sm font-semibold">
+                          Your agent needs the Kanbo skill
+                        </span>
+                        <ol className="list-decimal pl-4 text-[13px] leading-normal text-muted-foreground">
+                          <li>Download the skill and unzip it.</li>
+                          <li>
+                            Put the <code>kanbo</code> folder in your
+                            agent&apos;s skills folder.
+                          </li>
+                          <li>
+                            Set <code>KANBO_API_URL</code> to{" "}
+                            <code>{appUrl}</code> for the skill.
+                          </li>
+                        </ol>
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="h-9 w-full px-4 sm:w-auto sm:self-start"
+                        >
+                          <a href="/api/agent/skill.zip" download>
+                            Download skill
+                          </a>
+                        </Button>
+                      </div>
+                    </>
                   ) : (
                     <p className="text-[13px] leading-normal text-muted-foreground">
                       No Telegram bot is needed. You get a code, exchange it for

@@ -1,6 +1,6 @@
 # Kanbo agent integration
 
-Lets an AI agent (OpenClaw, Hermes, Claude Code, or any agent that can run a script) add and update Kanbo tasks from a Telegram chat. The model runs on the agent's side; Kanbo never needs an LLM key.
+Lets an AI agent (OpenClaw, Hermes, Claude Code, or any agent that can run a script) add, edit, complete and delete Kanbo tasks from a Telegram chat. The model runs on the agent's side; Kanbo never needs an LLM key.
 
 ```
 Telegram group ──► your agent (skill: kanbo) ──HTTPS──► Kanbo /api/agent/v1 ──► your board
@@ -17,7 +17,7 @@ The agent exchanges the code for a per-chat token on its own and stores it. You 
 
 ## 2. On the agent (OpenClaw on Discloud)
 
-1. Copy the folder `integrations/skill/kanbo/` into the agent's skills folder.
+1. Download the skill from `<your Kanbo URL>/api/agent/skill.zip` (also linked in the Connect Chat dialog), unzip it, and put the `kanbo` folder in the agent's skills folder. It is the same as `integrations/skill/kanbo/` in this repo.
 2. Set the environment for the skill in `openclaw.json`:
    ```json
    { "skills": { "entries": { "kanbo": { "env": {
@@ -42,7 +42,7 @@ echo '{"tasks":[{"title":"Test task"}]}' > input.json
 node kanbo.mjs preview-tasks --chat -1001234567890 --input input.json
 ```
 
-Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `PATCH /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. One Telegram chat can be linked to several projects (one token per project); linking the same project again replaces its token. MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
+Raw REST works too: `POST /api/agent/v1/link`, `GET /context`, `GET|POST /tasks`, `GET|PATCH|DELETE /tasks/:id`, `DELETE /link` with `Authorization: Bearer kbo_…`. Saving requires an `Idempotency-Key` header; add `"dryRun": true` to preview. Limit: 60 requests per minute per chat. One Telegram chat can be linked to several projects (one token per project); linking the same project again replaces its token. MCP clients use `POST /api/agent/mcp` with the same token and must send an `idempotencyKey` argument when saving (not for `dryRun`).
 
 ## 4. Claude Code and other MCP clients
 
@@ -76,7 +76,7 @@ claude mcp add --transport http kanbo https://your-kanbo.vercel.app/api/agent/mc
 
 - Without `--scope`, the server is only available when Claude Code starts in the folder where you ran the command. Add `--scope user` to use it from any folder.
 - Use a different name per project or environment (for example `kanbo-web`, `kanbo-prod`), because each token is bound to one project.
-- Start a new Claude Code session, then type `/mcp`. The server `kanbo` should be connected with four tools.
+- Start a new Claude Code session, then type `/mcp`. The server `kanbo` should be connected with six tools: `get_context`, `list_tasks`, `get_task`, `create_tasks`, `update_task` (title, description, column, priority, due date, assignees; add or remove single assignees) and `delete_task`.
 - Local development uses `http://localhost:3000/api/agent/mcp`. A production token must be created from the production app; a token from another environment does not work there.
 
 ### Tools

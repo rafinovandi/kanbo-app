@@ -196,6 +196,65 @@ export async function listTasks(ctx: AgentLinkContext, request: Request): Promis
   };
 }
 
+const PREVIEW_CHARS = 300;
+const preview = (value: string) => (value.length > PREVIEW_CHARS ? `${value.slice(0, PREVIEW_CHARS)}…` : value);
+
+export async function getTask(ctx: AgentLinkContext, taskId: string): Promise<ApiResult> {
+  if (!UUID.test(taskId)) return failure(404, "not_found", "Task not found.");
+
+  const [data, { data: task }] = await Promise.all([
+    loadProject(ctx),
+    ctx.admin
+      .from("tasks")
+      .select("id, title, description, priority, due_date, completed_at, category_id")
+      .eq("id", taskId)
+      .eq("project_id", ctx.projectId)
+      .maybeSingle(),
+  ]);
+  if (!task) return failure(404, "not_found", "Task not found.");
+
+  const { data: assigned } = await ctx.admin.from("task_assignees").select("user_id").eq("task_id", task.id);
+  const nameOf = new Map(data.members.map((m) => [m.id, m.name]));
+
+  return {
+    status: 200,
+    body: {
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      dueDate: task.due_date,
+      category: data.categories.find((c) => c.id === task.category_id)?.name ?? null,
+      done: task.completed_at !== null,
+      assignees: (assigned ?? []).map((a) => nameOf.get(a.user_id) ?? "Former member"),
+      url: boardUrl(ctx.projectId),
+    },
+  };
+}
+
+export async function deleteTask(ctx: AgentLinkContext, request: Request, taskId: string): Promise<ApiResult> {
+  if (!UUID.test(taskId)) return failure(404, "not_found", "Task not found.");
+  const parsed = await readJson(request);
+  if (isApiResult(parsed)) return parsed;
+  const { data: body, raw } = parsed;
+
+  const { data: task } = await ctx.admin
+    .from("tasks")
+    .select("id, title")
+    .eq("id", taskId)
+    .eq("project_id", ctx.projectId)
+    .maybeSingle();
+  if (!task) return failure(404, "not_found", "Task not found.");
+
+  if (body.dryRun === true) return { status: 200, body: { dryRun: true, id: task.id, title: task.title, willDelete: true } };
+
+  return runIdempotent(ctx, request, `tasks.delete:${task.id}`, raw, async () => {
+    const { error } = await ctx.admin.from("tasks").delete().eq("id", task.id).eq("project_id", ctx.projectId);
+    if (error) return failure(500, "delete_failed", "Could not delete the task.");
+    return { status: 200, body: { deleted: true, id: task.id, title: task.title } };
+  });
+}
+
 export async function updateTask(ctx: AgentLinkContext, request: Request, taskId: string): Promise<ApiResult> {
   if (!UUID.test(taskId)) return failure(404, "not_found", "Task not found.");
   const parsed = await readJson(request);
@@ -206,7 +265,7 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
     loadProject(ctx),
     ctx.admin
       .from("tasks")
-      .select("id, title, priority, due_date, category_id")
+      .select("id, title, description, priority, due_date, category_id")
       .eq("id", taskId)
       .eq("project_id", ctx.projectId)
       .maybeSingle(),
@@ -217,8 +276,33 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
   const warn = (message: string) => warnings.push(message);
   const nameOfCategory = (id: string) => data.categories.find((c) => c.id === id)?.name ?? "";
 
-  const patch: { category_id?: string; position?: number; priority?: TaskPriority; due_date?: string | null } = {};
+  const patch: {
+    title?: string;
+    description?: string;
+    category_id?: string;
+    position?: number;
+    priority?: TaskPriority;
+    due_date?: string | null;
+  } = {};
   const changes: { field: string; from: unknown; to: unknown }[] = [];
+
+  if (body.title !== undefined) {
+    const title = validateTitle(typeof body.title === "string" ? body.title : "");
+    if (title.error) return invalid(`title: ${title.error}.`);
+    if (title.value !== task.title) {
+      patch.title = title.value;
+      changes.push({ field: "title", from: task.title, to: title.value });
+    }
+  }
+  if (body.description !== undefined) {
+    if (typeof body.description !== "string") return invalid("description must be text.");
+    const description = validateDescription(body.description);
+    if (description.error) return invalid(`description: ${description.error}.`);
+    if (description.value !== task.description) {
+      patch.description = description.value;
+      changes.push({ field: "description", from: preview(task.description), to: preview(description.value) });
+    }
+  }
 
   if (body.category !== undefined) {
     const category = findCategory(data, body.category);
@@ -241,6 +325,23 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
   const assignees = resolveAssignees(data, body.assignees, warn);
   if (assignees) changes.push({ field: "assignees", from: undefined, to: assignees.map((a) => a.name) });
 
+  // addAssignees / removeAssignees change the list by name and leave everyone else as they are.
+  let assigneeDiff: { add: { id: string; name: string }[]; remove: { id: string; name: string }[] } | undefined;
+  if (!assignees && (body.addAssignees !== undefined || body.removeAssignees !== undefined)) {
+    const { data: rows } = await ctx.admin.from("task_assignees").select("user_id").eq("task_id", task.id);
+    const current = new Set((rows ?? []).map((row) => row.user_id));
+    const add = (resolveAssignees(data, body.addAssignees, warn) ?? []).filter((a) => !current.has(a.id));
+    const remove = (resolveAssignees(data, body.removeAssignees, warn) ?? []).filter((a) => current.has(a.id));
+    if (add.length > 0 || remove.length > 0) {
+      assigneeDiff = { add, remove };
+      changes.push({
+        field: "assignees",
+        from: undefined,
+        to: { added: add.map((a) => a.name), removed: remove.map((a) => a.name) },
+      });
+    }
+  }
+
   if (changes.length === 0) return { status: 200, body: { id: task.id, title: task.title, changes: [], warnings } };
   if (body.dryRun === true) return { status: 200, body: { dryRun: true, id: task.id, title: task.title, changes, warnings } };
 
@@ -260,6 +361,18 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
           ? await ctx.admin.from("task_assignees").insert(assignees.map((a) => ({ task_id: task.id, user_id: a.id })))
           : { error: null };
       if (clearError || setError) warn("The task was updated, but its assignees could not be changed.");
+    }
+    if (assigneeDiff) {
+      const { add, remove } = assigneeDiff;
+      const { error: removeError } =
+        remove.length > 0
+          ? await ctx.admin.from("task_assignees").delete().eq("task_id", task.id).in("user_id", remove.map((a) => a.id))
+          : { error: null };
+      const { error: addError } =
+        add.length > 0
+          ? await ctx.admin.from("task_assignees").insert(add.map((a) => ({ task_id: task.id, user_id: a.id })))
+          : { error: null };
+      if (removeError || addError) warn("The task was updated, but its assignees could not be changed.");
     }
     if (patch.category_id) {
       const sender = text(body.sender, 64);

@@ -1,6 +1,6 @@
 ---
 name: kanbo
-description: Add, find and update tasks on a Kanbo project board from a Telegram chat. Use when someone sends "link kanbo CODE", or asks to add, list, move or complete tasks for their project (including from a photo of a to-do list).
+description: Add, find, edit, delete and complete tasks on a Kanbo project board from a Telegram chat. Use when someone sends "link kanbo CODE", or asks to add, list, read, edit, rename, move, complete or delete tasks for their project (including from a photo of a to-do list).
 metadata: { "openclaw": { "requires": { "env": ["KANBO_API_URL"] } } }
 ---
 
@@ -69,14 +69,25 @@ If any command answers `not_linked`, this chat has no project yet: explain how t
 5. If the user corrects something ("make 2 high"), change that task and run `preview-tasks` again.
 6. Only after the user clearly confirms, run `create-tasks` with **exactly the same JSON** that was last previewed (the same input file). Then reply with the number of tasks created, the project name and the board link (`url`).
 
-Never run `create-tasks` or `update-task` in the same turn as the preview. They may only run after a **new message from the user** that approves the preview. The helper refuses with `preview_required` when this exact input was not previewed in the last 30 minutes: preview it again, show it, and wait for the user's reply.
+Never run `create-tasks`, `update-task` or `delete-task` in the same turn as the preview. They may only run after a **new message from the user** that approves the preview. The helper refuses with `preview_required` when this exact input was not previewed in the last 30 minutes: preview it again, show it, and wait for the user's reply.
 
-## 3. Finding, moving and completing tasks
+## 3. Finding, reading, editing and completing tasks
 
-1. Find the task with `list` (`--status open`, `done` or `all`; optional input file `{"q":"words from the title"}` via `--input`). If several tasks match, ask which one.
-2. Write only the fields to change to the input file, then run `preview-update --chat <chatId> --task <taskId> --input <file>`: `category`, `priority`, `dueDate`, `assignees`. To complete a task, set `category` to the column named Done.
-3. Show the `changes` (for example "Revise the hero section: To Do → Done") and ask for confirmation.
+1. Find the task with `list` (`--status open`, `done` or `all`; optional input file `{"q":"words from the title"}` via `--input`). If several tasks match, ask which one. `list` does not include descriptions: to read one, run `get --chat <chatId> --task <taskId>`.
+2. Write only the fields to change to the input file, then run `preview-update --chat <chatId> --task <taskId> --input <file>`: `title`, `description`, `category`, `priority`, `dueDate`, `assignees`, `addAssignees`, `removeAssignees`. To complete a task, set `category` to the column named Done.
+   - `assignees` replaces the whole list (`[]` removes everyone). To add or remove only some people, use `addAssignees` / `removeAssignees` with member names; the others stay. `dueDate: null` clears the due date.
+   - `description` replaces the whole description and may use markdown (headings, lists, bold). Run `get` first when the user wants to tidy or extend the current text, then send the full new text. An empty string clears it.
+3. Show the `changes` (for example "Revise the hero section: To Do → Done"; for a description, show the new text) and ask for confirmation.
 4. After confirmation, run `update-task` with the same input file.
+
+## 4. Deleting a task
+
+Deleting is permanent. Only do it when the user clearly asks to delete that task.
+
+1. Find the task with `list` and confirm which one if several match.
+2. Run `preview-delete --chat <chatId> --task <taskId>`. Nothing is deleted yet.
+3. Tell the user which task (its title) will be deleted, that it cannot be undone, and ask for confirmation.
+4. After a new message that confirms, run `delete-task --chat <chatId> --task <taskId>`.
 
 ## Rules
 

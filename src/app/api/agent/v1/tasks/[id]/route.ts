@@ -1,7 +1,19 @@
 import { withAuth } from "@/lib/agent/http";
-import { updateTask } from "@/lib/agent/task-service";
+import { deleteTask, getTask, updateTask } from "@/lib/agent/task-service";
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+type Params = { params: Promise<{ id: string }> };
+
+export async function GET(request: Request, { params }: Params) {
+  const { id } = await params;
+  return withAuth(request, (ctx) => getTask(ctx, id));
+}
+
+export async function PATCH(request: Request, { params }: Params) {
   const { id } = await params;
   return withAuth(request, (ctx) => updateTask(ctx, request, id));
+}
+
+export async function DELETE(request: Request, { params }: Params) {
+  const { id } = await params;
+  return withAuth(request, (ctx) => deleteTask(ctx, request, id));
 }
