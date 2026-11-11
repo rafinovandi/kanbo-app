@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, More, Trash } from "iconsax-react";
+import { More, Trash } from "iconsax-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,14 +22,12 @@ export default function BoardCardMenu({
   categories,
   categoryId,
   isAdmin,
-  onOpen,
   onMove,
   onRequestDelete,
 }: {
   categories: BoardCategory[];
   categoryId: string;
   isAdmin: boolean;
-  onOpen: () => void;
   onMove: (categoryId: string) => void;
   onRequestDelete: () => void;
 }) {
@@ -53,11 +51,6 @@ export default function BoardCardMenu({
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => event.stopPropagation()}
       >
-        <DropdownMenuItem onSelect={onOpen} className="gap-2.5">
-          <Eye size={18} variant="Linear" color="currentColor" aria-hidden />
-          Open Task
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuLabel>Move to</DropdownMenuLabel>
         <DropdownMenuRadioGroup value={categoryId} onValueChange={onMove}>
           {categories.map((category) => (

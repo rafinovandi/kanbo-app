@@ -33,12 +33,20 @@ export default function BoardCard({
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: task.id,
     disabled: !canDrag,
   });
 
-  const shortTitle = task.title.length > 60 ? `${task.title.slice(0, 60)}…` : task.title;
+  const shortTitle =
+    task.title.length > 60 ? `${task.title.slice(0, 60)}…` : task.title;
 
   return (
     <>
@@ -62,7 +70,6 @@ export default function BoardCard({
               categories={categories}
               categoryId={category.id}
               isAdmin={isAdmin}
-              onOpen={() => setDetailOpen(true)}
               onMove={(categoryId) => onMove(task.id, categoryId)}
               onRequestDelete={() => setConfirmOpen(true)}
             />
