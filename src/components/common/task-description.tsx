@@ -48,7 +48,7 @@ function renderInline(tokens: InlineToken[]): ReactNode[] {
       return (
         <code
           key={index}
-          className="rounded-[6px] bg-kb-line px-1.5 py-0.5 font-mono text-[13px] text-foreground"
+          className="rounded-[6px] bg-kb-gray-tint px-1.5 py-0.5 font-mono text-[13px] text-foreground dark:bg-kb-line"
         >
           {token.text}
         </code>
@@ -149,7 +149,7 @@ function renderPreviewInline(tokens: InlineToken[]): ReactNode[] {
       return (
         <Fragment key={index}>
           <span className={MARKER_CLASS}>`</span>
-          <span className="rounded-[4px] bg-kb-line text-foreground">
+          <span className="rounded-[4px] bg-kb-gray-tint text-foreground dark:bg-kb-line">
             {token.text}
           </span>
           <span className={MARKER_CLASS}>`</span>
@@ -264,6 +264,12 @@ export default function TaskDescription({
     textareaRef.current.focus();
     cursor.current = null;
   }, [value]);
+
+  // Focus without scrolling: the browser would scroll to the top of a long textarea, away from where you clicked.
+  useLayoutEffect(() => {
+    if (editingByClick && !alwaysEditing)
+      textareaRef.current?.focus({ preventScroll: true });
+  }, [editingByClick, alwaysEditing]);
 
   const edit = () => {
     setEditingByClick(true);
@@ -485,7 +491,6 @@ export default function TaskDescription({
               maxLength={TASK_LIMITS.description}
               placeholder={PLACEHOLDER}
               aria-invalid={invalid}
-              autoFocus={!alwaysEditing}
               className={cn(
                 "min-h-[120px] w-full min-w-0 rounded-none border-0 bg-transparent p-0 shadow-none focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent md:text-sm",
                 "[overflow-wrap:anywhere]",
