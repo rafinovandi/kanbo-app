@@ -14,7 +14,11 @@ import MyTasksEmpty from "./my-tasks-empty";
 import MyTasksProject from "./my-tasks-project";
 
 function NoResults({ search }: { search: string }) {
-  return <p className="py-10 text-center text-sm text-muted-foreground">No tasks match “{search}”.</p>;
+  return (
+    <p className="py-10 text-center text-sm text-muted-foreground">
+      No tasks match “{search}”.
+    </p>
+  );
 }
 
 // With projects: search, the header New Project button and one section per project. Without: the
@@ -22,26 +26,41 @@ function NoResults({ search }: { search: string }) {
 export default function MyTasksContent() {
   const debounce = useDebounce();
   const [search, setSearch] = useState("");
-  const { data: projects, isLoading, isError, isPlaceholderData } = useProjectsOverview(search);
+  const {
+    data: projects,
+    isLoading,
+    isError,
+    isPlaceholderData,
+  } = useProjectsOverview(search);
 
-  const handleChangeSearch = (value: string) => debounce(() => setSearch(value.trim()), 500);
+  const handleChangeSearch = (value: string) =>
+    debounce(() => setSearch(value.trim()), 500);
   const hasProjects = !!projects && projects.length > 0;
 
   return (
     <>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1.5">
-          <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">My Tasks</h1>
+          <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">
+            My Tasks
+          </h1>
           <p className="text-sm text-muted-foreground">
             Every task, grouped by project. Open a project to see its board.
           </p>
         </div>
         {(hasProjects || search || isPlaceholderData) && (
-          <div className="flex flex-wrap gap-2">
-            <TaskSearch onChange={handleChangeSearch} />
+          <div className="flex w-full gap-2 sm:w-auto">
+            <div className="min-w-0 flex-1 sm:flex-none">
+              <TaskSearch onChange={handleChangeSearch} />
+            </div>
             <NewProjectDialog>
-              <Button type="button" className="gap-2">
-                <Add size={20} variant="Linear" color="currentColor" aria-hidden />
+              <Button type="button" className="shrink-0 gap-2">
+                <Add
+                  size={20}
+                  variant="Linear"
+                  color="currentColor"
+                  aria-hidden
+                />
                 New Project
               </Button>
             </NewProjectDialog>
@@ -50,8 +69,15 @@ export default function MyTasksContent() {
       </div>
 
       {isLoading && <Skeleton className="h-48 rounded-xl" />}
-      {isError && <p className="text-sm text-muted-foreground">Could not load your projects. Refresh to try again.</p>}
-      {projects && !hasProjects && !isPlaceholderData && (search ? <NoResults search={search} /> : <MyTasksEmpty />)}
+      {isError && (
+        <p className="text-sm text-muted-foreground">
+          Could not load your projects. Refresh to try again.
+        </p>
+      )}
+      {projects &&
+        !hasProjects &&
+        !isPlaceholderData &&
+        (search ? <NoResults search={search} /> : <MyTasksEmpty />)}
       {projects?.map((project) => (
         <MyTasksProject key={project.id} project={project} />
       ))}

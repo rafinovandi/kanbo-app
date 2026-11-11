@@ -29,30 +29,46 @@ export default function ProfileRecent({
       </div>
       {tasks.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          {isSelf ? "Tasks you complete will show up here." : "No completed tasks to show yet."}
+          {isSelf
+            ? "Tasks you complete will show up here."
+            : "No completed tasks to show yet."}
         </p>
       ) : (
         <Card className="gap-0 py-0">
-        <ul>
-          {tasks.map((t) => (
-            <li
-              key={t.id}
-              className="flex min-h-13.5 flex-wrap items-center gap-x-3 gap-y-2 border-b border-kb-divider px-4 py-2.5 last:border-b-0"
-            >
-              <TickCircle size={20} variant="Linear" color="currentColor" className="shrink-0 text-kb-green" aria-hidden />
-              <span className="min-w-0 flex-[1_1_16rem] text-sm text-kb-text-2">
-                Completed <strong className="font-semibold text-foreground">{t.title}</strong>
-              </span>
-              <Badge variant="outline" className="gap-1.5">
-                <span className={cn("size-2 rounded-full", PROJECT_TONE[t.projectColor].dot)} />
-                {t.projectName}
-              </Badge>
-              <span className="w-14 text-right text-[13px] text-muted-foreground">
-                {formatCompletedDate(t.completedAt, timeZone)}
-              </span>
-            </li>
-          ))}
-        </ul>
+          <ul>
+            {tasks.map((t) => (
+              <li
+                key={t.id}
+                className="flex min-h-13.5 flex-wrap items-center gap-x-3 gap-y-2 border-b border-kb-divider px-4 py-2.5 last:border-b-0"
+              >
+                <TickCircle
+                  size={20}
+                  variant="Linear"
+                  color="currentColor"
+                  className="shrink-0 text-kb-green"
+                  aria-hidden
+                />
+                <span className="min-w-0 flex-[1_1_16rem] text-sm text-kb-text-2">
+                  Completed{" "}
+                  <strong className="font-semibold text-foreground">
+                    {t.title}
+                  </strong>
+                </span>
+                <Badge variant="outline" className="gap-1.5">
+                  <span
+                    className={cn(
+                      "size-2 rounded-full",
+                      PROJECT_TONE[t.projectColor].dot,
+                    )}
+                  />
+                  {t.projectName}
+                </Badge>
+                <span className="ml-auto w-14 text-right text-[13px] text-muted-foreground">
+                  {formatCompletedDate(t.completedAt, timeZone)}
+                </span>
+              </li>
+            ))}
+          </ul>
         </Card>
       )}
     </section>
