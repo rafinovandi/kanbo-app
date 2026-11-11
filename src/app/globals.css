@@ -105,7 +105,7 @@
   --border: #e7e8ec;
   --input: #e7e8ec;
   --ring: var(--kb-placeholder); /* focus ring: neutral gray */
-  --chart-1: #83bbf6;
+  --chart-1: #7caff1;
   --chart-2: #8ad761;
   --chart-3: #fbc45c;
   --chart-4: #cbb5db;
@@ -122,7 +122,7 @@
   --sidebar-ring: var(--kb-placeholder);
 
   /* Kanbo palette */
-  --kb-blue: #83bbf6;
+  --kb-blue: #7caff1;
   --kb-blue-fg: #2f6fb0;
   --kb-blue-tint: #bedfff;
   --kb-green: #8ad761;
@@ -171,7 +171,7 @@
   --kb-gray-tint: #eff0f3;
   /* Profile activity graph, primary blue: least to most active (same in dark) */
   --kb-activity-1: #bedfff;
-  --kb-activity-2: #83bbf6;
+  --kb-activity-2: #7caff1;
   --kb-activity-3: #5995d3;
   --kb-activity-4: #30659c;
   --kb-surface: #f5f6f8;
@@ -202,7 +202,7 @@
   --border: #2f3035;
   --input: #2f3035;
   --ring: var(--kb-placeholder);
-  --chart-1: #83bbf6;
+  --chart-1: #7caff1;
   --chart-2: #8ad761;
   --chart-3: #fbc45c;
   --chart-4: #cbb5db;
