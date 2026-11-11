@@ -3,9 +3,10 @@
 import { ArrowRight2, Logout, Profile, Cpu } from "iconsax-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
 import { signOut } from "@/actions/auth-action";
+import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,8 +31,8 @@ import UserAvatar from "./user-avatar";
 export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
   const { isMobile } = useSidebar();
   const pathname = usePathname();
-  const [isSigningOut, startSignOut] = useTransition();
   const [botsOpen, setBotsOpen] = useState(false);
+  const [signOutOpen, setSignOutOpen] = useState(false);
   const onProfile = isPathActive(pathname, "/profile") || pathname === `/u/${profile.username}`;
 
   return (
@@ -90,18 +91,26 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
                 <Cpu size={16} variant="Linear" color="currentColor" aria-hidden />
                 Agent Bots
               </DropdownMenuItem>
-              <DropdownMenuItem
-                variant="destructive"
-                disabled={isSigningOut}
-                onSelect={() => startSignOut(() => signOut())}
-              >
+              <DropdownMenuItem variant="destructive" onSelect={() => setSignOutOpen(true)}>
                 <Logout size={16} variant="Linear" color="currentColor" aria-hidden />
-                {isSigningOut ? "Signing out…" : "Sign Out"}
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         <AgentBotsDialog open={botsOpen} onOpenChange={setBotsOpen} />
+        <ConfirmDeleteDialog
+          open={signOutOpen}
+          onOpenChange={setSignOutOpen}
+          title="Sign Out"
+          description="You will be signed out of Kanbo on this device."
+          confirmLabel="Sign Out"
+          pendingLabel="Signing out…"
+          onConfirm={async () => {
+            await signOut();
+            return true;
+          }}
+        />
       </SidebarMenuItem>
     </SidebarMenu>
   );

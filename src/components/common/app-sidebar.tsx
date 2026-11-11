@@ -61,7 +61,10 @@ export default function AppSidebar({
   const viewedId = pathname.match(/^\/projects\/([^/]+)/)?.[1];
   const viewed = projects.find((item) => item.id === viewedId);
   const project =
-    viewed ?? projects.find((item) => item.id === selectedId) ?? projects[0] ?? null;
+    viewed ??
+    projects.find((item) => item.id === selectedId) ??
+    projects[0] ??
+    null;
 
   useEffect(() => {
     if (viewed && viewed.id !== selectedId) setSelectedId(viewed.id);
@@ -78,7 +81,11 @@ export default function AppSidebar({
     <Sidebar className="border-r border-kb-divider">
       <SidebarHeader className="gap-5 px-4 pt-5 pb-0">
         <KanboLogo subtitle="Personal workspace" className="px-1.5 py-1" />
-        <SidebarProjectCard project={project} projects={projects} onSelect={selectProject} />
+        <SidebarProjectCard
+          project={project}
+          projects={projects}
+          onSelect={selectProject}
+        />
       </SidebarHeader>
 
       <SidebarSeparator className="mx-4 my-5 bg-kb-divider data-horizontal:w-auto" />
@@ -87,45 +94,61 @@ export default function AppSidebar({
         <SidebarGroup className="p-0">
           <SidebarGroupContent>
             <MotionConfig reducedMotion="user">
-            <SidebarMenu className="gap-1" aria-label="Main">
-              {SIDEBAR_MENU_LIST.map((item) => {
-                const url = item.needsProject ? (project ? `/projects/${project.id}` : null) : item.url;
-                const activePath = item.activePath ?? url;
-                const isActive = !!activePath && isPathActive(pathname, activePath);
-                const content = (
-                  <>
-                    {isActive && <ActivePill />}
-                    <item.icon variant="Linear" color="currentColor" aria-hidden />
-                    <span>{item.title}</span>
-                  </>
-                );
+              <SidebarMenu className="gap-1" aria-label="Main">
+                {SIDEBAR_MENU_LIST.map((item) => {
+                  const url = item.needsProject
+                    ? project
+                      ? `/projects/${project.id}`
+                      : null
+                    : item.url;
+                  const activePath = item.activePath ?? url;
+                  const isActive =
+                    !!activePath && isPathActive(pathname, activePath);
+                  const content = (
+                    <>
+                      {isActive && <ActivePill />}
+                      <item.icon
+                        variant={isActive ? "Bold" : "Linear"}
+                        color="currentColor"
+                        aria-hidden
+                      />
+                      <span>{item.title}</span>
+                    </>
+                  );
 
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    {url && !item.disabled ? (
-                      <SidebarMenuButton asChild isActive={isActive} className={NAV_BUTTON_CLASS}>
-                        <Link href={url} aria-current={isActive ? "page" : undefined}>
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      {url && !item.disabled ? (
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className={NAV_BUTTON_CLASS}
+                        >
+                          <Link
+                            href={url}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            {content}
+                          </Link>
+                        </SidebarMenuButton>
+                      ) : (
+                        <SidebarMenuButton
+                          disabled
+                          className={NAV_BUTTON_CLASS}
+                          title="Create a project first"
+                        >
                           {content}
-                        </Link>
-                      </SidebarMenuButton>
-                    ) : (
-                      <SidebarMenuButton
-                        disabled
-                        className={NAV_BUTTON_CLASS}
-                        title="Create a project first"
-                      >
-                        {content}
-                      </SidebarMenuButton>
-                    )}
-                    {item.badge && (
-                      <SidebarMenuBadge className="right-3 h-5 min-w-[22px] rounded-md bg-kb-gray-tint font-semibold text-kb-text-2 peer-data-[size=default]/menu-button:top-3">
-                        {openTasks}
-                      </SidebarMenuBadge>
-                    )}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
+                        </SidebarMenuButton>
+                      )}
+                      {item.badge && (
+                        <SidebarMenuBadge className="right-3 h-5 min-w-[22px] rounded-md bg-kb-gray-tint font-semibold text-kb-text-2 peer-data-[size=default]/menu-button:top-3">
+                          {openTasks}
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
             </MotionConfig>
           </SidebarGroupContent>
         </SidebarGroup>

@@ -3,10 +3,17 @@
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-// "Are you sure?" step before something is deleted. `onConfirm` returns true when it worked; the
+// "Are you sure?" step before something is deleted (or another action that cannot be undone, like signing out). `onConfirm` returns true when it worked; the
 // dialog closes then, and stays open (so the user can retry or cancel) when it did not. With
 // `confirmText` the user must type it before the button works; `children` lists what is lost.
 export default function ConfirmDeleteDialog({
@@ -15,6 +22,7 @@ export default function ConfirmDeleteDialog({
   title,
   description,
   confirmLabel = "Delete",
+  pendingLabel = "Deleting…",
   confirmText,
   children,
   onConfirm,
@@ -24,6 +32,7 @@ export default function ConfirmDeleteDialog({
   title: string;
   description: string;
   confirmLabel?: string;
+  pendingLabel?: string;
   confirmText?: string;
   children?: ReactNode;
   onConfirm: () => Promise<boolean>;
@@ -57,13 +66,19 @@ export default function ConfirmDeleteDialog({
       >
         <DialogHeader className="pr-10">
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
-          <DialogDescription className="[overflow-wrap:anywhere]">{description}</DialogDescription>
+          <DialogDescription className="[overflow-wrap:anywhere]">
+            {description}
+          </DialogDescription>
         </DialogHeader>
         {children}
         {confirmText !== undefined && (
           <div className="flex flex-col gap-2">
-            <label htmlFor="confirm-delete-text" className="text-sm font-medium">
-              Type <span className="font-semibold">{confirmText}</span> to confirm
+            <label
+              htmlFor="confirm-delete-text"
+              className="text-sm font-medium"
+            >
+              Type <span className="font-semibold">{confirmText}</span> to
+              confirm
             </label>
             <Input
               id="confirm-delete-text"
@@ -81,8 +96,13 @@ export default function ConfirmDeleteDialog({
               Cancel
             </Button>
           </DialogClose>
-          <Button type="button" variant="destructive" onClick={confirm} disabled={pending || !matches}>
-            {pending ? "Deleting…" : confirmLabel}
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={confirm}
+            disabled={pending || !matches}
+          >
+            {pending ? pendingLabel : confirmLabel}
           </Button>
         </div>
       </DialogContent>
