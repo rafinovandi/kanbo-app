@@ -48,7 +48,7 @@ function renderInline(tokens: InlineToken[]): ReactNode[] {
       return (
         <code
           key={index}
-          className="rounded-md bg-kb-gray-tint px-1.5 py-0.5 font-mono text-[13px] text-foreground"
+          className="rounded-[6px] bg-kb-line px-1.5 py-0.5 font-mono text-[13px] text-foreground"
         >
           {token.text}
         </code>
@@ -149,7 +149,7 @@ function renderPreviewInline(tokens: InlineToken[]): ReactNode[] {
       return (
         <Fragment key={index}>
           <span className={MARKER_CLASS}>`</span>
-          <span className="rounded-sm bg-kb-gray-tint text-foreground">
+          <span className="rounded-[4px] bg-kb-line text-foreground">
             {token.text}
           </span>
           <span className={MARKER_CLASS}>`</span>
