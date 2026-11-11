@@ -65,6 +65,10 @@
   --color-kb-gray: var(--kb-gray);
   --color-kb-gray-fg: var(--kb-gray-fg);
   --color-kb-gray-tint: var(--kb-gray-tint);
+  --color-kb-activity-1: var(--kb-activity-1);
+  --color-kb-activity-2: var(--kb-activity-2);
+  --color-kb-activity-3: var(--kb-activity-3);
+  --color-kb-activity-4: var(--kb-activity-4);
   --color-kb-surface: var(--kb-surface);
   --color-kb-text-2: var(--kb-text-2);
   --color-kb-placeholder: var(--kb-placeholder);
@@ -97,15 +101,16 @@
   --muted-foreground: #5b5f6b;
   --accent: #eff0f3; /* hover for menu / list items */
   --accent-foreground: #111318;
-  --destructive: #e5484d;
+  --destructive: #ed4c4c; /* previous: #e5484d */
   --border: #e7e8ec;
   --input: #e7e8ec;
   --ring: var(--kb-placeholder); /* focus ring: neutral gray */
-  --chart-1: #2f9bff;
-  --chart-2: #2fc85a;
-  --chart-3: #e4703b;
-  --chart-4: #9b87f5;
-  --chart-5: #f25cc8;
+  --chart-1: #83bbf6;
+  --chart-2: #8ad761;
+  --chart-3: #fbc45c;
+  --chart-4: #cbb5db;
+  --chart-5: #fdd2e3;
+  /* previous charts: #2f9bff #2fc85a #e4703b #9b87f5 #f25cc8 */
   --radius: 0.625rem; /* 10px; xl ≈ 14px */
   --sidebar: #ffffff;
   --sidebar-foreground: #3a3d46;
@@ -117,6 +122,28 @@
   --sidebar-ring: var(--kb-placeholder);
 
   /* Kanbo palette */
+  --kb-blue: #83bbf6;
+  --kb-blue-fg: #2f6fb0;
+  --kb-blue-tint: #bedfff;
+  --kb-green: #8ad761;
+  --kb-green-fg: #3f7f22;
+  --kb-green-tint: #e6f6dc;
+  --kb-orange: #fbc45c;
+  --kb-orange-fg: #8a5e0a;
+  --kb-orange-tint: #fef0d2;
+  --kb-lilac: #cbb5db;
+  --kb-lilac-fg: #6b4a8a;
+  --kb-lilac-tint: #efe7f5;
+  --kb-pink: #fdd2e3;
+  --kb-pink-fg: #a8386a;
+  --kb-pink-tint: #feeaf2;
+  --kb-red: #ed4c4c;
+  --kb-red-fg: #b52626;
+  --kb-red-tint: #fde8e8;
+  --kb-yellow: #fbc45c;
+  --kb-yellow-fg: #8a5e0a;
+  --kb-yellow-tint: #fef0d2;
+  /* Previous palette (kept for a future theme), light:
   --kb-blue: #2f9bff;
   --kb-blue-fg: #1a63c7;
   --kb-blue-tint: #e6f2ff;
@@ -135,12 +162,18 @@
   --kb-red: #e5484d;
   --kb-red-fg: #b3271f;
   --kb-red-tint: #fdeceb;
-  --kb-yellow: #e0b400; /* solid not in the design (estimate); fg + tint are */
+  --kb-yellow: #e0b400;
   --kb-yellow-fg: #7a5c00;
   --kb-yellow-tint: #fdf5d6;
+  */
   --kb-gray: #8e929c;
   --kb-gray-fg: #3a3d46;
   --kb-gray-tint: #eff0f3;
+  /* Profile activity graph, primary blue: least to most active (same in dark) */
+  --kb-activity-1: #bedfff;
+  --kb-activity-2: #83bbf6;
+  --kb-activity-3: #5995d3;
+  --kb-activity-4: #30659c;
   --kb-surface: #f5f6f8;
   --kb-text-2: #3a3d46;
   --kb-placeholder: #8e929c;
@@ -169,11 +202,12 @@
   --border: #2f3035;
   --input: #2f3035;
   --ring: var(--kb-placeholder);
-  --chart-1: #2f9bff;
-  --chart-2: #2fc85a;
-  --chart-3: #e4703b;
-  --chart-4: #9b87f5;
-  --chart-5: #f25cc8;
+  --chart-1: #83bbf6;
+  --chart-2: #8ad761;
+  --chart-3: #fbc45c;
+  --chart-4: #cbb5db;
+  --chart-5: #fdd2e3;
+  /* previous charts: #2f9bff #2fc85a #e4703b #9b87f5 #f25cc8 */
   --sidebar: #1b1c1f;
   --sidebar-foreground: #d4d5d9;
   --sidebar-primary: #f2f3f5; /* active nav item: light fill, dark text */
@@ -184,6 +218,21 @@
   --sidebar-ring: var(--kb-placeholder);
 
   /* Kanbo palette (fg = lighter text, tint = dark chip background) */
+  --kb-blue-fg: #9ccbfa;
+  --kb-blue-tint: #1e3347;
+  --kb-green-fg: #b2e896;
+  --kb-green-tint: #24351a;
+  --kb-orange-fg: #fcd487;
+  --kb-orange-tint: #3d3118;
+  --kb-lilac-fg: #dcc9ea;
+  --kb-lilac-tint: #2e2538;
+  --kb-pink-fg: #fdb0cf;
+  --kb-pink-tint: #40222f;
+  --kb-red-fg: #ff8a86;
+  --kb-red-tint: #402325;
+  --kb-yellow-fg: #fcd487;
+  --kb-yellow-tint: #3d3118;
+  /* Previous palette (kept for a future theme), dark:
   --kb-blue-fg: #7db8ff;
   --kb-blue-tint: #1c3250;
   --kb-green-fg: #6fd89a;
@@ -198,6 +247,7 @@
   --kb-red-tint: #402325;
   --kb-yellow-fg: #f0cb5a;
   --kb-yellow-tint: #3d3516;
+  */
   --kb-gray-fg: #d4d5d9;
   --kb-gray-tint: #34353b;
   --kb-surface: #232428;
