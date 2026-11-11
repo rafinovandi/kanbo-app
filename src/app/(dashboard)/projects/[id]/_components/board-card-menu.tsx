@@ -42,7 +42,7 @@ export default function BoardCardMenu({
           size="icon-sm"
           aria-label="Task actions"
           onClick={(event) => event.stopPropagation()}
-          className="absolute top-3 right-3 opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+          className="absolute top-3 right-3 opacity-0 max-md:opacity-100 group-hover/card:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
         >
           <More size={18} variant="Linear" color="currentColor" aria-hidden />
         </Button>
@@ -62,7 +62,13 @@ export default function BoardCardMenu({
         <DropdownMenuRadioGroup value={categoryId} onValueChange={onMove}>
           {categories.map((category) => (
             <DropdownMenuRadioItem key={category.id} value={category.id}>
-              <span className={cn("size-2 rounded-full", PROJECT_TONE[category.color].dot)} aria-hidden="true" />
+              <span
+                className={cn(
+                  "size-2 rounded-full",
+                  PROJECT_TONE[category.color].dot,
+                )}
+                aria-hidden="true"
+              />
               {category.name}
             </DropdownMenuRadioItem>
           ))}
@@ -70,8 +76,17 @@ export default function BoardCardMenu({
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onSelect={onRequestDelete} className="gap-2.5">
-              <Trash size={18} variant="Linear" color="currentColor" aria-hidden />
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={onRequestDelete}
+              className="gap-2.5"
+            >
+              <Trash
+                size={18}
+                variant="Linear"
+                color="currentColor"
+                aria-hidden
+              />
               Delete Task
             </DropdownMenuItem>
           </>

@@ -48,13 +48,21 @@ export default function BoardColumn({
   onMove: (taskId: string, categoryId: string) => void;
   onDelete: (taskId: string) => Promise<boolean>;
 }) {
-  const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging, isOver } =
-    useSortable({
-      id: category.id,
-      data: { type: "column" },
-      disabled: { draggable: !isAdmin },
-      animateLayoutChanges,
-    });
+  const {
+    setNodeRef,
+    setActivatorNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+  } = useSortable({
+    id: category.id,
+    data: { type: "column" },
+    disabled: { draggable: !isAdmin },
+    animateLayoutChanges,
+  });
   const [editOpen, setEditOpen] = useState(false);
 
   return (
@@ -68,21 +76,35 @@ export default function BoardColumn({
       )}
     >
       <div className="flex min-h-8 items-center gap-2 pl-1.5">
-        <span className={cn("h-4 w-1 rounded-sm", PROJECT_TONE[category.color].bar)} aria-hidden="true" />
-        <h2 className="text-sm font-semibold whitespace-nowrap">{category.name}</h2>
+        <span
+          className={cn("h-4 w-1 rounded-sm", PROJECT_TONE[category.color].bar)}
+          aria-hidden="true"
+        />
+        <h2 className="text-sm font-semibold whitespace-nowrap">
+          {category.name}
+        </h2>
         <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-border px-1.5 text-xs font-semibold text-muted-foreground">
           {tasks.length}
         </span>
         <div className="ml-auto flex items-center">
-          <TaskDialog project={project} category={category} categories={categories}>
+          <TaskDialog
+            project={project}
+            category={category}
+            categories={categories}
+          >
             <Button
               type="button"
               variant="ghost"
               size="icon-sm"
               aria-label={`Add task to ${category.name}`}
-              className="opacity-0 group-hover/column:opacity-100 focus-visible:opacity-100"
+              className="opacity-0 max-md:opacity-100 group-hover/column:opacity-100 focus-visible:opacity-100"
             >
-              <Add size={20} variant="Linear" color="currentColor" aria-hidden />
+              <Add
+                size={20}
+                variant="Linear"
+                color="currentColor"
+                aria-hidden
+              />
             </Button>
           </TaskDialog>
           {isAdmin && (
@@ -101,7 +123,7 @@ export default function BoardColumn({
               variant="ghost"
               size="icon-sm"
               aria-label={`Move ${category.name} column`}
-              className="cursor-grab touch-none opacity-0 group-hover/column:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
+              className="cursor-grab touch-none opacity-0 max-md:opacity-100 group-hover/column:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
               {...attributes}
               {...listeners}
             >
@@ -112,9 +134,15 @@ export default function BoardColumn({
       </div>
 
       <div
-        className={cn("flex min-h-12 flex-col gap-2.5 rounded-2xl", isOver && tasks.length === 0 && "bg-kb-gray-tint")}
+        className={cn(
+          "flex min-h-12 flex-col gap-2.5 rounded-2xl",
+          isOver && tasks.length === 0 && "bg-kb-gray-tint",
+        )}
       >
-        <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={tasks.map((task) => task.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {tasks.map((task) => (
             <BoardCard
               key={task.id}

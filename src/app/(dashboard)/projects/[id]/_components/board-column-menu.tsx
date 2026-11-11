@@ -40,9 +40,17 @@ export default function BoardColumnMenu({
   const index = categories.findIndex((item) => item.id === category.id);
   const target = categories[index + 1] ?? categories[index - 1];
 
-  const blocked = category.key === "done" ? "The Done category can't be deleted." : !target ? "You need at least one category." : null;
+  const blocked =
+    category.key === "done"
+      ? "The Done category can't be deleted."
+      : !target
+        ? "You need at least one category."
+        : null;
   const hint =
-    blocked ?? (taskCount === 0 ? "This column is empty." : `${taskCount} ${taskCount === 1 ? "task moves" : "tasks move"} to ${target.name}.`);
+    blocked ??
+    (taskCount === 0
+      ? "This column is empty."
+      : `${taskCount} ${taskCount === 1 ? "task moves" : "tasks move"} to ${target.name}.`);
 
   const remove = async () => {
     const result = await deleteCategoryAction(category.id);
@@ -71,7 +79,7 @@ export default function BoardColumnMenu({
             variant="ghost"
             size="icon-sm"
             aria-label={`${category.name} column actions`}
-            className="opacity-0 group-hover/column:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+            className="opacity-0 max-md:opacity-100 group-hover/column:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
           >
             <More size={18} variant="Linear" color="currentColor" aria-hidden />
           </Button>
@@ -82,11 +90,24 @@ export default function BoardColumnMenu({
             Edit Category
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" disabled={!!blocked} onSelect={() => setConfirmOpen(true)} className="items-start gap-2.5">
-            <Trash size={18} variant="Linear" color="currentColor" className="mt-0.5" aria-hidden />
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={!!blocked}
+            onSelect={() => setConfirmOpen(true)}
+            className="items-start gap-2.5"
+          >
+            <Trash
+              size={18}
+              variant="Linear"
+              color="currentColor"
+              className="mt-0.5"
+              aria-hidden
+            />
             <span className="flex flex-col gap-0.5">
               <span>Delete Category</span>
-              <span className="text-xs font-normal text-muted-foreground">{hint}</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                {hint}
+              </span>
             </span>
           </DropdownMenuItem>
         </DropdownMenuContent>
