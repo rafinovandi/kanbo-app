@@ -2,8 +2,17 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 
-import { AUTH_PROFILE_COLUMNS, INITIAL_STATE_PROFILE } from "@/constants/auth-constant";
-import { ACTIVITY_DAYS, RECENT_TASKS_LIMIT } from "@/constants/profile-constant";
+import {
+  AUTH_PROFILE_COLUMNS,
+  INITIAL_STATE_PROFILE,
+} from "@/constants/auth-constant";
+import {
+  ACTIVITY_COLORS,
+  ACTIVITY_DAYS,
+  DEFAULT_ACTIVITY_COLOR,
+  RECENT_TASKS_LIMIT,
+  type ActivityColor,
+} from "@/constants/profile-constant";
 import { createClient } from "@/lib/supabase/server";
 import type { AuthProfile } from "@/types/auth";
 import type { ActivityRow, ProfileData, RecentTask } from "@/types/profile";
@@ -38,6 +47,12 @@ export const getCurrentProfile = cache(async (): Promise<AuthProfile> => {
   );
 });
 
+// A stored colour that is not one of the known choices falls back to the default.
+export const toActivityColor = (
+  value: string | null | undefined,
+): ActivityColor =>
+  ACTIVITY_COLORS.find((color) => color === value) ?? DEFAULT_ACTIVITY_COLOR;
+
 // Everything a profile page shows: the get_profile() payload, the activity graph rows and the
 // last completed tasks of that user. RLS + the RPCs' own privacy checks decide what comes back;
 // null means the profile does not exist or is not visible to the viewer (404).
@@ -46,7 +61,9 @@ export const getProfilePageData = cache(async (username?: string) => {
   const supabase = await createClient();
   const target = username ?? me.username;
 
-  const { data: raw } = await supabase.rpc("get_profile", { p_username: target });
+  const { data: raw } = await supabase.rpc("get_profile", {
+    p_username: target,
+  });
   const profile = (raw as ProfileData | null) ?? null;
   if (!profile && username) return null;
 
@@ -56,7 +73,15 @@ export const getProfilePageData = cache(async (username?: string) => {
   let showActivity = true;
   let showRecent = true;
   let timezone = me.timezone;
-  if (!isSelf) {
+  let activityColor: ActivityColor = DEFAULT_ACTIVITY_COLOR;
+  if (isSelf) {
+    const { data: row } = await supabase
+      .from("profiles")
+      .select("activity_color")
+      .eq("id", userId)
+      .single();
+    activityColor = toActivityColor(row?.activity_color);
+  } else {
     const { data: row } = await supabase
       .from("profiles")
       .select("show_activity, show_recent_tasks, timezone")
@@ -68,11 +93,18 @@ export const getProfilePageData = cache(async (username?: string) => {
   }
 
   const [activityRes, recentRes] = await Promise.all([
-    showActivity ? supabase.rpc("activity_graph", { p_user_id: userId, p_days: ACTIVITY_DAYS }) : null,
+    showActivity
+      ? supabase.rpc("activity_graph", {
+          p_user_id: userId,
+          p_days: ACTIVITY_DAYS,
+        })
+      : null,
     showRecent
       ? supabase
           .from("tasks")
-          .select("id, title, completed_at, projects(name, color), task_assignees!inner(user_id)")
+          .select(
+            "id, title, completed_at, projects(name, color), task_assignees!inner(user_id)",
+          )
           .eq("task_assignees.user_id", userId)
           .not("completed_at", "is", null)
           .order("completed_at", { ascending: false })
@@ -95,7 +127,17 @@ export const getProfilePageData = cache(async (username?: string) => {
       : [],
   );
 
-  return { me, profile, activity, recent, isSelf, timezone, showActivity, showRecent };
+  return {
+    me,
+    profile,
+    activity,
+    recent,
+    isSelf,
+    timezone,
+    showActivity,
+    showRecent,
+    activityColor,
+  };
 });
 
 // The editable text fields of the signed-in user's profile (Edit Profile form).
@@ -104,11 +146,17 @@ export const getEditableProfile = cache(async () => {
   const supabase = await createClient();
   const [{ data }, { data: owned }] = await Promise.all([
     supabase
-    .from("profiles")
-    .select("headline, bio, location, website, username, telegram_username, show_stats, show_activity, show_pinned, show_recent_tasks")
+      .from("profiles")
+      .select(
+        "headline, bio, location, website, username, telegram_username, show_stats, show_activity, show_pinned, show_recent_tasks, activity_color",
+      )
       .eq("id", me.id)
       .single(),
-    supabase.from("projects").select("name").eq("owner_id", me.id).order("name"),
+    supabase
+      .from("projects")
+      .select("name")
+      .eq("owner_id", me.id)
+      .order("name"),
   ]);
   return {
     me,
@@ -125,6 +173,7 @@ export const getEditableProfile = cache(async () => {
       show_activity: data?.show_activity ?? true,
       show_pinned: data?.show_pinned ?? true,
       show_recent_tasks: data?.show_recent_tasks ?? false,
+      activity_color: toActivityColor(data?.activity_color),
     },
   };
 });

@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
-import { AVATAR_MAX_BYTES, AVATAR_TYPES } from "@/constants/profile-constant";
+import {
+  AVATAR_MAX_BYTES,
+  AVATAR_TYPES,
+  type ActivityColor,
+} from "@/constants/profile-constant";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileFormState } from "@/types/auth";
 import { detectAvatarType, validateProfile } from "@/validations/profile";
@@ -33,6 +37,7 @@ export async function updateProfileAction(
     show_activity: formData.get("show_activity") === "on",
     show_pinned: formData.get("show_pinned") === "on",
     show_recent_tasks: formData.get("show_recent_tasks") === "on",
+    activity_color: text(formData, "activity_color") as ActivityColor,
   });
 
   const avatar = formData.get("avatar");
@@ -44,8 +49,11 @@ export async function updateProfileAction(
     if (file.size > AVATAR_MAX_BYTES) {
       errors.avatar_url = ["Image must be 2 MB or smaller"];
     } else {
-      avatarType = detectAvatarType(new Uint8Array(await file.slice(0, 8).arrayBuffer()));
-      if (!avatarType || !AVATAR_TYPES.includes(avatarType)) errors.avatar_url = ["Use a PNG or JPG image"];
+      avatarType = detectAvatarType(
+        new Uint8Array(await file.slice(0, 8).arrayBuffer()),
+      );
+      if (!avatarType || !AVATAR_TYPES.includes(avatarType))
+        errors.avatar_url = ["Use a PNG or JPG image"];
     }
   }
 
@@ -54,12 +62,20 @@ export async function updateProfileAction(
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
-  if (!userId) return { status: "error", errors: { _form: ["Your session expired. Sign in again."] } };
+  if (!userId)
+    return {
+      status: "error",
+      errors: { _form: ["Your session expired. Sign in again."] },
+    };
 
   // The previous avatar, so its file can be removed once the new one is saved.
   let previousAvatarUrl: string | null = null;
   if (file && avatarType) {
-    const { data: current } = await supabase.from("profiles").select("avatar_url").eq("id", userId).single();
+    const { data: current } = await supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", userId)
+      .single();
     previousAvatarUrl = current?.avatar_url ?? null;
   }
 
@@ -67,10 +83,17 @@ export async function updateProfileAction(
   let avatarPath: string | undefined;
   if (file && avatarType) {
     const path = `${userId}/${crypto.randomUUID()}.${avatarType === "image/png" ? "png" : "jpg"}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, file, { contentType: avatarType });
-    if (error) return { status: "error", errors: { avatar_url: ["Could not upload the photo. Try again."] } };
+    const { error } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { contentType: avatarType });
+    if (error)
+      return {
+        status: "error",
+        errors: { avatar_url: ["Could not upload the photo. Try again."] },
+      };
     avatarPath = path;
-    avatarUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    avatarUrl = supabase.storage.from("avatars").getPublicUrl(path)
+      .data.publicUrl;
   }
 
   const { error } = await supabase
@@ -87,22 +110,33 @@ export async function updateProfileAction(
       show_activity: values.show_activity,
       show_pinned: values.show_pinned,
       show_recent_tasks: values.show_recent_tasks,
+      activity_color: values.activity_color,
       ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     })
     .eq("id", userId);
 
   if (error) {
     if (avatarPath) await supabase.storage.from("avatars").remove([avatarPath]);
-    if (error.code === "23505") return { status: "error", errors: { username: ["That username is taken"] } };
-    return { status: "error", errors: { _form: ["Could not save your profile. Try again."] } };
+    if (error.code === "23505")
+      return {
+        status: "error",
+        errors: { username: ["That username is taken"] },
+      };
+    return {
+      status: "error",
+      errors: { _form: ["Could not save your profile. Try again."] },
+    };
   }
 
   // Best effort: drop the old file, only when it is one of this user's own uploads
   // (a Google profile picture or a foreign URL is left alone). A failure must not fail the save.
   const oldPath = previousAvatarUrl?.split(AVATAR_PUBLIC_PATH)[1];
   if (avatarUrl && oldPath && oldPath.startsWith(`${userId}/`)) {
-    const { error: removeError } = await supabase.storage.from("avatars").remove([oldPath]);
-    if (removeError) console.error("Could not remove the old avatar:", removeError.message);
+    const { error: removeError } = await supabase.storage
+      .from("avatars")
+      .remove([oldPath]);
+    if (removeError)
+      console.error("Could not remove the old avatar:", removeError.message);
   }
 
   revalidatePath("/", "layout");

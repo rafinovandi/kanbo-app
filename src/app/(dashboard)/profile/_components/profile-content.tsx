@@ -10,10 +10,24 @@ import ProfileRecent from "./profile-recent";
 import ProfileStreaks from "./profile-streaks";
 
 // A profile at /u/[username]: yours (with Edit Profile) or someone else's.
-export default async function ProfileContent({ username }: { username: string }) {
+export default async function ProfileContent({
+  username,
+}: {
+  username: string;
+}) {
   const result = await getProfilePageData(username);
   if (!result) notFound();
-  const { me, profile, activity, recent, isSelf, timezone, showActivity, showRecent } = result;
+  const {
+    me,
+    profile,
+    activity,
+    recent,
+    isSelf,
+    timezone,
+    showActivity,
+    showRecent,
+    activityColor,
+  } = result;
 
   // get_profile only returns null for a missing row; fall back to the session profile.
   const data = profile ?? {
@@ -32,13 +46,20 @@ export default async function ProfileContent({ username }: { username: string })
     stats: null,
     pinned: [],
   };
-  const { contributions, summary } = buildActivity(activity, todayInTimezone(new Date(), timezone));
+  const { contributions, summary } = buildActivity(
+    activity,
+    todayInTimezone(new Date(), timezone),
+  );
 
   return (
     <div className="flex flex-wrap items-start gap-8 p-4 pb-12 sm:p-7 sm:pb-12">
       <ProfileIdentity profile={data} openTasks={data.stats?.open_tasks} />
       <div className="flex min-w-0 flex-[999_1_35rem] flex-col gap-7">
-        <ProfilePinned pinned={data.pinned} hidden={data.privacy?.show_pinned === false} isSelf={isSelf} />
+        <ProfilePinned
+          pinned={data.pinned}
+          hidden={data.privacy?.show_pinned === false}
+          isSelf={isSelf}
+        />
         {showActivity && (
           <>
             <ProfileActivity
@@ -46,6 +67,7 @@ export default async function ProfileContent({ username }: { username: string })
               summary={summary}
               hidden={data.privacy?.show_activity === false}
               isSelf={isSelf}
+              color={activityColor}
             />
             <ProfileStreaks summary={summary} />
           </>

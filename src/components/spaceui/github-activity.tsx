@@ -1,102 +1,141 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  ACTIVITY_PALETTE,
+  DEFAULT_ACTIVITY_COLOR,
+  type ActivityColor,
+} from "@/constants/profile-constant";
+import { cn } from "@/lib/utils";
 
 // Heatmap board adapted from @spaceui/github-activity: only the 52-week matrix + legend.
 // The GitHub fetching, header and KPI cards are dropped; data comes in through `contributions`.
-// Colors use the kb-green tokens instead of hardcoded Tailwind greens.
+// Colors come from ACTIVITY_PALETTE (project tokens), picked with the `color` prop.
 
-export type ContributionLevel = "NONE" | "FIRST_QUARTILE" | "SECOND_QUARTILE" | "THIRD_QUARTILE" | "FOURTH_QUARTILE"
+export type ContributionLevel =
+  | "NONE"
+  | "FIRST_QUARTILE"
+  | "SECOND_QUARTILE"
+  | "THIRD_QUARTILE"
+  | "FOURTH_QUARTILE";
 
 export interface ContributionDay {
   /** ISO date (yyyy-mm-dd). Empty string marks a padding cell outside the range. */
-  date: string
-  contributionCount: number
-  contributionLevel: ContributionLevel
+  date: string;
+  contributionCount: number;
+  contributionLevel: ContributionLevel;
 }
 
 export interface ContributionWeek {
   /** 7 days, Sunday first. */
-  contributionDays: ContributionDay[]
+  contributionDays: ContributionDay[];
 }
 
 export interface ContributionData {
-  totalContributions: number
-  weeks: ContributionWeek[]
+  totalContributions: number;
+  weeks: ContributionWeek[];
 }
 
-export type GitHubActivityShape = "square" | "rounded" | "circle"
+export type GitHubActivityShape = "square" | "rounded" | "circle";
 
-const LEVELS: ContributionLevel[] = ["NONE", "FIRST_QUARTILE", "SECOND_QUARTILE", "THIRD_QUARTILE", "FOURTH_QUARTILE"]
+const LEVELS: ContributionLevel[] = [
+  "NONE",
+  "FIRST_QUARTILE",
+  "SECOND_QUARTILE",
+  "THIRD_QUARTILE",
+  "FOURTH_QUARTILE",
+];
 
-const LEVEL_COLORS: Record<ContributionLevel, string> = {
-  NONE: "bg-kb-gray-tint",
-  FIRST_QUARTILE: "bg-kb-green/30",
-  SECOND_QUARTILE: "bg-kb-green/60",
-  THIRD_QUARTILE: "bg-kb-green",
-  FOURTH_QUARTILE: "bg-kb-green-fg",
+function levelColors(color: ActivityColor): Record<ContributionLevel, string> {
+  const [first, second, third, fourth] = ACTIVITY_PALETTE[color].levels;
+  return {
+    NONE: "bg-kb-gray-tint",
+    FIRST_QUARTILE: first,
+    SECOND_QUARTILE: second,
+    THIRD_QUARTILE: third,
+    FOURTH_QUARTILE: fourth,
+  };
 }
 
 const SHAPE_CLASSES: Record<GitHubActivityShape, string> = {
   square: "rounded-none",
   rounded: "rounded-[3px]",
   circle: "rounded-full",
-}
+};
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const MONTHS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 function parseDate(iso: string) {
-  const [y, m, d] = iso.split("-").map(Number)
-  return { y: y!, m: m! - 1, d: d! }
+  const [y, m, d] = iso.split("-").map(Number);
+  return { y: y!, m: m! - 1, d: d! };
 }
 
 function formatDate(iso: string) {
-  const { y, m, d } = parseDate(iso)
-  return `${MONTHS[m]} ${d}, ${y}`
+  const { y, m, d } = parseDate(iso);
+  return `${MONTHS[m]} ${d}, ${y}`;
 }
 
 export function GitHubActivity({
   contributions,
   shape = "rounded",
+  color = DEFAULT_ACTIVITY_COLOR,
   showLegend = true,
   unit = ["task", "tasks"],
   helperText,
   className,
 }: {
-  contributions: ContributionData
-  shape?: GitHubActivityShape
-  showLegend?: boolean
+  contributions: ContributionData;
+  shape?: GitHubActivityShape;
+  color?: ActivityColor;
+  showLegend?: boolean;
   /** Singular and plural noun used in tooltips, e.g. ["task", "tasks"]. */
-  unit?: [string, string]
+  unit?: [string, string];
   /** Text on the left of the legend row. */
-  helperText?: string
-  className?: string
+  helperText?: string;
+  className?: string;
 }) {
-  const scrollRef = React.useRef<HTMLDivElement>(null)
-  const cell = cn("block size-[11px] shrink-0", SHAPE_CLASSES[shape])
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const cell = cn("block size-[11px] shrink-0", SHAPE_CLASSES[shape]);
+  const levelClasses = levelColors(color);
 
   // Newest weeks are on the right: start scrolled to the end on narrow screens.
   React.useEffect(() => {
-    const el = scrollRef.current
-    if (el) el.scrollLeft = el.scrollWidth
-  }, [contributions])
+    const el = scrollRef.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, [contributions]);
 
   // A month label sits on the first week whose first in-range day starts a new month.
   const monthLabels = React.useMemo(() => {
     const firsts = contributions.weeks.map((week) => {
-      const first = week.contributionDays.find((day) => day.date)
-      return first ? parseDate(first.date) : null
-    })
+      const first = week.contributionDays.find((day) => day.date);
+      return first ? parseDate(first.date) : null;
+    });
     return firsts.map((cur, i) => {
-      if (!cur) return ""
-      const prev = firsts[i - 1]
-      if (prev && prev.m === cur.m) return ""
-      return i > 0 || cur.d <= 7 ? MONTHS[cur.m]! : ""
-    })
-  }, [contributions.weeks])
+      if (!cur) return "";
+      const prev = firsts[i - 1];
+      if (prev && prev.m === cur.m) return "";
+      return i > 0 || cur.d <= 7 ? MONTHS[cur.m]! : "";
+    });
+  }, [contributions.weeks]);
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
@@ -109,7 +148,10 @@ export function GitHubActivity({
         <div className="inline-flex min-w-max flex-col gap-1.5">
           <div aria-hidden className="flex h-3.5 gap-[3px] pl-8">
             {monthLabels.map((label, i) => (
-              <span key={i} className="w-[11px] shrink-0 text-[11px] leading-[14px] whitespace-nowrap text-kb-text-2">
+              <span
+                key={i}
+                className="w-[11px] shrink-0 text-[11px] leading-[14px] whitespace-nowrap text-kb-text-2"
+              >
                 {label}
               </span>
             ))}
@@ -133,7 +175,12 @@ export function GitHubActivity({
                   day.date ? (
                     <Tooltip key={d}>
                       <TooltipTrigger asChild>
-                        <span className={cn(cell, LEVEL_COLORS[day.contributionLevel])} />
+                        <span
+                          className={cn(
+                            cell,
+                            levelClasses[day.contributionLevel],
+                          )}
+                        />
                       </TooltipTrigger>
                       <TooltipContent>
                         {day.contributionCount === 0
@@ -144,7 +191,7 @@ export function GitHubActivity({
                     </Tooltip>
                   ) : (
                     <span key={d} className={cell} />
-                  )
+                  ),
                 )}
               </div>
             ))}
@@ -158,12 +205,16 @@ export function GitHubActivity({
           <span className="flex items-center gap-1">
             Less
             {LEVELS.map((level) => (
-              <span key={level} aria-hidden className={cn(cell, LEVEL_COLORS[level])} />
+              <span
+                key={level}
+                aria-hidden
+                className={cn(cell, levelClasses[level])}
+              />
             ))}
             More
           </span>
         </div>
       )}
     </div>
-  )
+  );
 }

@@ -23,19 +23,19 @@ npm run dev                 # http://localhost:3000
 
 See [`env.example`](./env.example). Minimum to run locally:
 
-| Key | Where to find it |
-|---|---|
-| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase → Project Settings → Data API |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys (`sb_publishable_…`) |
-| `SUPABASE_SECRET_KEY` | Supabase → Project Settings → API Keys (`sb_secret_…`, server only) |
+| Key                                    | Where to find it                                                    |
+| -------------------------------------- | ------------------------------------------------------------------- |
+| `NEXT_PUBLIC_APP_URL`                  | `http://localhost:3000`                                             |
+| `NEXT_PUBLIC_SUPABASE_URL`             | Supabase → Project Settings → Data API                              |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase → Project Settings → API Keys (`sb_publishable_…`)         |
+| `SUPABASE_SECRET_KEY`                  | Supabase → Project Settings → API Keys (`sb_secret_…`, server only) |
 
 Invites and the agent integration also need these (both are in `env.example`):
 
-| Key | Purpose |
-|---|---|
+| Key                 | Purpose                                                                                                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `TOKEN_HASH_PEPPER` | Secret used to hash invite tokens, agent chat tokens and link codes. Generate with `openssl rand -hex 32`. Use a different value per environment; changing it invalidates existing tokens. |
-| `AGENT_ENABLED` | Set to `true` to turn on the agent endpoints (`/api/agent/v1` and `/api/agent/mcp`). Anything else makes them answer 404. |
+| `AGENT_ENABLED`     | Set to `true` to turn on the agent endpoints (`/api/agent/v1` and `/api/agent/mcp`). Anything else makes them answer 404.                                                                  |
 
 Invite links are copied from the app and shared by hand; no email service is required.
 Google OAuth credentials live in Supabase → Authentication → Providers → Google, not in `.env`.
@@ -66,7 +66,7 @@ supabase/
 
 ## Database
 
-Migrations in `supabase/migrations/` (001 to 023) are applied in order to each Supabase project; a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
+Migrations in `supabase/migrations/` (001 to 024) are applied in order to each Supabase project; a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
 
 ```bash
 npx supabase gen types typescript --project-id <project-ref> > src/types/database.types.ts
@@ -85,9 +85,9 @@ To report a security issue, see [`SECURITY.md`](./SECURITY.md).
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Start the dev server |
-| `npm run build` | Production build |
+| Command         | Description                |
+| --------------- | -------------------------- |
+| `npm run dev`   | Start the dev server       |
+| `npm run build` | Production build           |
 | `npm run start` | Serve the production build |
-| `npm run lint` | ESLint |
+| `npm run lint`  | ESLint                     |

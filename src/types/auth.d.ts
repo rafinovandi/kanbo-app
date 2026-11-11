@@ -6,7 +6,14 @@ export type Profile = Tables<"profiles">;
 // The signed-in user's profile as used across the app shell (sidebar, auth store).
 export type AuthProfile = Pick<
   Profile,
-  "id" | "email" | "name" | "username" | "avatar_url" | "avatar_bg" | "avatar_fg" | "timezone"
+  | "id"
+  | "email"
+  | "name"
+  | "username"
+  | "avatar_url"
+  | "avatar_bg"
+  | "avatar_fg"
+  | "timezone"
 >;
 
 export type ProfileFormState = {
@@ -19,6 +26,7 @@ export type ProfileFormState = {
     location?: string[];
     website?: string[];
     telegram_username?: string[];
+    activity_color?: string[];
     avatar_url?: string[];
     _form?: string[];
   };
