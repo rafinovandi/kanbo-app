@@ -2,6 +2,8 @@ import { Folder2 } from "iconsax-react";
 import Link from "next/link";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { getProgressPercent } from "@/constants/dashboard-constant";
 import { PROJECT_TONE } from "@/constants/profile-constant";
 import { cn } from "@/lib/utils";
 import type { PinnedProject } from "@/types/profile";
@@ -13,7 +15,13 @@ function PinnedCard({ project }: { project: PinnedProject }) {
   const body = (
     <>
       <span className="flex items-center gap-2 text-sm font-semibold">
-        <Folder2 size={18} variant="Linear" color="currentColor" className="text-muted-foreground" aria-hidden />
+        <Folder2
+          size={18}
+          variant="Linear"
+          color="currentColor"
+          className="text-muted-foreground"
+          aria-hidden
+        />
         <span className="truncate">{project.name}</span>
       </span>
       {project.can_open && (
@@ -26,12 +34,12 @@ function PinnedCard({ project }: { project: PinnedProject }) {
               <span className={cn("size-2 rounded-full", tone.dot)} />
               {project.done} of {project.total} done
             </span>
-            <span className="h-1 flex-1 overflow-hidden rounded-full bg-kb-gray-tint">
-              <span
-                className={cn("block h-full rounded-full", tone.bar)}
-                style={{ width: `${project.total ? (project.done / project.total) * 100 : 0}%` }}
-              />
-            </span>
+            <Progress
+              value={getProgressPercent(project.done, project.total)}
+              aria-label={`${project.name} progress`}
+              className="flex-1 bg-kb-gray-tint"
+              indicatorClassName={tone.bar}
+            />
           </span>
         </>
       )}
@@ -45,7 +53,10 @@ function PinnedCard({ project }: { project: PinnedProject }) {
 
   // Pinned projects you can't open (not a member) stay as plain cards.
   return project.can_open ? (
-    <Link href={`/projects/${project.project_id}`} className="min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+    <Link
+      href={`/projects/${project.project_id}`}
+      className="min-w-0 rounded-xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
       {card}
     </Link>
   ) : (
@@ -77,7 +88,10 @@ export default function ProfilePinned({
       ) : (
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(15rem,100%),1fr))] gap-3.5">
           {pinned.map((p, i) => (
-            <PinnedCard key={p.can_open ? p.project_id : `${p.name}-${i}`} project={p} />
+            <PinnedCard
+              key={p.can_open ? p.project_id : `${p.name}-${i}`}
+              project={p}
+            />
           ))}
         </div>
       )}
