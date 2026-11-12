@@ -26,7 +26,6 @@ export type ProfileFormState = {
     location?: string[];
     website?: string[];
     telegram_username?: string[];
-    activity_color?: string[];
     avatar_url?: string[];
     _form?: string[];
   };

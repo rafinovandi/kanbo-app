@@ -71,7 +71,7 @@ export default function BoardColumn({
       aria-label={category.name}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "group/column flex w-[300px] flex-none snap-start flex-col gap-2.5 rounded-[20px] bg-kb-surface p-2.5",
+        "kb-column group/column flex w-[300px] flex-none snap-start flex-col gap-2.5 rounded-[20px] bg-kb-surface p-2.5",
         isDragging && "relative z-10 opacity-40",
       )}
     >

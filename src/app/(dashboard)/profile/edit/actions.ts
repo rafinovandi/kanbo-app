@@ -2,11 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import {
-  AVATAR_MAX_BYTES,
-  AVATAR_TYPES,
-  type ActivityColor,
-} from "@/constants/profile-constant";
+import { AVATAR_MAX_BYTES, AVATAR_TYPES } from "@/constants/profile-constant";
 import { createClient } from "@/lib/supabase/server";
 import type { ProfileFormState } from "@/types/auth";
 import { detectAvatarType, validateProfile } from "@/validations/profile";
@@ -37,7 +33,6 @@ export async function updateProfileAction(
     show_activity: formData.get("show_activity") === "on",
     show_pinned: formData.get("show_pinned") === "on",
     show_recent_tasks: formData.get("show_recent_tasks") === "on",
-    activity_color: text(formData, "activity_color") as ActivityColor,
   });
 
   const avatar = formData.get("avatar");
@@ -110,7 +105,6 @@ export async function updateProfileAction(
       show_activity: values.show_activity,
       show_pinned: values.show_pinned,
       show_recent_tasks: values.show_recent_tasks,
-      activity_color: values.activity_color,
       ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
     })
     .eq("id", userId);

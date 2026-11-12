@@ -7,11 +7,8 @@ import {
   INITIAL_STATE_PROFILE,
 } from "@/constants/auth-constant";
 import {
-  ACTIVITY_COLORS,
   ACTIVITY_DAYS,
-  DEFAULT_ACTIVITY_COLOR,
   RECENT_TASKS_LIMIT,
-  type ActivityColor,
 } from "@/constants/profile-constant";
 import { createClient } from "@/lib/supabase/server";
 import type { AuthProfile } from "@/types/auth";
@@ -47,12 +44,6 @@ export const getCurrentProfile = cache(async (): Promise<AuthProfile> => {
   );
 });
 
-// A stored colour that is not one of the known choices falls back to the default.
-export const toActivityColor = (
-  value: string | null | undefined,
-): ActivityColor =>
-  ACTIVITY_COLORS.find((color) => color === value) ?? DEFAULT_ACTIVITY_COLOR;
-
 // Everything a profile page shows: the get_profile() payload, the activity graph rows and the
 // last completed tasks of that user. RLS + the RPCs' own privacy checks decide what comes back;
 // null means the profile does not exist or is not visible to the viewer (404).
@@ -73,15 +64,7 @@ export const getProfilePageData = cache(async (username?: string) => {
   let showActivity = true;
   let showRecent = true;
   let timezone = me.timezone;
-  let activityColor: ActivityColor = DEFAULT_ACTIVITY_COLOR;
-  if (isSelf) {
-    const { data: row } = await supabase
-      .from("profiles")
-      .select("activity_color")
-      .eq("id", userId)
-      .single();
-    activityColor = toActivityColor(row?.activity_color);
-  } else {
+  if (!isSelf) {
     const { data: row } = await supabase
       .from("profiles")
       .select("show_activity, show_recent_tasks, timezone")
@@ -136,7 +119,6 @@ export const getProfilePageData = cache(async (username?: string) => {
     timezone,
     showActivity,
     showRecent,
-    activityColor,
   };
 });
 
@@ -148,7 +130,7 @@ export const getEditableProfile = cache(async () => {
     supabase
       .from("profiles")
       .select(
-        "headline, bio, location, website, username, telegram_username, show_stats, show_activity, show_pinned, show_recent_tasks, activity_color",
+        "headline, bio, location, website, username, telegram_username, show_stats, show_activity, show_pinned, show_recent_tasks",
       )
       .eq("id", me.id)
       .single(),
@@ -173,7 +155,6 @@ export const getEditableProfile = cache(async () => {
       show_activity: data?.show_activity ?? true,
       show_pinned: data?.show_pinned ?? true,
       show_recent_tasks: data?.show_recent_tasks ?? false,
-      activity_color: toActivityColor(data?.activity_color),
     },
   };
 });

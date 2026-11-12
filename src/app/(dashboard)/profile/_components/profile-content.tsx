@@ -26,7 +26,6 @@ export default async function ProfileContent({
     timezone,
     showActivity,
     showRecent,
-    activityColor,
   } = result;
 
   // get_profile only returns null for a missing row; fall back to the session profile.
@@ -67,7 +66,6 @@ export default async function ProfileContent({
               summary={summary}
               hidden={data.privacy?.show_activity === false}
               isSelf={isSelf}
-              color={activityColor}
             />
             <ProfileStreaks summary={summary} />
           </>

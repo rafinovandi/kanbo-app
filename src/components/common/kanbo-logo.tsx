@@ -12,7 +12,7 @@ export default function KanboLogo({
   return (
     <span className={cn("flex items-center gap-3 text-foreground", className)}>
       <Image
-        src="/new-logo.svg"
+        src="/new-logo.png"
         alt=""
         width={36}
         height={36}
