@@ -34,14 +34,20 @@ export default function MembersInviteForm({
     setPending(false);
 
     if (result.status === "error") return void toast.error(result.message);
-    setLinks((current) => [...current.filter((item) => item.email !== address), { email: address, link: result.link ?? "" }]);
+    setLinks((current) => [
+      ...current.filter((item) => item.email !== address),
+      { email: address, link: result.link ?? "" },
+    ]);
     setEmail("");
     onInvited(address);
   };
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-2">
-      <label htmlFor="mm-invite" className="text-[13px] font-medium text-kb-text-2">
+      <label
+        htmlFor="mm-invite"
+        className="text-[13px] font-medium text-kb-text-2"
+      >
         Invite people
       </label>
       <div className="flex gap-2">
@@ -59,7 +65,8 @@ export default function MembersInviteForm({
         </Button>
       </div>
       <p id="mm-invite-hint" className="text-xs text-muted-foreground">
-        You get an invite link to share. Add their roles below while the invite is pending.
+        We email them the invite link. You can also copy it to share yourself.
+        Add their roles below while the invite is pending.
       </p>
       {links.length > 0 && (
         <ul className="mt-1 flex flex-col gap-2">
