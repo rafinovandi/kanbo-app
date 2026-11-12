@@ -55,7 +55,7 @@ export default function AgentLinkRow({
       : "Waiting for the first request from your client";
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-border p-3.5">
+    <li className="kb-panel flex flex-col gap-3 rounded-xl border border-border p-3.5">
       <div className="flex items-start gap-3">
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span

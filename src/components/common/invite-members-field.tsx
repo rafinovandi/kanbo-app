@@ -5,7 +5,11 @@ import { useState, type KeyboardEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isValidEmail, MAX_INVITES, type InviteDraft } from "@/validations/project";
+import {
+  isValidEmail,
+  MAX_INVITES,
+  type InviteDraft,
+} from "@/validations/project";
 
 import { AddRoleButton, RoleChip, RolePicker } from "./role-picker";
 
@@ -27,9 +31,14 @@ export default function InviteMembersField({
   const add = () => {
     const value = email.trim().toLowerCase();
     if (!value) return;
-    if (!isValidEmail(value)) return setEmailError("Enter a valid email address");
-    if (invites.some((invite) => invite.email === value)) return setEmailError("This email is already added");
-    if (invites.length >= MAX_INVITES) return setEmailError(`You can invite up to ${MAX_INVITES} people at once`);
+    if (!isValidEmail(value))
+      return setEmailError("Enter a valid email address");
+    if (invites.some((invite) => invite.email === value))
+      return setEmailError("This email is already added");
+    if (invites.length >= MAX_INVITES)
+      return setEmailError(
+        `You can invite up to ${MAX_INVITES} people at once`,
+      );
     onChange([...invites, { email: value, roles: [] }]);
     setEmail("");
     setEmailError(undefined);
@@ -43,13 +52,21 @@ export default function InviteMembersField({
   };
 
   const update = (target: string, patch: Partial<InviteDraft>) =>
-    onChange(invites.map((invite) => (invite.email === target ? { ...invite, ...patch } : invite)));
+    onChange(
+      invites.map((invite) =>
+        invite.email === target ? { ...invite, ...patch } : invite,
+      ),
+    );
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
-        <label htmlFor="np-invite-email" className="text-[13px] font-medium text-kb-text-2">
-          Invite members <span className="font-normal text-muted-foreground">(optional)</span>
+        <label
+          htmlFor="np-invite-email"
+          className="text-[13px] font-medium text-kb-text-2"
+        >
+          Invite members{" "}
+          <span className="font-normal text-muted-foreground">(optional)</span>
         </label>
         <div className="flex gap-2">
           <Input
@@ -66,9 +83,12 @@ export default function InviteMembersField({
             Add
           </Button>
         </div>
-        {(emailError || error) && <p className="text-xs text-destructive">{emailError ?? error}</p>}
+        {(emailError || error) && (
+          <p className="text-xs text-destructive">{emailError ?? error}</p>
+        )}
         <p className="text-xs text-muted-foreground">
-          You get an invite link for each person to share. They join the project once they accept.
+          You get an invite link for each person to share. They join the project
+          once they accept.
         </p>
       </div>
 
@@ -76,7 +96,7 @@ export default function InviteMembersField({
         <ul className="flex flex-col gap-2">
           {invites.map((invite) => (
             <li key={invite.email} className="flex flex-col gap-2">
-              <div className="flex items-center gap-2.5 rounded-xl border border-border p-2.5">
+              <div className="kb-panel flex items-center gap-2.5 rounded-xl border border-border p-2.5">
                 <span
                   aria-hidden="true"
                   className="flex size-8 flex-none items-center justify-center rounded-full bg-kb-gray-tint text-xs font-semibold text-kb-gray-fg"
@@ -91,7 +111,11 @@ export default function InviteMembersField({
                     ))}
                     <AddRoleButton
                       expanded={openEmail === invite.email}
-                      onClick={() => setOpenEmail(openEmail === invite.email ? null : invite.email)}
+                      onClick={() =>
+                        setOpenEmail(
+                          openEmail === invite.email ? null : invite.email,
+                        )
+                      }
                     />
                   </div>
                 </div>
@@ -100,9 +124,16 @@ export default function InviteMembersField({
                   variant="ghost"
                   size="icon-sm"
                   aria-label={`Remove ${invite.email}`}
-                  onClick={() => onChange(invites.filter((i) => i.email !== invite.email))}
+                  onClick={() =>
+                    onChange(invites.filter((i) => i.email !== invite.email))
+                  }
                 >
-                  <CloseCircle size={18} variant="Linear" color="currentColor" aria-hidden />
+                  <CloseCircle
+                    size={18}
+                    variant="Linear"
+                    color="currentColor"
+                    aria-hidden
+                  />
                 </Button>
               </div>
               {openEmail === invite.email && (

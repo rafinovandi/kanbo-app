@@ -30,7 +30,7 @@ export default function BoardOverview({ projectId }: { projectId: string }) {
   return (
     <section
       aria-label="Overview"
-      className="flex w-[300px] flex-none snap-start flex-col gap-2.5 rounded-[20px] bg-kb-surface p-2.5"
+      className="kb-column flex w-[300px] flex-none snap-start flex-col gap-2.5 rounded-[20px] bg-kb-surface p-2.5"
     >
       <h2 className="flex min-h-8 items-center pl-1.5 text-sm font-semibold">
         Overview
