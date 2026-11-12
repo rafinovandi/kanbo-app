@@ -15,7 +15,6 @@ import {
 
 import { updateProfileAction } from "../actions";
 import EditProfileAccount from "./edit-profile-account";
-import EditProfileActivityColor from "./edit-profile-activity-color";
 import EditProfileDelete from "./edit-profile-delete";
 import EditProfileInfo from "./edit-profile-info";
 import EditProfilePhoto from "./edit-profile-photo";
@@ -109,12 +108,6 @@ export default function EditProfileForm({
       <EditProfilePrivacy
         fields={fields}
         onChange={(key, on) => setFields((f) => ({ ...f, [key]: on }))}
-      />
-      <EditProfileActivityColor
-        value={fields.activity_color}
-        onChange={(color) =>
-          setFields((f) => ({ ...f, activity_color: color }))
-        }
       />
       <EditProfileAccount email={me.email} />
       <EditProfileDelete

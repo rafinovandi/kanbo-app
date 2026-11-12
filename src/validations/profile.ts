@@ -1,10 +1,4 @@
-import {
-  ACTIVITY_COLORS,
-  DEFAULT_ACTIVITY_COLOR,
-  PRIVACY_KEYS,
-  PROFILE_LIMITS,
-  type ActivityColor,
-} from "@/constants/profile-constant";
+import { PRIVACY_KEYS, PROFILE_LIMITS } from "@/constants/profile-constant";
 import type { ProfileFormState } from "@/types/auth";
 
 export type ProfileFields = {
@@ -15,7 +9,6 @@ export type ProfileFields = {
   website: string;
   username: string;
   telegram_username: string;
-  activity_color: ActivityColor;
 } & Record<(typeof PRIVACY_KEYS)[number], boolean>;
 
 export type ProfileTextKey = {
@@ -41,9 +34,6 @@ export function validateProfile(input: ProfileFields): {
     show_activity: input.show_activity,
     show_pinned: input.show_pinned,
     show_recent_tasks: input.show_recent_tasks,
-    activity_color: ACTIVITY_COLORS.includes(input.activity_color)
-      ? input.activity_color
-      : DEFAULT_ACTIVITY_COLOR,
   };
   const errors: NonNullable<ProfileFormState["errors"]> = {};
 

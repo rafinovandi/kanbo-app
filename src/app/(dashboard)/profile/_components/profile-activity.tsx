@@ -1,11 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  GitHubActivity,
-  type ContributionData,
-} from "@/components/spaceui/github-activity";
-import type { ActivityColor } from "@/constants/profile-constant";
+import type { ContributionData } from "@/components/spaceui/github-activity";
 import type { ActivitySummary } from "@/types/profile";
 
+import ProfileActivityGraph from "./profile-activity-graph";
 import { HiddenNote } from "./profile-identity";
 
 // "N tasks completed in the last year" + the heatmap board (spaceui GitHub activity).
@@ -14,13 +11,11 @@ export default function ProfileActivity({
   summary,
   hidden,
   isSelf = true,
-  color,
 }: {
   contributions: ContributionData;
   summary: ActivitySummary;
   hidden: boolean;
   isSelf?: boolean;
-  color?: ActivityColor;
 }) {
   return (
     <section aria-label="Activity" className="flex flex-col gap-3">
@@ -41,9 +36,9 @@ export default function ProfileActivity({
       </div>
       <Card>
         <CardContent>
-          <GitHubActivity
+          <ProfileActivityGraph
             contributions={contributions}
-            color={color}
+            useOwnColor={isSelf}
             helperText={
               isSelf
                 ? "Every task you mark as done adds to a day."
