@@ -38,6 +38,7 @@ import { TASK_LIMITS } from "@/validations/task";
 
 const PLACEHOLDER = "Type a description here…";
 const TEXT_CLASS = "text-sm leading-[1.7] text-kb-text-2";
+const HEADING_CLASS = ["text-xl", "text-base"];
 const TOOLBAR_HALF_WIDTH = 60;
 const SHORTCUTS: Record<string, InlineMarker> = { b: "**", i: "*", x: "~~" };
 
@@ -80,8 +81,8 @@ function caretAtPoint(
     : null;
 }
 
-// The view of a text block. Every source line is one line here too (a blank line keeps its height, headings only turn
-// semibold), so the text does not jump when it switches to the editor.
+// The view of a text block. Every source line is one line here too (a blank line keeps its height), so the text barely
+// jumps when it switches to the editor. Headings are larger here only; the editor keeps one size so the caret lines up.
 function renderText(text: string): ReactNode[] {
   return parseLines(text).map((line, index) => {
     if (line.type === "blank")
@@ -101,7 +102,10 @@ function renderText(text: string): ReactNode[] {
           data-line={index}
           role="heading"
           aria-level={line.marker.trim().length + 1}
-          className="font-semibold text-foreground"
+          className={cn(
+            "font-semibold text-foreground",
+            HEADING_CLASS[line.marker.trim().length - 1],
+          )}
         >
           {inline}
         </div>
