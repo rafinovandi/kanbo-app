@@ -28,11 +28,24 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
+      data-palette="ocean"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var p=localStorage.getItem("palette");if(p==="vivid"||p==="classic")document.documentElement.dataset.palette=p;if(localStorage.getItem("surface")==="filled")document.documentElement.dataset.surface="filled"}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <ReactQueryProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+          >
             <TooltipProvider>
               {children}
               <Toaster position="bottom-right" duration={6000} closeButton />

@@ -70,6 +70,8 @@
   --color-kb-activity-3: var(--kb-activity-3);
   --color-kb-activity-4: var(--kb-activity-4);
   --color-kb-surface: var(--kb-surface);
+  --color-kb-fill: var(--kb-fill);
+  --color-kb-fill-raised: var(--kb-fill-raised);
   --color-kb-text-2: var(--kb-text-2);
   --color-kb-placeholder: var(--kb-placeholder);
   --color-kb-divider: var(--kb-divider);
@@ -110,7 +112,6 @@
   --chart-3: #fbc45c;
   --chart-4: #cbb5db;
   --chart-5: #fdd2e3;
-  /* previous charts: #2f9bff #2fc85a #e4703b #9b87f5 #f25cc8 */
   --radius: 0.625rem; /* 10px; xl ≈ 14px */
   --sidebar: #ffffff;
   --sidebar-foreground: #3a3d46;
@@ -143,29 +144,6 @@
   --kb-yellow: #fbc45c;
   --kb-yellow-fg: #8a5e0a;
   --kb-yellow-tint: #fef0d2;
-  /* Previous palette (kept for a future theme), light:
-  --kb-blue: #2f9bff;
-  --kb-blue-fg: #1a63c7;
-  --kb-blue-tint: #e6f2ff;
-  --kb-green: #2fc85a;
-  --kb-green-fg: #1a7a39;
-  --kb-green-tint: #e4f8ea;
-  --kb-orange: #e4703b;
-  --kb-orange-fg: #b3460f;
-  --kb-orange-tint: #ffeee6;
-  --kb-lilac: #9b87f5;
-  --kb-lilac-fg: #5a43c6;
-  --kb-lilac-tint: #f0edfe;
-  --kb-pink: #f25cc8;
-  --kb-pink-fg: #a3247f;
-  --kb-pink-tint: #fde9f7;
-  --kb-red: #e5484d;
-  --kb-red-fg: #b3271f;
-  --kb-red-tint: #fdeceb;
-  --kb-yellow: #e0b400;
-  --kb-yellow-fg: #7a5c00;
-  --kb-yellow-tint: #fdf5d6;
-  */
   --kb-gray: #8e929c;
   --kb-gray-fg: #3a3d46;
   --kb-gray-tint: #eff0f3;
@@ -175,6 +153,9 @@
   --kb-activity-3: #5995d3;
   --kb-activity-4: #30659c;
   --kb-surface: #f5f6f8;
+  --kb-card-bg: var(--card);
+  --kb-fill: #f5f6f8;
+  --kb-fill-raised: #ffffff;
   --kb-text-2: #3a3d46;
   --kb-placeholder: #8e929c;
   --kb-divider: #eff0f3;
@@ -207,7 +188,6 @@
   --chart-3: #fbc45c;
   --chart-4: #cbb5db;
   --chart-5: #fdd2e3;
-  /* previous charts: #2f9bff #2fc85a #e4703b #9b87f5 #f25cc8 */
   --sidebar: #1b1c1f;
   --sidebar-foreground: #d4d5d9;
   --sidebar-primary: #f2f3f5; /* active nav item: light fill, dark text */
@@ -232,25 +212,11 @@
   --kb-red-tint: #402325;
   --kb-yellow-fg: #fcd487;
   --kb-yellow-tint: #3d3118;
-  /* Previous palette (kept for a future theme), dark:
-  --kb-blue-fg: #7db8ff;
-  --kb-blue-tint: #1c3250;
-  --kb-green-fg: #6fd89a;
-  --kb-green-tint: #1b3a29;
-  --kb-orange-fg: #ffa77a;
-  --kb-orange-tint: #3f2a1e;
-  --kb-lilac-fg: #b3a5ff;
-  --kb-lilac-tint: #2b2750;
-  --kb-pink-fg: #ff8ad4;
-  --kb-pink-tint: #40223a;
-  --kb-red-fg: #ff8a86;
-  --kb-red-tint: #402325;
-  --kb-yellow-fg: #f0cb5a;
-  --kb-yellow-tint: #3d3516;
-  */
   --kb-gray-fg: #d4d5d9;
   --kb-gray-tint: #34353b;
   --kb-surface: #232428;
+  --kb-fill: #26272b;
+  --kb-fill-raised: #2e2f34;
   --kb-text-2: #d4d5d9;
   --kb-placeholder: #8a8b92;
   --kb-divider: #2a2b30;
@@ -511,4 +477,163 @@
   ::view-transition-new(.page-enter) {
     animation: none;
   }
+}
+
+/* Ocean palette (user-selectable on /settings/theme). Applied with data-palette on <html> (or on a preview element). */
+[data-palette="ocean"]:where(:not(.dark, .dark *)) {
+  --chart-1: #2a8ed9;
+  --chart-2: #2bc76c;
+  --chart-3: #ebc115;
+  --chart-4: #9b76f7;
+  --chart-5: #e34f3d;
+  --kb-blue: #2a8ed9;
+  --kb-blue-fg: #2b5d87;
+  --kb-blue-tint: #d9eaf7;
+  --kb-green: #2bc76c;
+  --kb-green-fg: #17703b;
+  --kb-green-tint: #dcf6e7;
+  --kb-orange: #ee9a1f;
+  --kb-orange-fg: #8a5200;
+  --kb-orange-tint: #fdebd0;
+  --kb-lilac: #9b76f7;
+  --kb-lilac-fg: #5b3bb8;
+  --kb-lilac-tint: #ece5fe;
+  --kb-pink: #f07fa8;
+  --kb-pink-fg: #a3245a;
+  --kb-pink-tint: #fde6ef;
+  --kb-red: #e34f3d;
+  --kb-red-fg: #a8281a;
+  --kb-red-tint: #fce5e1;
+  --kb-yellow: #ebc115;
+  --kb-yellow-fg: #7a5c00;
+  --kb-yellow-tint: #fcf2c9;
+  --kb-activity-1: #d9eaf7;
+  --kb-activity-2: #79b2e3;
+  --kb-activity-3: #4c98d9;
+  --kb-activity-4: #2b5d87;
+}
+
+.dark[data-palette="ocean"],
+.dark [data-palette="ocean"] {
+  --chart-1: #2a8ed9;
+  --chart-2: #2bc76c;
+  --chart-3: #ebc115;
+  --chart-4: #9b76f7;
+  --chart-5: #e34f3d;
+  --kb-blue: #2a8ed9;
+  --kb-blue-fg: #79b2e3;
+  --kb-blue-tint: #1b3347;
+  --kb-green: #2bc76c;
+  --kb-green-fg: #7fe0a6;
+  --kb-green-tint: #1a3a29;
+  --kb-orange: #ee9a1f;
+  --kb-orange-fg: #f5b863;
+  --kb-orange-tint: #3d2c14;
+  --kb-lilac: #9b76f7;
+  --kb-lilac-fg: #bba3fb;
+  --kb-lilac-tint: #2b2550;
+  --kb-pink: #f07fa8;
+  --kb-pink-fg: #f7a8c4;
+  --kb-pink-tint: #40222f;
+  --kb-red: #e34f3d;
+  --kb-red-fg: #f58b7e;
+  --kb-red-tint: #402523;
+  --kb-yellow: #ebc115;
+  --kb-yellow-fg: #f2d45a;
+  --kb-yellow-tint: #3d3516;
+  --kb-activity-1: #d9eaf7;
+  --kb-activity-2: #79b2e3;
+  --kb-activity-3: #4c98d9;
+  --kb-activity-4: #2b5d87;
+}
+
+/* Lets the palette picker preview the classic solids while another palette is active. */
+[data-palette="classic"] {
+  --kb-blue: #7caff1;
+  --kb-green: #8ad761;
+  --kb-orange: #fbc45c;
+  --kb-lilac: #cbb5db;
+  --kb-pink: #fdd2e3;
+  --kb-red: #ed4c4c;
+  --kb-yellow: #fbc45c;
+}
+
+/* Vivid palette (the original saturated colors, user-selectable on /settings/theme). */
+[data-palette="vivid"]:where(:not(.dark, .dark *)) {
+  --chart-1: #2f9bff;
+  --chart-2: #2fc85a;
+  --chart-3: #e4703b;
+  --chart-4: #9b87f5;
+  --chart-5: #f25cc8;
+  --kb-blue: #2f9bff;
+  --kb-blue-fg: #1a63c7;
+  --kb-blue-tint: #e6f2ff;
+  --kb-green: #2fc85a;
+  --kb-green-fg: #1a7a39;
+  --kb-green-tint: #e4f8ea;
+  --kb-orange: #e4703b;
+  --kb-orange-fg: #b3460f;
+  --kb-orange-tint: #ffeee6;
+  --kb-lilac: #9b87f5;
+  --kb-lilac-fg: #5a43c6;
+  --kb-lilac-tint: #f0edfe;
+  --kb-pink: #f25cc8;
+  --kb-pink-fg: #a3247f;
+  --kb-pink-tint: #fde9f7;
+  --kb-red: #e5484d;
+  --kb-red-fg: #b3271f;
+  --kb-red-tint: #fdeceb;
+  --kb-yellow: #e0b400;
+  --kb-yellow-fg: #7a5c00;
+  --kb-yellow-tint: #fdf5d6;
+}
+
+.dark[data-palette="vivid"],
+.dark [data-palette="vivid"] {
+  --chart-1: #2f9bff;
+  --chart-2: #2fc85a;
+  --chart-3: #e4703b;
+  --chart-4: #9b87f5;
+  --chart-5: #f25cc8;
+  --kb-blue: #2f9bff;
+  --kb-green: #2fc85a;
+  --kb-orange: #e4703b;
+  --kb-lilac: #9b87f5;
+  --kb-pink: #f25cc8;
+  --kb-red: #e5484d;
+  --kb-yellow: #e0b400;
+  --kb-blue-fg: #7db8ff;
+  --kb-blue-tint: #1c3250;
+  --kb-green-fg: #6fd89a;
+  --kb-green-tint: #1b3a29;
+  --kb-orange-fg: #ffa77a;
+  --kb-orange-tint: #3f2a1e;
+  --kb-lilac-fg: #b3a5ff;
+  --kb-lilac-tint: #2b2750;
+  --kb-pink-fg: #ff8ad4;
+  --kb-pink-tint: #40223a;
+  --kb-red-fg: #ff8a86;
+  --kb-red-tint: #402325;
+  --kb-yellow-fg: #f0cb5a;
+  --kb-yellow-tint: #3d3516;
+}
+
+/* Card style "filled": borderless cards and panels with a solid fill (set on <html> from /settings/theme). */
+[data-surface="filled"] [data-slot="card"],
+[data-surface="filled"] .kb-panel {
+  --kb-card-bg: var(--kb-fill);
+  background-color: var(--kb-card-bg);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+html:not(.dark)[data-surface="filled"] [data-slot="card"] {
+  --muted: #eceef2;
+  --secondary: #eceef2;
+  --kb-surface: #eceef2;
+}
+
+/* Cards inside a board column sit on kb-surface, so they use the raised fill to stay visible. */
+[data-surface="filled"] .kb-column [data-slot="card"] {
+  --kb-card-bg: var(--kb-fill-raised);
 }
