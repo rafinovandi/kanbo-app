@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight2, Logout, Profile, Cpu } from "iconsax-react";
+import { ArrowRight2, Logout, Profile, Cpu, Brush2 } from "iconsax-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -33,7 +33,8 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
   const pathname = usePathname();
   const [botsOpen, setBotsOpen] = useState(false);
   const [signOutOpen, setSignOutOpen] = useState(false);
-  const onProfile = isPathActive(pathname, "/profile") || pathname === `/u/${profile.username}`;
+  const onProfile =
+    isPathActive(pathname, "/profile") || pathname === `/u/${profile.username}`;
 
   return (
     <SidebarMenu>
@@ -52,10 +53,20 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
                 avatarFg={profile.avatar_fg}
               />
               <span className="flex min-w-0 flex-1 flex-col gap-px">
-                <span className="truncate text-sm font-semibold text-foreground">{profile.name}</span>
-                <span className="text-xs text-muted-foreground">View profile</span>
+                <span className="truncate text-sm font-semibold text-foreground">
+                  {profile.name}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  View profile
+                </span>
               </span>
-              <ArrowRight2 size={14} variant="Linear" color="currentColor" className="text-muted-foreground" aria-hidden />
+              <ArrowRight2
+                size={14}
+                variant="Linear"
+                color="currentColor"
+                className="text-muted-foreground"
+                aria-hidden
+              />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -75,7 +86,9 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
                 />
                 <div className="min-w-0 leading-tight">
                   <p className="truncate text-sm font-medium">{profile.name}</p>
-                  <p className="truncate text-xs text-muted-foreground">{profile.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {profile.email}
+                  </p>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -83,16 +96,45 @@ export default function SidebarUserMenu({ profile }: { profile: AuthProfile }) {
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link href="/profile">
-                  <Profile size={16} variant="Linear" color="currentColor" aria-hidden />
+                  <Profile
+                    size={16}
+                    variant="Linear"
+                    color="currentColor"
+                    aria-hidden
+                  />
                   View Profile
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings/theme">
+                  <Brush2
+                    size={16}
+                    variant="Linear"
+                    color="currentColor"
+                    aria-hidden
+                  />
+                  Theme
+                </Link>
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setBotsOpen(true)}>
-                <Cpu size={16} variant="Linear" color="currentColor" aria-hidden />
+                <Cpu
+                  size={16}
+                  variant="Linear"
+                  color="currentColor"
+                  aria-hidden
+                />
                 Agent Bots
               </DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => setSignOutOpen(true)}>
-                <Logout size={16} variant="Linear" color="currentColor" aria-hidden />
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => setSignOutOpen(true)}
+              >
+                <Logout
+                  size={16}
+                  variant="Linear"
+                  color="currentColor"
+                  aria-hidden
+                />
                 Sign Out
               </DropdownMenuItem>
             </DropdownMenuGroup>
