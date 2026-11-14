@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import {
   createLinkCodeAction,
+  createMcpLinkAction,
   revokeLinkAction,
   sendTestMessageAction,
   updateLinkNotifyAction,
@@ -95,14 +96,9 @@ export default function ConnectChatDialog({
       (link) => !linkIdsAtGenerate.current.has(link.id),
     );
     if (!created) return;
-    if (code?.kind === "mcp") {
-      toast.success("Code used. Now add the server to your MCP client");
-      setLinkedId(created.id);
-    } else {
-      toast.success("Chat connected");
-      setCode(null);
-    }
-  }, [links, waiting, code?.kind]);
+    toast.success("Chat connected");
+    setCode(null);
+  }, [links, waiting]);
 
   useEffect(() => {
     if (connected) toast.success("MCP client connected");
@@ -119,6 +115,18 @@ export default function ConnectChatDialog({
   const generate = async () => {
     if (needsBot && !selectedBot) return;
     setGenerating(true);
+    if (kind === "mcp") {
+      const mcp = await createMcpLinkAction(project.id);
+      setGenerating(false);
+      if (mcp.status === "error") {
+        toast.error(mcp.message);
+        return;
+      }
+      setLinkedId(mcp.linkId);
+      setCode({ value: mcp.token, kind, botUsername: "", expiresAt: 0 });
+      queryClient.invalidateQueries({ queryKey: agentLinksKey(project.id) });
+      return;
+    }
     const result = await createLinkCodeAction(
       project.id,
       kind,
@@ -236,7 +244,6 @@ export default function ConnectChatDialog({
                 <LinkCodeCard
                   code={code}
                   waiting={waiting}
-                  linked={linkedId !== null}
                   remaining={remaining}
                   generating={generating}
                   appUrl={appUrl}
@@ -303,8 +310,8 @@ export default function ConnectChatDialog({
                     </>
                   ) : (
                     <p className="text-[13px] leading-normal text-muted-foreground">
-                      No Telegram bot is needed. You get a code, exchange it for
-                      a token, and add the server to your MCP client.
+                      No Telegram bot is needed. You get one command to run in
+                      your terminal, and the MCP client is connected.
                     </p>
                   )}
                   <Button
@@ -313,7 +320,11 @@ export default function ConnectChatDialog({
                     disabled={generating}
                     className="h-10 w-full px-4 sm:w-auto sm:self-start"
                   >
-                    {generating ? "Generating…" : "Generate Code"}
+                    {generating
+                      ? "Generating…"
+                      : needsBot
+                        ? "Generate Code"
+                        : "Generate Command"}
                   </Button>
                 </>
               )}

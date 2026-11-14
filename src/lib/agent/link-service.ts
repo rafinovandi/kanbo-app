@@ -3,31 +3,57 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 
 import { environment } from "@/configs/environment";
-import { clientKey, failure, isApiResult, readJson, type AgentLinkContext, type ApiResult } from "@/lib/agent/http";
+import {
+  clientKey,
+  failure,
+  isApiResult,
+  readJson,
+  type AgentLinkContext,
+  type ApiResult,
+} from "@/lib/agent/http";
 import { boardUrl, invalid, text } from "@/lib/agent/shared";
-import { createChatToken, hashAgentSecret, normalizeLinkCode } from "@/lib/agent/tokens";
+import {
+  createChatToken,
+  hashAgentSecret,
+  normalizeLinkCode,
+} from "@/lib/agent/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const CHAT_ID = /^-?\d{1,20}$/;
 
 // Trades a one-time code for a chat token. The code is consumed in one UPDATE, so it can only win once.
 export async function linkChat(request: Request): Promise<ApiResult> {
-  if (!environment.AGENT_ENABLED) return failure(404, "agent_disabled", "Not found");
+  if (!environment.AGENT_ENABLED)
+    return failure(404, "agent_disabled", "Not found");
 
   const admin = createAdminClient();
-  const { data: limit } = await admin.rpc("agent_link_rate_limit", { p_client_hash: clientKey(request) });
+  const { data: limit } = await admin.rpc("agent_link_rate_limit", {
+    p_client_hash: clientKey(request),
+  });
   if (!limit?.[0]?.allowed) {
-    return failure(429, "rate_limited", "Too many attempts. Try again shortly.", {
-      "Retry-After": String(limit?.[0]?.retry_after ?? 60),
-    });
+    return failure(
+      429,
+      "rate_limited",
+      "Too many attempts. Try again shortly.",
+      {
+        "Retry-After": String(limit?.[0]?.retry_after ?? 60),
+      },
+    );
   }
 
   const parsed = await readJson(request);
   if (isApiResult(parsed)) return parsed;
   const code = normalizeLinkCode(text(parsed.data.code, 32));
   const chatId = text(parsed.data.chatId, 64);
-  const gone = failure(410, "code_expired", "This code is invalid, expired or already used.");
-  if (!code) return invalid("Send { code } (and, for a Telegram chat, channel and chatId).");
+  const gone = failure(
+    410,
+    "code_expired",
+    "This code is invalid, expired or already used.",
+  );
+  if (!code)
+    return invalid(
+      "Send { code } (and, for a Telegram chat, channel and chatId).",
+    );
 
   const codeHash = hashAgentSecret("link-code", code);
   const { data: peek } = await admin
@@ -38,8 +64,13 @@ export async function linkChat(request: Request): Promise<ApiResult> {
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
   if (!peek) return gone;
-  if (peek.kind === "chat" && (parsed.data.channel !== "telegram" || !CHAT_ID.test(chatId))) {
-    return invalid("Send { code, channel: \"telegram\", chatId } with a numeric chatId.");
+  if (
+    peek.kind === "chat" &&
+    (parsed.data.channel !== "telegram" || !CHAT_ID.test(chatId))
+  ) {
+    return invalid(
+      'Send { code, channel: "telegram", chatId } with a numeric chatId.',
+    );
   }
 
   const { data: used } = await admin
@@ -53,20 +84,30 @@ export async function linkChat(request: Request): Promise<ApiResult> {
   if (!used) return gone;
   const isChat = used.kind === "chat";
 
-  const [{ data: bot }, { data: stillAdmin }, { data: project }] = await Promise.all([
-    used.bot_id
-      ? admin.from("agent_bots").select("id").eq("id", used.bot_id).is("revoked_at", null).maybeSingle()
-      : Promise.resolve({ data: isChat ? null : { id: "" } }),
-    admin
-      .from("project_members")
-      .select("id")
-      .eq("project_id", used.project_id)
-      .eq("user_id", used.created_by)
-      .eq("status", "active")
-      .eq("is_admin", true)
-      .maybeSingle(),
-    admin.from("projects").select("id, name").eq("id", used.project_id).maybeSingle(),
-  ]);
+  const [{ data: bot }, { data: stillAdmin }, { data: project }] =
+    await Promise.all([
+      used.bot_id
+        ? admin
+            .from("agent_bots")
+            .select("id")
+            .eq("id", used.bot_id)
+            .is("revoked_at", null)
+            .maybeSingle()
+        : Promise.resolve({ data: isChat ? null : { id: "" } }),
+      admin
+        .from("project_members")
+        .select("id")
+        .eq("project_id", used.project_id)
+        .eq("user_id", used.created_by)
+        .eq("status", "active")
+        .eq("is_admin", true)
+        .maybeSingle(),
+      admin
+        .from("projects")
+        .select("id, name")
+        .eq("id", used.project_id)
+        .maybeSingle(),
+    ]);
   if (!bot || !stillAdmin || !project) return gone;
 
   const linkChatId = isChat ? chatId : `mcp-${randomBytes(8).toString("hex")}`;
@@ -78,9 +119,14 @@ export async function linkChat(request: Request): Promise<ApiResult> {
         .eq("chat_id", chatId)
         .is("revoked_at", null)
     : { data: [] };
-  const replaced = (existing ?? []).filter((link) => link.project_id === used.project_id).map((link) => link.id);
+  const replaced = (existing ?? [])
+    .filter((link) => link.project_id === used.project_id)
+    .map((link) => link.id);
   if (replaced.length > 0) {
-    await admin.from("agent_links").update({ revoked_at: new Date().toISOString() }).in("id", replaced);
+    await admin
+      .from("agent_links")
+      .update({ revoked_at: new Date().toISOString() })
+      .in("id", replaced);
   }
 
   const token = createChatToken();
@@ -94,17 +140,75 @@ export async function linkChat(request: Request): Promise<ApiResult> {
     linked_by: used.created_by,
   });
   if (error) {
-    if (replaced.length > 0) await admin.from("agent_links").update({ revoked_at: null }).in("id", replaced);
+    if (replaced.length > 0)
+      await admin
+        .from("agent_links")
+        .update({ revoked_at: null })
+        .in("id", replaced);
     if (error.code === "23505") {
-      return failure(409, "chat_already_linked", "This chat is already connected to this project. Try again with a new code.");
+      return failure(
+        409,
+        "chat_already_linked",
+        "This chat is already connected to this project. Try again with a new code.",
+      );
     }
-    return failure(500, "link_failed", "Could not link this chat. Try again with a new code.");
+    return failure(
+      500,
+      "link_failed",
+      "Could not link this chat. Try again with a new code.",
+    );
   }
 
-  return { status: 200, body: { token, project: { id: project.id, name: project.name, url: boardUrl(project.id) } } };
+  return {
+    status: 200,
+    body: {
+      token,
+      project: {
+        id: project.id,
+        name: project.name,
+        url: boardUrl(project.id),
+      },
+    },
+  };
+}
+
+// Issues an MCP link and its token directly, so the client needs a single `claude mcp add` command.
+export async function createMcpLink(
+  admin: ReturnType<typeof createAdminClient>,
+  projectId: string,
+  userId: string,
+): Promise<{ token: string; linkId: string } | null> {
+  await admin
+    .from("agent_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("project_id", projectId)
+    .eq("linked_by", userId)
+    .eq("kind", "mcp")
+    .is("last_used_at", null)
+    .is("revoked_at", null);
+
+  const token = createChatToken();
+  const { data, error } = await admin
+    .from("agent_links")
+    .insert({
+      project_id: projectId,
+      bot_id: null,
+      kind: "mcp",
+      channel: "telegram",
+      chat_id: `mcp-${randomBytes(8).toString("hex")}`,
+      token_hash: hashAgentSecret("chat-token", token),
+      linked_by: userId,
+    })
+    .select("id")
+    .single();
+  if (error || !data) return null;
+  return { token, linkId: data.id };
 }
 
 export async function unlinkChat(ctx: AgentLinkContext): Promise<ApiResult> {
-  await ctx.admin.from("agent_links").update({ revoked_at: new Date().toISOString() }).eq("id", ctx.id);
+  await ctx.admin
+    .from("agent_links")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", ctx.id);
   return { status: 200, body: { revoked: true } };
 }

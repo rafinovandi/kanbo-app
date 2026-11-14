@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import useDashboardStats from "@/hooks/use-dashboard-stats";
 
 import DashboardEmpty from "./dashboard-empty";
+import DashboardActivity from "./dashboard-activity";
 import DashboardProgress from "./dashboard-progress";
 import DashboardProjects from "./dashboard-projects";
 import DashboardStatBoxes from "./dashboard-stats";
@@ -24,7 +25,11 @@ export default function DashboardContent() {
   }
 
   if (isError || !stats) {
-    return <p className="text-sm text-muted-foreground">Could not load your dashboard. Refresh to try again.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        Could not load your dashboard. Refresh to try again.
+      </p>
+    );
   }
 
   if (stats.project_count === 0) return <DashboardEmpty />;
@@ -35,7 +40,10 @@ export default function DashboardContent() {
       <Separator />
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-start gap-4">
         <DashboardProjects projects={stats.projects} />
-        <DashboardProgress stats={stats} />
+        <div className="flex flex-col gap-4">
+          <DashboardProgress stats={stats} />
+          <DashboardActivity />
+        </div>
       </div>
     </>
   );

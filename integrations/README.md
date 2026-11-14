@@ -55,19 +55,13 @@ Kanbo also speaks MCP over plain HTTP, so Claude Code (or any MCP client that su
 
 An MCP client needs **no Telegram bot**. You can do the whole thing from the dialog:
 
-1. Open the project as an admin → ⋯ menu → **Connect Chat**, choose **MCP Client**, then **Generate Code**. The code is valid for 10 minutes.
-2. The dialog shows two commands with Copy buttons. Run the first one in a terminal of your own, not a shared one, because the token it returns is shown only once:
-   ```bash
-   curl -i -X POST https://your-kanbo.vercel.app/api/agent/v1/link \
-     -H "Content-Type: application/json" \
-     -d '{"code":"ABCD1234"}'
-   ```
-   The reply contains `"token":"kbo_…"`. No `chatId` or `channel` is needed for an MCP code.
-3. Run the second command (below) with that token. The dialog then lists the connection as **MCP client**; it has no **Send Test** button and no notification switches, because there is no chat to post to. Use **Revoke** to disconnect it.
+1. Open the project as an admin → ⋯ menu → **Connect Chat**, choose **MCP Client**, then **Generate Command**.
+2. The dialog shows one `claude mcp add` command with the token already inside, and a Copy button. Run it in a terminal of your own, not a shared one, because the token is shown only once. Generating a new command cancels the previous one if it was never used.
+3. Once the client connects, the dialog lists the connection as **MCP client**; it has no **Send Test** button and no notification switches, because there is no chat to post to. Use **Revoke** to disconnect it.
 
 Choose **Telegram Chat** instead if you want the agent to work from a Telegram group; that path needs a bot and shows **Send Test**.
 
-### Add it to Claude Code
+### What the command looks like
 
 ```bash
 claude mcp add --transport http kanbo https://your-kanbo.vercel.app/api/agent/mcp \

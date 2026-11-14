@@ -63,6 +63,15 @@ function levelColors(color: ActivityColor): Record<ContributionLevel, string> {
   };
 }
 
+// More tasks on a day, a bigger square. The grid slot stays 11px; only the square scales inside it.
+const LEVEL_SCALE: Record<ContributionLevel, string> = {
+  NONE: "scale-[0.9]",
+  FIRST_QUARTILE: "scale-[0.95]",
+  SECOND_QUARTILE: "scale-100",
+  THIRD_QUARTILE: "scale-[1.1]",
+  FOURTH_QUARTILE: "scale-[1.2]",
+};
+
 const SHAPE_CLASSES: Record<GitHubActivityShape, string> = {
   square: "rounded-none",
   rounded: "rounded-[3px]",
@@ -114,7 +123,14 @@ export function GitHubActivity({
   className?: string;
 }) {
   const scrollRef = React.useRef<HTMLDivElement>(null);
-  const cell = cn("block size-[11px] shrink-0", SHAPE_CLASSES[shape]);
+  const slot = "flex size-[11px] shrink-0 items-center justify-center";
+  const square = (level: ContributionLevel) =>
+    cn(
+      "block size-full",
+      SHAPE_CLASSES[shape],
+      LEVEL_SCALE[level],
+      levelClasses[level],
+    );
   const levelClasses = levelColors(color);
 
   // Newest weeks are on the right: start scrolled to the end on narrow screens.
@@ -143,7 +159,7 @@ export function GitHubActivity({
         ref={scrollRef}
         role="img"
         aria-label={`Activity graph: ${contributions.totalContributions} ${unit[1]} completed in the last year`}
-        className="overflow-x-auto"
+        className="overflow-x-auto py-px"
       >
         <div className="inline-flex min-w-max flex-col gap-1.5">
           <div aria-hidden className="flex h-3.5 gap-[3px] pl-8">
@@ -175,12 +191,9 @@ export function GitHubActivity({
                   day.date ? (
                     <Tooltip key={d}>
                       <TooltipTrigger asChild>
-                        <span
-                          className={cn(
-                            cell,
-                            levelClasses[day.contributionLevel],
-                          )}
-                        />
+                        <span className={slot}>
+                          <span className={square(day.contributionLevel)} />
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent>
                         {day.contributionCount === 0
@@ -190,7 +203,7 @@ export function GitHubActivity({
                       </TooltipContent>
                     </Tooltip>
                   ) : (
-                    <span key={d} className={cell} />
+                    <span key={d} className={slot} />
                   ),
                 )}
               </div>
@@ -205,11 +218,9 @@ export function GitHubActivity({
           <span className="flex items-center gap-1">
             Less
             {LEVELS.map((level) => (
-              <span
-                key={level}
-                aria-hidden
-                className={cn(cell, levelClasses[level])}
-              />
+              <span key={level} aria-hidden className={slot}>
+                <span className={square(level)} />
+              </span>
             ))}
             More
           </span>

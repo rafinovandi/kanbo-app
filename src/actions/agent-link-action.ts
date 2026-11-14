@@ -1,6 +1,7 @@
 "use server";
 
 import { environment } from "@/configs/environment";
+import { createMcpLink } from "@/lib/agent/link-service";
 import { escapeHtml, sendMessage } from "@/lib/agent/telegram";
 import { hashAgentSecret, createLinkCode } from "@/lib/agent/tokens";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -10,6 +11,7 @@ import type { AgentLink, AgentLinkKind } from "@/types/agent";
 type Failure = { status: "error"; message: string };
 export type AgentLinkActionResult = { status: "success" } | Failure;
 export type LinkCodeResult = { status: "success"; code: string; expiresAt: string } | Failure;
+export type McpLinkResult = { status: "success"; token: string; linkId: string } | Failure;
 export type AgentLinksResult = { status: "success"; links: AgentLink[] } | Failure;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -83,6 +85,16 @@ export async function createLinkCodeAction(projectId: string, kind: AgentLinkKin
     if (error.code !== "23505") break;
   }
   return fail(FAILED);
+}
+
+// The MCP token is created right away and shown once, so the client only has to run `claude mcp add`.
+export async function createMcpLinkAction(projectId: string): Promise<McpLinkResult> {
+  const session = await getAdminSession(projectId);
+  if (!session) return fail(NOT_ALLOWED);
+
+  const link = await createMcpLink(session.admin, projectId, session.userId);
+  if (!link) return fail(FAILED);
+  return { status: "success", ...link };
 }
 
 export async function listAgentLinksAction(projectId: string): Promise<AgentLinksResult> {

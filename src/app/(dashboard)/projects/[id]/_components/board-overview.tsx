@@ -58,7 +58,7 @@ export default function BoardOverview({ projectId }: { projectId: string }) {
             segments={counts.map(({ category, count }) => ({
               id: category.id,
               value: count,
-              className: PROJECT_TONE[category.color].bar,
+              className: cn(PROJECT_TONE[category.color].bar, "rounded-[3.5px]"),
             }))}
           />
           {counts.map(({ category, count }) => (

@@ -147,7 +147,7 @@
   --kb-gray: #8e929c;
   --kb-gray-fg: #3a3d46;
   --kb-gray-tint: #eff0f3;
-  /* Profile activity graph, primary blue: least to most active (same in dark) */
+  /* Profile activity graph, primary blue: least to most active. Light fades in from pale to deep; dark flips it (dim to bright). */
   --kb-activity-1: #bedfff;
   --kb-activity-2: #7caff1;
   --kb-activity-3: #5995d3;
@@ -222,6 +222,10 @@
   --kb-divider: #2a2b30;
   --kb-line: #45464d;
   --kb-faint: #585a63;
+  --kb-activity-1: #30659c;
+  --kb-activity-2: #5995d3;
+  --kb-activity-3: #7caff1;
+  --kb-activity-4: #bedfff;
 }
 
 /* Decorative animations (sign in visual, empty states). Static under prefers-reduced-motion. */
@@ -541,10 +545,10 @@
   --kb-yellow: #ebc115;
   --kb-yellow-fg: #f2d45a;
   --kb-yellow-tint: #3d3516;
-  --kb-activity-1: #d9eaf7;
-  --kb-activity-2: #79b2e3;
-  --kb-activity-3: #4c98d9;
-  --kb-activity-4: #2b5d87;
+  --kb-activity-1: #2b5d87;
+  --kb-activity-2: #4c98d9;
+  --kb-activity-3: #79b2e3;
+  --kb-activity-4: #d9eaf7;
 }
 
 /* Lets the palette picker preview the classic solids while another palette is active. */

@@ -19,11 +19,36 @@ export const EMPTY_PROJECT_ROWS = [
 // Task statuses shown in the stat boxes and the progress legend. Custom columns of all
 // projects are summed into "other".
 export const DASHBOARD_STATUSES = [
-  { key: "todo", label: "To Do", dotClass: "bg-kb-gray" },
-  { key: "progress", label: "In Progress", dotClass: "bg-kb-blue" },
-  { key: "review", label: "Review", dotClass: "bg-kb-lilac" },
-  { key: "done", label: "Done", dotClass: "bg-kb-green" },
-  { key: "other", label: "Other", dotClass: "bg-kb-orange" },
+  {
+    key: "todo",
+    label: "To Do",
+    dotClass: "bg-kb-gray",
+    color: "var(--kb-gray)",
+  },
+  {
+    key: "progress",
+    label: "In Progress",
+    dotClass: "bg-kb-blue",
+    color: "var(--kb-blue)",
+  },
+  {
+    key: "review",
+    label: "Review",
+    dotClass: "bg-kb-lilac",
+    color: "var(--kb-lilac)",
+  },
+  {
+    key: "done",
+    label: "Done",
+    dotClass: "bg-kb-green",
+    color: "var(--kb-green)",
+  },
+  {
+    key: "other",
+    label: "Other",
+    dotClass: "bg-kb-orange",
+    color: "var(--kb-orange)",
+  },
 ] as const;
 
 export const getProgressPercent = (done: number, total: number) =>
