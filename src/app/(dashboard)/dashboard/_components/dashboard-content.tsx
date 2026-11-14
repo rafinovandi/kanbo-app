@@ -1,7 +1,10 @@
 "use client";
 
+import { MotionConfig, motion } from "motion/react";
+
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { STAGGER_ITEM, STAGGER_LIST } from "@/constants/motion-constant";
 import useDashboardStats from "@/hooks/use-dashboard-stats";
 
 import DashboardEmpty from "./dashboard-empty";
@@ -35,16 +38,33 @@ export default function DashboardContent() {
   if (stats.project_count === 0) return <DashboardEmpty />;
 
   return (
-    <>
-      <DashboardStatBoxes stats={stats} />
-      <Separator />
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-start gap-4">
-        <DashboardProjects projects={stats.projects} />
-        <div className="flex flex-col gap-4">
-          <DashboardProgress stats={stats} />
-          <DashboardActivity />
+    <MotionConfig reducedMotion="user">
+      <motion.div
+        variants={STAGGER_LIST}
+        initial="hidden"
+        animate="visible"
+        className="flex flex-col gap-6"
+      >
+        <motion.div variants={STAGGER_ITEM}>
+          <DashboardStatBoxes stats={stats} />
+        </motion.div>
+        <motion.div variants={STAGGER_ITEM}>
+          <Separator />
+        </motion.div>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-start gap-4">
+          <motion.div variants={STAGGER_ITEM}>
+            <DashboardProjects projects={stats.projects} />
+          </motion.div>
+          <div className="flex flex-col gap-4">
+            <motion.div variants={STAGGER_ITEM}>
+              <DashboardProgress stats={stats} />
+            </motion.div>
+            <motion.div variants={STAGGER_ITEM}>
+              <DashboardActivity />
+            </motion.div>
+          </div>
         </div>
-      </div>
-    </>
+      </motion.div>
+    </MotionConfig>
   );
 }

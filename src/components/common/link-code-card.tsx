@@ -1,8 +1,11 @@
 "use client";
 
+import { MotionConfig, motion } from "motion/react";
+
 import CopyField from "@/components/common/copy-field";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { STAGGER_ITEM, STAGGER_LIST } from "@/constants/motion-constant";
 import { cn } from "@/lib/utils";
 import type { AgentLinkKind } from "@/types/agent";
 
@@ -43,31 +46,44 @@ export default function LinkCodeCard({
     ];
     return (
       <div className="flex flex-col gap-3">
-        <Tabs defaultValue={tabs[0].value}>
-          <TabsList className="dark:bg-background">
+        <MotionConfig reducedMotion="user">
+          <Tabs defaultValue={tabs[0].value}>
+            <TabsList className="dark:bg-background">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="data-active:border-primary data-active:bg-primary data-active:text-primary-foreground data-active:hover:text-primary-foreground! dark:data-active:border-foreground/25 dark:data-active:bg-input/30 dark:data-active:text-foreground dark:data-active:hover:text-foreground!"
+                >
+                  <code className="text-[13px]">{tab.name}</code>
+                </TabsTrigger>
+              ))}
+            </TabsList>
             {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="data-active:border-primary data-active:bg-primary data-active:text-primary-foreground data-active:hover:text-primary-foreground! dark:data-active:border-foreground/25 dark:data-active:bg-input/30 dark:data-active:text-foreground dark:data-active:hover:text-foreground!"
-              >
-                <code className="text-[13px]">{tab.name}</code>
-              </TabsTrigger>
+              <TabsContent key={tab.value} value={tab.value}>
+                <motion.div
+                  variants={STAGGER_LIST}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  <motion.div variants={STAGGER_ITEM}>
+                    <CopyField value={tab.command} />
+                  </motion.div>
+                  {tab.value === "codex" && (
+                    <motion.span
+                      variants={STAGGER_ITEM}
+                      className="mt-2 block text-xs leading-normal text-muted-foreground"
+                    >
+                      Codex reads the token from the KANBO_TOKEN variable, so
+                      also add the export line to your shell profile (for
+                      example ~/.zshrc).
+                    </motion.span>
+                  )}
+                </motion.div>
+              </TabsContent>
             ))}
-          </TabsList>
-          {tabs.map((tab) => (
-            <TabsContent key={tab.value} value={tab.value}>
-              <CopyField value={tab.command} />
-              {tab.value === "codex" && (
-                <span className="mt-2 block text-xs leading-normal text-muted-foreground">
-                  Codex reads the token from the KANBO_TOKEN variable, so also
-                  add the export line to your shell profile (for example
-                  ~/.zshrc).
-                </span>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+          </Tabs>
+        </MotionConfig>
         <span className="text-xs leading-normal text-muted-foreground">
           The token in this command is shown only once. Generating a new command
           cancels this one if it has not been used.

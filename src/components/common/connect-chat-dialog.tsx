@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { MotionConfig, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { STAGGER_ITEM, STAGGER_LIST } from "@/constants/motion-constant";
 import useAgentBots from "@/hooks/use-agent-bots";
 import useAgentLinks, { agentLinksKey } from "@/hooks/use-agent-links";
 import { displayClientName } from "@/lib/agent/client-name";
@@ -230,106 +232,127 @@ export default function ConnectChatDialog({
                 </div>
               )}
 
-              {needsBot && botsLoading ? (
-                <Skeleton className="h-10 w-full rounded-[10px]" />
-              ) : needsBot && !selectedBot ? (
-                <div className="flex flex-col gap-1 rounded-xl bg-muted p-3.5">
-                  <span className="text-sm font-semibold">
-                    You don&apos;t have a bot yet
-                  </span>
-                  <span className="text-[13px] leading-normal text-muted-foreground">
-                    Add your Telegram bot first: open your profile menu in the
-                    sidebar and choose Agent Bots.
-                  </span>
-                </div>
-              ) : code && !connected ? (
-                <LinkCodeCard
-                  code={code}
-                  waiting={waiting}
-                  remaining={remaining}
-                  generating={generating}
-                  appUrl={appUrl}
-                  onGenerate={generate}
-                />
-              ) : (
-                <>
-                  {needsBot ? (
-                    <>
-                      <div className="flex flex-col gap-2">
-                        <label
-                          htmlFor="connect-chat-bot"
-                          className="text-[13px] font-medium text-kb-text-2"
-                        >
-                          Bot
-                        </label>
-                        <Select
-                          value={selectedBot?.id}
-                          onValueChange={setBotId}
-                        >
-                          <SelectTrigger
-                            id="connect-chat-bot"
-                            className="h-10 w-full rounded-[10px] px-3 text-sm"
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {bots?.map((bot) => (
-                              <SelectItem key={bot.id} value={bot.id}>
-                                {bot.name} · @{bot.bot_username}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <span className="text-xs text-muted-foreground">
-                          The bot must already be in your Telegram group.
-                        </span>
-                      </div>
-                      <div className="flex flex-col gap-2.5 rounded-xl bg-muted p-3.5">
-                        <span className="text-sm font-semibold">
-                          Your agent needs the Kanbo skill
-                        </span>
-                        <ol className="list-decimal pl-4 text-[13px] leading-normal text-muted-foreground">
-                          <li>Download the skill and unzip it.</li>
-                          <li>
-                            Put the <code>kanbo</code> folder in your
-                            agent&apos;s skills folder.
-                          </li>
-                          <li>
-                            Set <code>KANBO_API_URL</code> to{" "}
-                            <code>{appUrl}</code> for the skill.
-                          </li>
-                        </ol>
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="h-9 w-full px-4 sm:w-auto sm:self-start"
-                        >
-                          <a href="/api/agent/skill.zip" download>
-                            Download skill
-                          </a>
-                        </Button>
-                      </div>
-                    </>
+              <MotionConfig reducedMotion="user">
+                <motion.div
+                  key={kind}
+                  className="flex flex-col gap-3"
+                  variants={STAGGER_LIST}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {needsBot && botsLoading ? (
+                    <Skeleton className="h-10 w-full rounded-[10px]" />
+                  ) : needsBot && !selectedBot ? (
+                    <div className="flex flex-col gap-1 rounded-xl bg-muted p-3.5">
+                      <span className="text-sm font-semibold">
+                        You don&apos;t have a bot yet
+                      </span>
+                      <span className="text-[13px] leading-normal text-muted-foreground">
+                        Add your Telegram bot first: open your profile menu in
+                        the sidebar and choose Agent Bots.
+                      </span>
+                    </div>
+                  ) : code && !connected ? (
+                    <LinkCodeCard
+                      code={code}
+                      waiting={waiting}
+                      remaining={remaining}
+                      generating={generating}
+                      appUrl={appUrl}
+                      onGenerate={generate}
+                    />
                   ) : (
-                    <p className="text-[13px] leading-normal text-muted-foreground">
-                      No Telegram bot is needed. You get one command to run in
-                      your terminal, and the MCP client is connected.
-                    </p>
+                    <>
+                      {needsBot ? (
+                        <>
+                          <motion.div
+                            variants={STAGGER_ITEM}
+                            className="flex flex-col gap-2"
+                          >
+                            <label
+                              htmlFor="connect-chat-bot"
+                              className="text-[13px] font-medium text-kb-text-2"
+                            >
+                              Bot
+                            </label>
+                            <Select
+                              value={selectedBot?.id}
+                              onValueChange={setBotId}
+                            >
+                              <SelectTrigger
+                                id="connect-chat-bot"
+                                className="h-10 w-full rounded-[10px] px-3 text-sm"
+                              >
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {bots?.map((bot) => (
+                                  <SelectItem key={bot.id} value={bot.id}>
+                                    {bot.name} · @{bot.bot_username}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <span className="text-xs text-muted-foreground">
+                              The bot must already be in your Telegram group.
+                            </span>
+                          </motion.div>
+                          <motion.div
+                            variants={STAGGER_ITEM}
+                            className="flex flex-col gap-2.5 rounded-xl bg-muted p-3.5"
+                          >
+                            <span className="text-sm font-semibold">
+                              Your agent needs the Kanbo skill
+                            </span>
+                            <ol className="list-decimal pl-4 text-[13px] leading-normal text-muted-foreground">
+                              <li>Download the skill and unzip it.</li>
+                              <li>
+                                Put the <code>kanbo</code> folder in your
+                                agent&apos;s skills folder.
+                              </li>
+                              <li>
+                                Set <code>KANBO_API_URL</code> to{" "}
+                                <code>{appUrl}</code> for the skill.
+                              </li>
+                            </ol>
+                            <Button
+                              asChild
+                              variant="outline"
+                              className="h-9 w-full px-4 sm:w-auto sm:self-start"
+                            >
+                              <a href="/api/agent/skill.zip" download>
+                                Download skill
+                              </a>
+                            </Button>
+                          </motion.div>
+                        </>
+                      ) : (
+                        <motion.p
+                          variants={STAGGER_ITEM}
+                          className="text-[13px] leading-normal text-muted-foreground"
+                        >
+                          No Telegram bot is needed. You get one command to run
+                          in your terminal, and the MCP client is connected.
+                        </motion.p>
+                      )}
+                      <motion.div variants={STAGGER_ITEM}>
+                        <Button
+                          type="button"
+                          onClick={generate}
+                          disabled={generating}
+                          className="h-10 w-full px-4 sm:w-auto sm:self-start"
+                        >
+                          {generating
+                            ? "Generating…"
+                            : needsBot
+                              ? "Generate Code"
+                              : "Generate Command"}
+                        </Button>
+                      </motion.div>
+                    </>
                   )}
-                  <Button
-                    type="button"
-                    onClick={generate}
-                    disabled={generating}
-                    className="h-10 w-full px-4 sm:w-auto sm:self-start"
-                  >
-                    {generating
-                      ? "Generating…"
-                      : needsBot
-                        ? "Generate Code"
-                        : "Generate Command"}
-                  </Button>
-                </>
-              )}
+                </motion.div>
+              </MotionConfig>
             </section>
 
             <div className="h-px bg-border" />
