@@ -1,7 +1,9 @@
 "use client";
 
+import { Warning2 } from "iconsax-react";
 import { MotionConfig, motion } from "motion/react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { STAGGER_ITEM, STAGGER_LIST } from "@/constants/motion-constant";
@@ -29,9 +31,12 @@ export default function DashboardContent() {
 
   if (isError || !stats) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Could not load your dashboard. Refresh to try again.
-      </p>
+      <Alert variant="destructive">
+        <Warning2 size={16} variant="Linear" color="currentColor" aria-hidden />
+        <AlertDescription>
+          Could not load your dashboard. Refresh to try again.
+        </AlertDescription>
+      </Alert>
     );
   }
 

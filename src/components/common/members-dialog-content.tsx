@@ -1,14 +1,22 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { Warning2 } from "iconsax-react";
 import { useState } from "react";
 
-import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PROJECT_TILE } from "@/constants/project-constant";
 import { DASHBOARD_STATS_KEY } from "@/hooks/use-dashboard-stats";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
-import useProjectMembers, { projectMembersKey } from "@/hooks/use-project-members";
+import useProjectMembers, {
+  projectMembersKey,
+} from "@/hooks/use-project-members";
 import { getMemberPermissions } from "@/lib/members";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
@@ -19,7 +27,13 @@ import MembersInviteForm from "./members-invite-form";
 
 // Body of the Members dialog. Mounted only while the dialog is open, so the list is
 // fetched on open and dropped on close.
-export default function MembersDialogContent({ project, onLeft }: { project: ProjectSummary; onLeft: () => void }) {
+export default function MembersDialogContent({
+  project,
+  onLeft,
+}: {
+  project: ProjectSummary;
+  onLeft: () => void;
+}) {
   const me = useAuthStore((state) => state.profile);
   const queryClient = useQueryClient();
   const { data, isLoading, isError } = useProjectMembers(project.id);
@@ -33,7 +47,9 @@ export default function MembersDialogContent({ project, onLeft }: { project: Pro
   };
 
   const rows = data?.members ?? [];
-  const iAmAdmin = rows.some((member) => member.userId === me.id && member.isAdmin);
+  const iAmAdmin = rows.some(
+    (member) => member.userId === me.id && member.isAdmin,
+  );
   const pending = rows.filter((member) => member.status === "pending").length;
   const active = rows.length - pending;
   const admins = rows.filter((member) => member.isAdmin).length;
@@ -51,7 +67,9 @@ export default function MembersDialogContent({ project, onLeft }: { project: Pro
           {project.name[0].toUpperCase()}
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <DialogTitle className="text-[15px] font-semibold">Members</DialogTitle>
+          <DialogTitle className="text-[15px] font-semibold">
+            Members
+          </DialogTitle>
           <DialogDescription className="truncate text-xs">
             {project.name} · {active} {active === 1 ? "member" : "members"}
             {pending > 0 && ` · ${pending} pending`}
@@ -61,7 +79,19 @@ export default function MembersDialogContent({ project, onLeft }: { project: Pro
 
       <div className="flex flex-col gap-5 p-6 pt-5">
         {isLoading && <Skeleton className="h-40 rounded-xl" />}
-        {isError && <p className="text-sm text-muted-foreground">Could not load the members. Close and try again.</p>}
+        {isError && (
+          <Alert variant="destructive">
+            <Warning2
+              size={16}
+              variant="Linear"
+              color="currentColor"
+              aria-hidden
+            />
+            <AlertDescription>
+              Could not load the members. Close and try again.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {data && (
           <>
@@ -77,7 +107,8 @@ export default function MembersDialogContent({ project, onLeft }: { project: Pro
 
             <div className="flex flex-col gap-1">
               <span className="pb-1 text-xs font-medium text-muted-foreground">
-                {rows.length} {rows.length === 1 ? "person" : "people"} · {admins} {admins === 1 ? "admin" : "admins"}
+                {rows.length} {rows.length === 1 ? "person" : "people"} ·{" "}
+                {admins} {admins === 1 ? "admin" : "admins"}
               </span>
               <ul aria-label="Project members">
                 {rows.map((row) => (
@@ -86,9 +117,20 @@ export default function MembersDialogContent({ project, onLeft }: { project: Pro
                     row={row}
                     projectName={project.name}
                     isSelf={row.userId === me.id}
-                    permissions={getMemberPermissions({ meId: me.id, iAmAdmin, ownerId: data.ownerId, row })}
+                    permissions={getMemberPermissions({
+                      meId: me.id,
+                      iAmAdmin,
+                      ownerId: data.ownerId,
+                      row,
+                    })}
                     rolesOpen={rolesOpen === row.id || rolesOpen === row.email}
-                    onToggleRoles={() => setRolesOpen(rolesOpen === row.id || rolesOpen === row.email ? null : row.id)}
+                    onToggleRoles={() =>
+                      setRolesOpen(
+                        rolesOpen === row.id || rolesOpen === row.email
+                          ? null
+                          : row.id,
+                      )
+                    }
                     onChanged={refresh}
                     onLeft={onLeft}
                   />

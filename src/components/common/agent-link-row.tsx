@@ -3,6 +3,7 @@
 import { formatDistanceToNow } from "date-fns";
 import { Warning2 } from "iconsax-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { displayClientName } from "@/lib/agent/client-name";
@@ -97,16 +98,15 @@ export default function AgentLinkRow({
       </div>
 
       {isChat && link.notify_disabled_reason && (
-        <div className="flex items-start gap-2 rounded-[10px] bg-kb-orange-tint px-3 py-2.5 text-[13px] leading-normal text-kb-orange-fg">
+        <Alert variant="destructive">
           <Warning2
-            size={18}
+            size={16}
             variant="Linear"
             color="currentColor"
-            className="mt-px flex-none"
             aria-hidden
           />
-          <span>{link.notify_disabled_reason}</span>
-        </div>
+          <AlertDescription>{link.notify_disabled_reason}</AlertDescription>
+        </Alert>
       )}
 
       {isChat && (

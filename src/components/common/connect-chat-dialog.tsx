@@ -1,6 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { InfoCircle } from "iconsax-react";
 import { MotionConfig, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import {
 import AgentLinkRow from "@/components/common/agent-link-row";
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import LinkCodeCard from "@/components/common/link-code-card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -243,15 +245,19 @@ export default function ConnectChatDialog({
                   {needsBot && botsLoading ? (
                     <Skeleton className="h-10 w-full rounded-[10px]" />
                   ) : needsBot && !selectedBot ? (
-                    <div className="flex flex-col gap-1 rounded-xl bg-muted p-3.5">
-                      <span className="text-sm font-semibold">
-                        You don&apos;t have a bot yet
-                      </span>
-                      <span className="text-[13px] leading-normal text-muted-foreground">
+                    <Alert>
+                      <InfoCircle
+                        size={16}
+                        variant="Linear"
+                        color="currentColor"
+                        aria-hidden
+                      />
+                      <AlertTitle>You don&apos;t have a bot yet</AlertTitle>
+                      <AlertDescription>
                         Add your Telegram bot first: open your profile menu in
                         the sidebar and choose Agent Bots.
-                      </span>
-                    </div>
+                      </AlertDescription>
+                    </Alert>
                   ) : code && !connected ? (
                     <LinkCodeCard
                       code={code}

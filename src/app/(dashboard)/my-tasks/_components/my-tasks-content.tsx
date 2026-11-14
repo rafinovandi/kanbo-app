@@ -1,10 +1,11 @@
 "use client";
 
-import { Add } from "iconsax-react";
+import { Add, Warning2 } from "iconsax-react";
 import { useState } from "react";
 
 import NewProjectDialog from "@/components/common/new-project-dialog";
 import TaskSearch from "@/components/common/task-search";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import useDebounce from "@/hooks/use-debounce";
@@ -70,9 +71,17 @@ export default function MyTasksContent() {
 
       {isLoading && <Skeleton className="h-48 rounded-xl" />}
       {isError && (
-        <p className="text-sm text-muted-foreground">
-          Could not load your projects. Refresh to try again.
-        </p>
+        <Alert variant="destructive">
+          <Warning2
+            size={16}
+            variant="Linear"
+            color="currentColor"
+            aria-hidden
+          />
+          <AlertDescription>
+            Could not load your projects. Refresh to try again.
+          </AlertDescription>
+        </Alert>
       )}
       {projects &&
         !hasProjects &&

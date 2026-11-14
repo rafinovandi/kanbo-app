@@ -1,9 +1,10 @@
 "use client";
 
-import { Copy, TickCircle } from "iconsax-react";
+import { Copy, TickCircle, Warning2 } from "iconsax-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   DialogDescription,
@@ -82,9 +83,17 @@ export default function InviteLinks({
       </ul>
 
       {failed.length > 0 && (
-        <p className="text-xs text-destructive">
-          Could not invite: {failed.join(", ")}
-        </p>
+        <Alert variant="destructive">
+          <Warning2
+            size={16}
+            variant="Linear"
+            color="currentColor"
+            aria-hidden
+          />
+          <AlertDescription>
+            Could not invite: {failed.join(", ")}
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="flex sm:justify-end">

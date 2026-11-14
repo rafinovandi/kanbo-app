@@ -1,7 +1,9 @@
 "use client";
 
+import { Warning2 } from "iconsax-react";
 import { useState } from "react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import useBoard from "@/hooks/use-board";
 import useBoardView from "@/hooks/use-board-view";
@@ -26,13 +28,32 @@ export default function Board({ projectId }: { projectId: string }) {
   const boardView = useBoardView();
   useBoardRealtime(projectId);
 
-  const isAdmin = !!members?.members.some((member) => member.userId === me.id && member.isAdmin);
+  const isAdmin = !!members?.members.some(
+    (member) => member.userId === me.id && member.isAdmin,
+  );
 
-  const activeMembers = members?.members.filter((member) => member.status === "active" && member.userId) ?? [];
+  const activeMembers =
+    members?.members.filter(
+      (member) => member.status === "active" && member.userId,
+    ) ?? [];
 
   if (isLoading) return <Skeleton className="h-96 rounded-xl" />;
-  if (isError) return <p className="text-sm text-muted-foreground">Could not load this board. Refresh to try again.</p>;
-  if (!data) return <p className="text-sm text-muted-foreground">This project is no longer available.</p>;
+  if (isError) {
+    return (
+      <Alert variant="destructive">
+        <Warning2 size={16} variant="Linear" color="currentColor" aria-hidden />
+        <AlertDescription>
+          Could not load this board. Refresh to try again.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (!data)
+    return (
+      <p className="text-sm text-muted-foreground">
+        This project is no longer available.
+      </p>
+    );
 
   return (
     <>

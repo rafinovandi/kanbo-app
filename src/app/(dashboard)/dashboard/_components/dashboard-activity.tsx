@@ -1,8 +1,10 @@
 "use client";
 
+import { Warning2 } from "iconsax-react";
 import { TrendingUp } from "lucide-react";
 
 import PeakLineChart from "@/components/common/peak-line-chart";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -39,9 +41,15 @@ export default function DashboardActivity() {
         {isLoading ? (
           <Skeleton className="h-40 w-full" />
         ) : isError || !data ? (
-          <p className="text-[13px] text-muted-foreground">
-            Could not load your activity.
-          </p>
+          <Alert variant="destructive">
+            <Warning2
+              size={16}
+              variant="Linear"
+              color="currentColor"
+              aria-hidden
+            />
+            <AlertDescription>Could not load your activity.</AlertDescription>
+          </Alert>
         ) : (
           <PeakLineChart data={data} label="Completed" />
         )}

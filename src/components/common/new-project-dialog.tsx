@@ -1,12 +1,17 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
+import { Warning2 } from "iconsax-react";
 import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { createProjectAction, updateProjectAction } from "@/actions/project-action";
+import {
+  createProjectAction,
+  updateProjectAction,
+} from "@/actions/project-action";
 import InviteLinks from "@/components/common/invite-links";
 import InviteMembersField from "@/components/common/invite-members-field";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -24,10 +29,18 @@ import { boardKey } from "@/hooks/use-board";
 import { DASHBOARD_STATS_KEY } from "@/hooks/use-dashboard-stats";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
 import { PROJECT_TONE } from "@/constants/profile-constant";
-import { PROJECT_COLORS, PROJECT_LIMITS, PROJECT_TILE } from "@/constants/project-constant";
+import {
+  PROJECT_COLORS,
+  PROJECT_LIMITS,
+  PROJECT_TILE,
+} from "@/constants/project-constant";
 import { cn } from "@/lib/utils";
 import type { ProjectColor, ProjectFormState } from "@/types/project";
-import { validateProject, type InviteDraft, type ProjectFields } from "@/validations/project";
+import {
+  validateProject,
+  type InviteDraft,
+  type ProjectFields,
+} from "@/validations/project";
 
 function Field({
   id,
@@ -46,7 +59,9 @@ function Field({
     <div className="flex flex-col gap-2">
       <label htmlFor={id} className="text-[13px] font-medium text-kb-text-2">
         {label}
-        {optional && <span className="font-normal text-muted-foreground"> (optional)</span>}
+        {optional && (
+          <span className="font-normal text-muted-foreground"> (optional)</span>
+        )}
       </label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -58,7 +73,10 @@ function Field({
 function ProjectPreview({ fields }: { fields: ProjectFields }) {
   const name = fields.name.trim();
   return (
-    <div className="flex items-center gap-3 rounded-[14px] bg-kb-surface dark:bg-background p-3.5" aria-hidden="true">
+    <div
+      className="flex items-center gap-3 rounded-[14px] bg-kb-surface dark:bg-background p-3.5"
+      aria-hidden="true"
+    >
       <span
         className={cn(
           "flex size-10 flex-none items-center justify-center rounded-[10px] text-base font-semibold",
@@ -68,7 +86,12 @@ function ProjectPreview({ fields }: { fields: ProjectFields }) {
         {name ? name[0].toUpperCase() : "?"}
       </span>
       <span className="flex min-w-0 flex-col gap-px">
-        <span className={cn("truncate text-sm font-semibold", !name && "text-muted-foreground")}>
+        <span
+          className={cn(
+            "truncate text-sm font-semibold",
+            !name && "text-muted-foreground",
+          )}
+        >
           {name || "Project name"}
         </span>
         <span className="truncate text-[13px] text-muted-foreground">
@@ -79,9 +102,20 @@ function ProjectPreview({ fields }: { fields: ProjectFields }) {
   );
 }
 
-export type EditableProject = { id: string; name: string; description: string; color: ProjectColor };
+export type EditableProject = {
+  id: string;
+  name: string;
+  description: string;
+  color: ProjectColor;
+};
 
-function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void; project?: EditableProject }) {
+function NewProjectForm({
+  setOpen,
+  project,
+}: {
+  setOpen: (open: boolean) => void;
+  project?: EditableProject;
+}) {
   const editing = !!project;
   const [fields, setFields] = useState<ProjectFields>({
     name: project?.name ?? "",
@@ -90,14 +124,16 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
   });
   const queryClient = useQueryClient();
   const [invites, setInvites] = useState<InviteDraft[]>([]);
-  const [state, formAction, pending] = useActionState<ProjectFormState, FormData>(
-    editing ? updateProjectAction : createProjectAction,
-    INITIAL_STATE_ACTION,
-  );
+  const [state, formAction, pending] = useActionState<
+    ProjectFormState,
+    FormData
+  >(editing ? updateProjectAction : createProjectAction, INITIAL_STATE_ACTION);
 
   const { errors: liveErrors } = validateProject(fields);
   const serverErrors = state.errors ?? {};
-  const invalidFieldCount = Object.keys(serverErrors).filter((key) => key !== "_form").length;
+  const invalidFieldCount = Object.keys(serverErrors).filter(
+    (key) => key !== "_form",
+  ).length;
 
   useEffect(() => {
     if (state.status === "success") {
@@ -112,7 +148,9 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
       toast.success("Project created");
       if (state.inviteLinks?.length) return;
       if (state.failedInvites?.length) {
-        toast.warning("Some invites could not be created", { description: state.failedInvites.join(", ") });
+        toast.warning("Some invites could not be created", {
+          description: state.failedInvites.join(", "),
+        });
       }
       setOpen(false);
     } else if (state.status === "error" && state.errors?._form?.[0]) {
@@ -122,16 +160,24 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
 
   if (state.status === "success" && state.inviteLinks?.length) {
     return (
-      <InviteLinks links={state.inviteLinks} failed={state.failedInvites ?? []} onDone={() => setOpen(false)} />
+      <InviteLinks
+        links={state.inviteLinks}
+        failed={state.failedInvites ?? []}
+        onDone={() => setOpen(false)}
+      />
     );
   }
 
   return (
     <form action={formAction} className="flex min-w-0 flex-col gap-5">
       <DialogHeader>
-        <DialogTitle className="text-lg font-semibold">{editing ? "Edit Project" : "New Project"}</DialogTitle>
+        <DialogTitle className="text-lg font-semibold">
+          {editing ? "Edit Project" : "New Project"}
+        </DialogTitle>
         <DialogDescription>
-          {editing ? "Change the name, description or color." : "A project holds your board, tasks and team."}
+          {editing
+            ? "Change the name, description or color."
+            : "A project holds your board, tasks and team."}
         </DialogDescription>
       </DialogHeader>
 
@@ -153,12 +199,19 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
         />
       </Field>
 
-      <Field id="np-description" label="Description" optional error={serverErrors.description?.[0]}>
+      <Field
+        id="np-description"
+        label="Description"
+        optional
+        error={serverErrors.description?.[0]}
+      >
         <Textarea
           id="np-description"
           name="description"
           value={fields.description}
-          onChange={(e) => setFields((f) => ({ ...f, description: e.target.value }))}
+          onChange={(e) =>
+            setFields((f) => ({ ...f, description: e.target.value }))
+          }
           maxLength={PROJECT_LIMITS.description}
           placeholder="What is this project about?"
           rows={3}
@@ -168,7 +221,9 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
       </Field>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-[13px] font-medium text-kb-text-2">Color</legend>
+        <legend className="mb-2 text-[13px] font-medium text-kb-text-2">
+          Color
+        </legend>
         <div className="flex flex-wrap gap-3">
           {PROJECT_COLORS.map((color) => (
             <label key={color.value} className="cursor-pointer">
@@ -177,7 +232,9 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
                 name="color"
                 value={color.value}
                 checked={fields.color === color.value}
-                onChange={() => setFields((f) => ({ ...f, color: color.value }))}
+                onChange={() =>
+                  setFields((f) => ({ ...f, color: color.value }))
+                }
                 className="peer sr-only"
               />
               <span
@@ -190,21 +247,36 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
             </label>
           ))}
         </div>
-        {serverErrors.color?.[0] && <p className="text-xs text-destructive">{serverErrors.color[0]}</p>}
+        {serverErrors.color?.[0] && (
+          <p className="text-xs text-destructive">{serverErrors.color[0]}</p>
+        )}
       </fieldset>
 
       {!editing && (
         <>
-          <InviteMembersField invites={invites} onChange={setInvites} error={serverErrors.invites?.[0]} />
+          <InviteMembersField
+            invites={invites}
+            onChange={setInvites}
+            error={serverErrors.invites?.[0]}
+          />
           <input type="hidden" name="invites" value={JSON.stringify(invites)} />
         </>
       )}
 
       {invalidFieldCount > 0 && (
-        <p role="alert" className="rounded-lg bg-destructive/10 px-3 py-2.5 text-[13px] text-destructive">
-          {invalidFieldCount} {invalidFieldCount === 1 ? "field needs" : "fields need"} attention before the project
-          can be created.
-        </p>
+        <Alert variant="destructive">
+          <Warning2
+            size={16}
+            variant="Linear"
+            color="currentColor"
+            aria-hidden
+          />
+          <AlertDescription>
+            {invalidFieldCount}{" "}
+            {invalidFieldCount === 1 ? "field needs" : "fields need"} attention
+            before the project can be created.
+          </AlertDescription>
+        </Alert>
       )}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -214,7 +286,13 @@ function NewProjectForm({ setOpen, project }: { setOpen: (open: boolean) => void
           </Button>
         </DialogClose>
         <Button type="submit" disabled={pending || !!liveErrors.name}>
-          {editing ? (pending ? "Saving…" : "Save Changes") : pending ? "Creating…" : "Create Project"}
+          {editing
+            ? pending
+              ? "Saving…"
+              : "Save Changes"
+            : pending
+              ? "Creating…"
+              : "Create Project"}
         </Button>
       </div>
     </form>
