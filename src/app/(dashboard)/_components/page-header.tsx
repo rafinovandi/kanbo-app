@@ -1,10 +1,11 @@
 import { ArrowLeft, type Icon } from "iconsax-react";
-import Link from "next/link";
 
 import NotificationsMenu from "@/components/common/notifications-menu";
 import ThemeToggle from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+
+import BackLink from "./back-link";
 
 // Top bar: page icon + name on the left, theme toggle and Notifications (tasks that are due) on the right.
 // On phones the sidebar opens from the burger button, so the page icon is hidden there. Sub-pages pass `backHref`:
@@ -13,10 +14,12 @@ export default function PageHeader({
   title,
   icon: PageIcon,
   backHref,
+  backToPrevious = false,
 }: {
   title: string;
   icon?: Icon;
   backHref?: string;
+  backToPrevious?: boolean;
 }) {
   return (
     <header className="flex items-center justify-between gap-3 border-b border-kb-divider px-4 py-4 sm:px-7">
@@ -24,9 +27,9 @@ export default function PageHeader({
         <SidebarTrigger className="-ml-1 md:hidden" />
         {backHref ? (
           <Button asChild variant="ghost" size="icon" aria-label={`Back from ${title}`}>
-            <Link href={backHref}>
+            <BackLink href={backHref} previous={backToPrevious}>
               <ArrowLeft size={20} variant="Linear" color="currentColor" aria-hidden />
-            </Link>
+            </BackLink>
           </Button>
         ) : (
           PageIcon && <PageIcon size={20} variant="Linear" color="currentColor" className="max-md:hidden" aria-hidden />

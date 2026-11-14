@@ -18,6 +18,7 @@ import { usePalette } from "@/hooks/use-palette";
 import { useSurface } from "@/hooks/use-surface";
 
 import PageHeader from "../../../_components/page-header";
+import SurfacePreview from "./surface-preview";
 
 function OptionButton({
   selected,
@@ -39,7 +40,7 @@ function OptionButton({
       className={cn(
         "rounded-[10px] border p-3 text-left text-sm transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
         selected
-          ? "border-foreground bg-accent"
+          ? "border-kb-blue bg-kb-blue-tint/40 ring-1 ring-kb-blue"
           : "border-border hover:bg-accent/60",
         className,
       )}
@@ -58,7 +59,7 @@ export default function ThemeSettings() {
 
   return (
     <PageTransition>
-      <PageHeader title="Theme" backHref="/profile" />
+      <PageHeader title="Theme" backHref="/profile" backToPrevious />
       <div className="mx-auto flex w-full max-w-180 flex-col gap-5 p-4 sm:p-7">
         <div className="flex flex-col gap-1">
           <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.02em]">
@@ -112,7 +113,7 @@ export default function ThemeSettings() {
           <CardContent
             role="radiogroup"
             aria-label="Card style"
-            className="grid gap-3 sm:grid-cols-2"
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
           >
             {SURFACE_OPTIONS.map((option) => (
               <OptionButton
@@ -120,15 +121,7 @@ export default function ThemeSettings() {
                 selected={hydrated && surface === option.id}
                 onClick={() => setSurface(option.id)}
               >
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "block h-10 rounded-lg",
-                    option.id === "outline"
-                      ? "border border-border bg-background"
-                      : "border border-transparent bg-kb-fill",
-                  )}
-                />
+                <SurfacePreview surface={option.id} />
                 <span className="mt-2.5 block font-medium">{option.label}</span>
                 <span className="block text-[13px] text-muted-foreground">
                   {option.description}
