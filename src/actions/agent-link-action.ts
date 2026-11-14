@@ -10,9 +10,15 @@ import type { AgentLink, AgentLinkKind } from "@/types/agent";
 
 type Failure = { status: "error"; message: string };
 export type AgentLinkActionResult = { status: "success" } | Failure;
-export type LinkCodeResult = { status: "success"; code: string; expiresAt: string } | Failure;
-export type McpLinkResult = { status: "success"; token: string; linkId: string } | Failure;
-export type AgentLinksResult = { status: "success"; links: AgentLink[] } | Failure;
+export type LinkCodeResult =
+  | { status: "success"; code: string; expiresAt: string }
+  | Failure;
+export type McpLinkResult =
+  | { status: "success"; token: string; linkId: string }
+  | Failure;
+export type AgentLinksResult =
+  | { status: "success"; links: AgentLink[] }
+  | Failure;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOT_ALLOWED = "You don't have permission to do that.";
@@ -45,7 +51,11 @@ async function getAdminSession(projectId: string) {
 
 // One-time code for linking a Telegram chat (needs one of your bots) or an MCP client (needs no bot).
 // Only the hash is stored, so the code exists in plain text only in this reply.
-export async function createLinkCodeAction(projectId: string, kind: AgentLinkKind, botId?: string): Promise<LinkCodeResult> {
+export async function createLinkCodeAction(
+  projectId: string,
+  kind: AgentLinkKind,
+  botId?: string,
+): Promise<LinkCodeResult> {
   if (kind !== "chat" && kind !== "mcp") return fail(FAILED);
   const chatBotId = kind === "chat" && botId && UUID.test(botId) ? botId : null;
   if (kind === "chat" && !chatBotId) return fail(FAILED);
@@ -88,7 +98,9 @@ export async function createLinkCodeAction(projectId: string, kind: AgentLinkKin
 }
 
 // The MCP token is created right away and shown once, so the client only has to run `claude mcp add`.
-export async function createMcpLinkAction(projectId: string): Promise<McpLinkResult> {
+export async function createMcpLinkAction(
+  projectId: string,
+): Promise<McpLinkResult> {
   const session = await getAdminSession(projectId);
   if (!session) return fail(NOT_ALLOWED);
 
@@ -97,14 +109,16 @@ export async function createMcpLinkAction(projectId: string): Promise<McpLinkRes
   return { status: "success", ...link };
 }
 
-export async function listAgentLinksAction(projectId: string): Promise<AgentLinksResult> {
+export async function listAgentLinksAction(
+  projectId: string,
+): Promise<AgentLinksResult> {
   const session = await getAdminSession(projectId);
   if (!session) return fail(NOT_ALLOWED);
 
   const { data, error } = await session.admin
     .from("agent_links")
     .select(
-      "id, kind, chat_id, last_used_at, created_at, notify_task_created, notify_task_completed, notify_disabled_reason, agent_bots(bot_username)",
+      "id, kind, chat_id, client_name, last_used_at, created_at, notify_task_created, notify_task_completed, notify_disabled_reason, agent_bots(bot_username)",
     )
     .eq("project_id", projectId)
     .is("revoked_at", null)
@@ -117,6 +131,7 @@ export async function listAgentLinksAction(projectId: string): Promise<AgentLink
       id: row.id,
       kind: row.kind === "mcp" ? "mcp" : "chat",
       chat_id: row.chat_id,
+      client_name: row.client_name,
       bot_username: row.agent_bots?.bot_username ?? null,
       last_used_at: row.last_used_at,
       created_at: row.created_at,
@@ -137,11 +152,18 @@ export async function updateLinkNotifyAction(
   const session = await getAdminSession(projectId);
   if (!session) return fail(NOT_ALLOWED);
 
-  const update: { notify_task_created?: boolean; notify_task_completed?: boolean; notify_disabled_reason?: null } = {};
-  if (typeof patch.notify_task_created === "boolean") update.notify_task_created = patch.notify_task_created;
-  if (typeof patch.notify_task_completed === "boolean") update.notify_task_completed = patch.notify_task_completed;
+  const update: {
+    notify_task_created?: boolean;
+    notify_task_completed?: boolean;
+    notify_disabled_reason?: null;
+  } = {};
+  if (typeof patch.notify_task_created === "boolean")
+    update.notify_task_created = patch.notify_task_created;
+  if (typeof patch.notify_task_completed === "boolean")
+    update.notify_task_completed = patch.notify_task_completed;
   if (Object.keys(update).length === 0) return fail(FAILED);
-  if (update.notify_task_created || update.notify_task_completed) update.notify_disabled_reason = null;
+  if (update.notify_task_created || update.notify_task_completed)
+    update.notify_disabled_reason = null;
 
   const { data, error } = await session.admin
     .from("agent_links")
@@ -154,7 +176,10 @@ export async function updateLinkNotifyAction(
   return { status: "success" };
 }
 
-export async function sendTestMessageAction(projectId: string, linkId: string): Promise<AgentLinkActionResult> {
+export async function sendTestMessageAction(
+  projectId: string,
+  linkId: string,
+): Promise<AgentLinkActionResult> {
   if (!UUID.test(linkId)) return fail(FAILED);
 
   const session = await getAdminSession(projectId);
@@ -171,9 +196,12 @@ export async function sendTestMessageAction(projectId: string, linkId: string): 
     session.admin.from("projects").select("name").eq("id", projectId).single(),
   ]);
   if (!link) return fail(FAILED);
-  if (link.kind !== "chat" || !link.bot_id) return fail("Test messages are only for Telegram chats.");
+  if (link.kind !== "chat" || !link.bot_id)
+    return fail("Test messages are only for Telegram chats.");
 
-  const { data: token } = await session.admin.rpc("get_agent_bot_token", { p_bot_id: link.bot_id });
+  const { data: token } = await session.admin.rpc("get_agent_bot_token", {
+    p_bot_id: link.bot_id,
+  });
   if (!token) return fail("The bot token is not available. Add the bot again.");
 
   const result = await sendMessage(
@@ -185,7 +213,10 @@ export async function sendTestMessageAction(projectId: string, linkId: string): 
   return { status: "success" };
 }
 
-export async function revokeLinkAction(projectId: string, linkId: string): Promise<AgentLinkActionResult> {
+export async function revokeLinkAction(
+  projectId: string,
+  linkId: string,
+): Promise<AgentLinkActionResult> {
   if (!UUID.test(linkId)) return fail(FAILED);
 
   const session = await getAdminSession(projectId);

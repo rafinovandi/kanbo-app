@@ -56,8 +56,8 @@ Kanbo also speaks MCP over plain HTTP, so Claude Code (or any MCP client that su
 An MCP client needs **no Telegram bot**. You can do the whole thing from the dialog:
 
 1. Open the project as an admin → ⋯ menu → **Connect Chat**, choose **MCP Client**, then **Generate Command**.
-2. The dialog shows one `claude mcp add` command with the token already inside, and a Copy button. Run it in a terminal of your own, not a shared one, because the token is shown only once. Generating a new command cancels the previous one if it was never used.
-3. Once the client connects, the dialog lists the connection as **MCP client**; it has no **Send Test** button and no notification switches, because there is no chat to post to. Use **Revoke** to disconnect it.
+2. The dialog shows the command with the token already inside and a Copy button, in two tabs: **Claude Code** and **Codex**. Run it in a terminal of your own, not a shared one, because the token is shown only once. Generating a new command cancels the previous one if it was never used.
+3. Once the client connects, the dialog lists the connection under the name the client announces (for example **Claude** or **Codex**); it has no **Send Test** button and no notification switches, because there is no chat to post to. Use **Revoke** to disconnect it.
 
 Choose **Telegram Chat** instead if you want the agent to work from a Telegram group; that path needs a bot and shows **Send Test**.
 
@@ -71,6 +71,16 @@ claude mcp add --transport http kanbo https://your-kanbo.vercel.app/api/agent/mc
 - Without `--scope`, the server is only available when Claude Code starts in the folder where you ran the command. Add `--scope user` to use it from any folder.
 - Use a different name per project or environment (for example `kanbo-web`, `kanbo-prod`), because each token is bound to one project.
 - Start a new Claude Code session, then type `/mcp`. The server `kanbo` should be connected with six tools: `get_context`, `list_tasks`, `get_task`, `create_tasks`, `update_task` (title, description, column, priority, due date, assignees; add or remove single assignees) and `delete_task`.
+### Codex
+
+On the **Codex** tab, run the command in your terminal:
+
+```bash
+export KANBO_TOKEN=kbo_YOUR_TOKEN && codex mcp add kanbo --url https://your-kanbo.vercel.app/api/agent/mcp --bearer-token-env-var KANBO_TOKEN
+```
+
+Codex reads the token from the `KANBO_TOKEN` variable when it starts, so also put the `export` line in your shell profile (for example `~/.zshrc`). Check with `codex mcp list`; remove with `codex mcp remove kanbo`.
+
 - Local development uses `http://localhost:3000/api/agent/mcp`. A production token must be created from the production app; a token from another environment does not work there.
 
 ### Tools

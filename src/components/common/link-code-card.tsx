@@ -2,6 +2,7 @@
 
 import CopyField from "@/components/common/copy-field";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { AgentLinkKind } from "@/types/agent";
 
@@ -27,10 +28,46 @@ export default function LinkCodeCard({
   onGenerate: () => void;
 }) {
   if (code.kind === "mcp") {
-    const addCommand = `claude mcp add --transport http kanbo ${appUrl}/api/agent/mcp --header "Authorization: Bearer ${code.value}"`;
+    const endpoint = `${appUrl}/api/agent/mcp`;
+    const tabs = [
+      {
+        value: "claude",
+        name: "Claude Code",
+        command: `claude mcp add --transport http kanbo ${endpoint} --header "Authorization: Bearer ${code.value}"`,
+      },
+      {
+        value: "codex",
+        name: "Codex",
+        command: `export KANBO_TOKEN=${code.value} && codex mcp add kanbo --url ${endpoint} --bearer-token-env-var KANBO_TOKEN`,
+      },
+    ];
     return (
       <div className="flex flex-col gap-3">
-        <CopyField label="Run this in your terminal" value={addCommand} />
+        <Tabs defaultValue={tabs[0].value}>
+          <TabsList className="dark:bg-background">
+            {tabs.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="data-active:border-primary data-active:bg-primary data-active:text-primary-foreground data-active:hover:text-primary-foreground! dark:data-active:border-foreground/25 dark:data-active:bg-input/30 dark:data-active:text-foreground dark:data-active:hover:text-foreground!"
+              >
+                <code className="text-[13px]">{tab.name}</code>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {tabs.map((tab) => (
+            <TabsContent key={tab.value} value={tab.value}>
+              <CopyField value={tab.command} />
+              {tab.value === "codex" && (
+                <span className="mt-2 block text-xs leading-normal text-muted-foreground">
+                  Codex reads the token from the KANBO_TOKEN variable, so also
+                  add the export line to your shell profile (for example
+                  ~/.zshrc).
+                </span>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
         <span className="text-xs leading-normal text-muted-foreground">
           The token in this command is shown only once. Generating a new command
           cancels this one if it has not been used.
@@ -40,7 +77,7 @@ export default function LinkCodeCard({
             aria-hidden="true"
             className="size-2 flex-none rounded-full bg-kb-green"
           />
-          Waiting for the MCP client to connect…
+          Waiting for your MCP client to connect…
         </span>
         <Button
           type="button"

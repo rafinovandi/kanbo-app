@@ -5,6 +5,7 @@ import { Warning2 } from "iconsax-react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { displayClientName } from "@/lib/agent/client-name";
 import { cn } from "@/lib/utils";
 import type { AgentLink, NotifyKey } from "@/types/agent";
 
@@ -56,7 +57,7 @@ export default function AgentLinkRow({
 
   return (
     <li className="kb-panel flex flex-col gap-3 rounded-xl border border-border p-3.5">
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span
             className={cn(
@@ -64,7 +65,9 @@ export default function AgentLinkRow({
               isChat && "font-mono",
             )}
           >
-            {isChat ? link.chat_id : "MCP client"}
+            {isChat
+              ? link.chat_id
+              : (displayClientName(link.client_name) ?? "MCP client")}
           </span>
           <span className="text-[13px] text-muted-foreground [overflow-wrap:anywhere]">
             {isChat ? `@${link.bot_username} · ${used}` : used}

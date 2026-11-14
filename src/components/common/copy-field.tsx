@@ -11,7 +11,7 @@ export default function CopyField({
   label,
   value,
 }: {
-  label: string;
+  label?: string;
   value: string;
 }) {
   const [copied, setCopied] = useState(false);
@@ -28,7 +28,9 @@ export default function CopyField({
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[13px] font-medium text-kb-text-2">{label}</span>
+      {label && (
+        <span className="text-[13px] font-medium text-kb-text-2">{label}</span>
+      )}
       <div className="kb-panel flex items-stretch overflow-hidden rounded-[10px] border border-border bg-background">
         <span className="min-w-0 flex-1 px-3.5 py-3 font-mono text-[13px] leading-normal font-medium [overflow-wrap:anywhere]">
           {value}
@@ -37,7 +39,7 @@ export default function CopyField({
           type="button"
           variant="ghost"
           onClick={copy}
-          aria-label={copied ? "Copied" : `Copy: ${label}`}
+          aria-label={copied ? "Copied" : label ? `Copy: ${label}` : "Copy"}
           className="h-auto flex-none rounded-none border-l border-border px-3.5"
         >
           {copied ? (

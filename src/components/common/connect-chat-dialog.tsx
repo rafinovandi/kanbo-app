@@ -33,6 +33,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import useAgentBots from "@/hooks/use-agent-bots";
 import useAgentLinks, { agentLinksKey } from "@/hooks/use-agent-links";
+import { displayClientName } from "@/lib/agent/client-name";
 import type { AgentLink, AgentLinkKind, NotifyKey } from "@/types/agent";
 
 const POLL_MS = 4000;
@@ -78,9 +79,11 @@ export default function ConnectChatDialog({
     open,
     polling ? POLL_MS : false,
   );
-  const connected =
-    linkedId !== null &&
-    !!links?.find((link) => link.id === linkedId)?.last_used_at;
+  const linkedLink =
+    linkedId !== null ? links?.find((link) => link.id === linkedId) : undefined;
+  const connected = !!linkedLink?.last_used_at;
+  const clientLabel =
+    displayClientName(linkedLink?.client_name) ?? "MCP client";
   const selectedBot = bots?.find((bot) => bot.id === botId) ?? bots?.[0];
   const appUrl = typeof window === "undefined" ? "" : window.location.origin;
 
@@ -101,8 +104,8 @@ export default function ConnectChatDialog({
   }, [links, waiting]);
 
   useEffect(() => {
-    if (connected) toast.success("MCP client connected");
-  }, [connected]);
+    if (connected) toast.success(`${clientLabel} connected`);
+  }, [connected, clientLabel]);
 
   const handleOpenChange = (next: boolean) => {
     if (!next) {
@@ -189,7 +192,7 @@ export default function ConnectChatDialog({
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent
           closeClassName="top-3.5"
-          className="max-h-[90vh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-[480px]"
+          className="h-[min(720px,90vh)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-[480px]"
         >
           <div className="flex h-[68px] items-center border-b border-kb-divider pr-16 pl-6">
             <DialogTitle className="text-[15px] font-semibold">
@@ -199,9 +202,8 @@ export default function ConnectChatDialog({
 
           <div className="flex flex-col gap-6 overflow-y-auto p-6">
             <DialogDescription>
-              Connect a Telegram chat or an MCP client such as Claude Code to
-              this project. The agent can then add tasks, and Kanbo posts
-              updates to Telegram chats.
+              Connect a Telegram chat or an MCP client like Claude Code or Codex
+              to this project.
             </DialogDescription>
 
             <section className="flex flex-col gap-3">
@@ -384,7 +386,7 @@ export default function ConnectChatDialog({
         open={revoking !== null}
         onOpenChange={(next) => !next && setRevoking(null)}
         title="Revoke this connection?"
-        description={`${revoking?.kind === "mcp" ? "This MCP client" : (revoking?.chat_id ?? "")} is disconnected from ${project.name}. Its token stops working right away.`}
+        description={`${revoking?.kind === "mcp" ? (displayClientName(revoking.client_name) ?? "This MCP client") : (revoking?.chat_id ?? "")} is disconnected from ${project.name}. Its token stops working right away.`}
         confirmLabel="Revoke"
         onConfirm={revoke}
       />

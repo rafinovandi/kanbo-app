@@ -14,6 +14,7 @@ export type AgentLink = {
   id: string;
   kind: AgentLinkKind;
   chat_id: string;
+  client_name: string | null;
   bot_username: string | null;
   last_used_at: string | null;
   created_at: string;
