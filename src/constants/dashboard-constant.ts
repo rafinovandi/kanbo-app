@@ -51,6 +51,8 @@ export const DASHBOARD_STATUSES = [
   },
 ] as const;
 
+export const MAX_DASHBOARD_PROJECTS = 6;
+
 export const getProgressPercent = (done: number, total: number) =>
   total > 0 ? Math.round((done / total) * 100) : 0;
 

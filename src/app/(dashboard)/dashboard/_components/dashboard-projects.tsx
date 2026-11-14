@@ -1,13 +1,21 @@
-import Link from "next/link";
+"use client";
 
+import { ArrowDown2 } from "iconsax-react";
+import Link from "next/link";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getProgressPercent } from "@/constants/dashboard-constant";
+import { getProgressPercent, MAX_DASHBOARD_PROJECTS } from "@/constants/dashboard-constant";
 import { PROJECT_TILE } from "@/constants/project-constant";
 import { cn } from "@/lib/utils";
 import type { DashboardStats } from "@/types/project";
 
 export default function DashboardProjects({ projects }: { projects: DashboardStats["projects"] }) {
+  const [expanded, setExpanded] = useState(false);
+  const hiddenProjects = projects.length - MAX_DASHBOARD_PROJECTS;
+
   return (
     <Card aria-label="Projects">
       <CardHeader className="flex flex-row items-center justify-between">
@@ -17,7 +25,7 @@ export default function DashboardProjects({ projects }: { projects: DashboardSta
         </Link>
       </CardHeader>
       <CardContent className="flex flex-col gap-1">
-        {projects.map((project) => (
+        {(expanded ? projects : projects.slice(0, MAX_DASHBOARD_PROJECTS)).map((project) => (
           <Link
             key={project.id}
             href={`/projects/${project.id}`}
@@ -45,6 +53,26 @@ export default function DashboardProjects({ projects }: { projects: DashboardSta
             />
           </Link>
         ))}
+        {hiddenProjects > 0 && (
+          <div className="flex justify-center pt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              aria-expanded={expanded}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? "Show Less" : `See More (${hiddenProjects})`}
+              <ArrowDown2
+                size={14}
+                variant="Linear"
+                color="currentColor"
+                className={cn("transition-transform", expanded && "rotate-180")}
+                aria-hidden
+              />
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
