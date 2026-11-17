@@ -89,8 +89,8 @@ Codex reads the token from the `KANBO_TOKEN` variable when it starts, so also pu
 |---|---|
 | `get_context` | The project's columns and the names of its active members. Call it first. |
 | `list_tasks` | Up to 50 recent tasks. Optional `status` (`open`, `done`, `all`) and `q` (search in the title). |
-| `create_tasks` | Creates 1 to 20 tasks. Each has `title` and optionally `description`, `category` (a column name), `priority` (`low`, `medium`, `high`), `dueDate` (`YYYY-MM-DD`) and `assignees` (member names). |
-| `update_task` | Moves a task to another column, or changes its priority, due date or assignees. Needs the task `id` from `list_tasks`. |
+| `create_tasks` | Creates 1 to 20 tasks. Each has `title` and optionally `description`, `category` (a column name), `priority` (`low`, `medium`, `high`), `dueDate` (`YYYY-MM-DD`) and `assignees` (member names). Send `notification: false` to skip the Telegram message for the new tasks (default `true`). |
+| `update_task` | Moves a task to another column, or changes its priority, due date or assignees. Needs the task `id` from `list_tasks`. Send `notification: false` to skip the Telegram message when the task moves to Done (default `true`). |
 
 Saving (`create_tasks`, `update_task`) needs an `idempotencyKey`: a value that is unique for each intended change. Reusing the same value retries that same change safely; a different request with the same value is refused. Add `"dryRun": true` to preview a change without saving it and without a key.
 

@@ -1,6 +1,13 @@
 import "server-only";
 
-import { failure, isApiResult, readJson, type AdminClient, type AgentLinkContext, type ApiResult } from "@/lib/agent/http";
+import {
+  failure,
+  isApiResult,
+  readJson,
+  type AdminClient,
+  type AgentLinkContext,
+  type ApiResult,
+} from "@/lib/agent/http";
 import { runIdempotent } from "@/lib/agent/idempotency";
 import { notifyProject } from "@/lib/agent/notify";
 import {
@@ -30,17 +37,33 @@ type PreparedTask = {
   warnings: string[];
 };
 
-function prepareTask(data: Project, input: unknown, index: number): PreparedTask | string {
-  const item = typeof input === "object" && input !== null ? (input as Record<string, unknown>) : {};
+function prepareTask(
+  data: Project,
+  input: unknown,
+  index: number,
+): PreparedTask | string {
+  const item =
+    typeof input === "object" && input !== null
+      ? (input as Record<string, unknown>)
+      : {};
   const title = validateTitle(typeof item.title === "string" ? item.title : "");
-  const description = validateDescription(typeof item.description === "string" ? item.description : "");
-  if (title.error || description.error) return `tasks[${index}]: ${title.error ?? description.error}.`;
+  const description = validateDescription(
+    typeof item.description === "string" ? item.description : "",
+  );
+  if (title.error || description.error)
+    return `tasks[${index}]: ${title.error ?? description.error}.`;
 
   const warnings: string[] = [];
   const warn = (message: string) => warnings.push(message);
   const category = findCategory(data, item.category) ?? data.categories[0];
-  if (item.category !== undefined && item.category !== null && !findCategory(data, item.category)) {
-    warn(`Column ${JSON.stringify(item.category)} does not exist, so the first column was used.`);
+  if (
+    item.category !== undefined &&
+    item.category !== null &&
+    !findCategory(data, item.category)
+  ) {
+    warn(
+      `Column ${JSON.stringify(item.category)} does not exist, so the first column was used.`,
+    );
   }
 
   return {
@@ -71,18 +94,33 @@ async function nextPositions(admin: AdminClient, categoryIds: string[]) {
   return positions;
 }
 
-export async function createTasks(ctx: AgentLinkContext, request: Request): Promise<ApiResult> {
+export async function createTasks(
+  ctx: AgentLinkContext,
+  request: Request,
+): Promise<ApiResult> {
   const parsed = await readJson(request);
   if (isApiResult(parsed)) return parsed;
   const { data: body, raw } = parsed;
 
   const list = body.tasks;
-  if (!Array.isArray(list) || list.length === 0 || list.length > MAX_TASKS_PER_REQUEST) {
+  if (
+    !Array.isArray(list) ||
+    list.length === 0 ||
+    list.length > MAX_TASKS_PER_REQUEST
+  ) {
     return invalid(`Send 1 to ${MAX_TASKS_PER_REQUEST} tasks in "tasks".`);
   }
+  if (
+    body.notification !== undefined &&
+    typeof body.notification !== "boolean"
+  ) {
+    return invalid("notification must be true or false.");
+  }
+  const notification = body.notification !== false;
 
   const data = await loadProject(ctx);
-  if (!data.project || data.categories.length === 0) return failure(404, "not_found", "Project not found.");
+  if (!data.project || data.categories.length === 0)
+    return failure(404, "not_found", "Project not found.");
 
   const prepared: PreparedTask[] = [];
   for (const [index, input] of list.entries()) {
@@ -91,19 +129,30 @@ export async function createTasks(ctx: AgentLinkContext, request: Request): Prom
     prepared.push(task);
   }
 
-  const warnings = prepared.flatMap((task, index) => task.warnings.map((message) => ({ index, message })));
-  const preview = prepared.map(({ title, description, priority, dueDate, category, assignees }) => ({
-    title,
-    description,
-    priority,
-    dueDate,
-    category,
-    assignees,
-  }));
-  if (body.dryRun === true) return { status: 200, body: { dryRun: true, tasks: preview, warnings } };
+  const warnings = prepared.flatMap((task, index) =>
+    task.warnings.map((message) => ({ index, message })),
+  );
+  const preview = prepared.map(
+    ({ title, description, priority, dueDate, category, assignees }) => ({
+      title,
+      description,
+      priority,
+      dueDate,
+      category,
+      assignees,
+    }),
+  );
+  if (body.dryRun === true)
+    return {
+      status: 200,
+      body: { dryRun: true, tasks: preview, notification, warnings },
+    };
 
   return runIdempotent(ctx, request, "tasks.create", raw, async () => {
-    const positions = await nextPositions(ctx.admin, prepared.map((t) => t.category.id));
+    const positions = await nextPositions(
+      ctx.admin,
+      prepared.map((t) => t.category.id),
+    );
     const sender = text(body.sender, 64) || null;
 
     const { data: rows, error } = await ctx.admin
@@ -128,15 +177,25 @@ export async function createTasks(ctx: AgentLinkContext, request: Request): Prom
         }),
       )
       .select("id, title");
-    if (error || !rows) return failure(500, "create_failed", "Could not save the tasks.");
+    if (error || !rows)
+      return failure(500, "create_failed", "Could not save the tasks.");
 
-    const assignments = rows.flatMap((row, i) => prepared[i].assignees.map((a) => ({ task_id: row.id, user_id: a.id })));
+    const assignments = rows.flatMap((row, i) =>
+      prepared[i].assignees.map((a) => ({ task_id: row.id, user_id: a.id })),
+    );
     if (assignments.length > 0) {
-      const { error: assignError } = await ctx.admin.from("task_assignees").insert(assignments);
-      if (assignError) warnings.push({ index: -1, message: "The tasks were saved, but their assignees could not be set." });
+      const { error: assignError } = await ctx.admin
+        .from("task_assignees")
+        .insert(assignments);
+      if (assignError)
+        warnings.push({
+          index: -1,
+          message:
+            "The tasks were saved, but their assignees could not be set.",
+        });
     }
 
-    for (const row of rows) {
+    for (const row of notification ? rows : []) {
       notifyProject({
         projectId: ctx.projectId,
         taskId: row.id,
@@ -148,15 +207,23 @@ export async function createTasks(ctx: AgentLinkContext, request: Request): Prom
 
     return {
       status: 201,
-      body: { created: rows.map(({ id, title }) => ({ id, title })), url: boardUrl(ctx.projectId), warnings },
+      body: {
+        created: rows.map(({ id, title }) => ({ id, title })),
+        url: boardUrl(ctx.projectId),
+        warnings,
+      },
     };
   });
 }
 
-export async function listTasks(ctx: AgentLinkContext, request: Request): Promise<ApiResult> {
+export async function listTasks(
+  ctx: AgentLinkContext,
+  request: Request,
+): Promise<ApiResult> {
   const params = new URL(request.url).searchParams;
   const status = params.get("status") ?? "open";
-  if (!["open", "done", "all"].includes(status)) return invalid('status must be "open", "done" or "all".');
+  if (!["open", "done", "all"].includes(status))
+    return invalid('status must be "open", "done" or "all".');
   const q = (params.get("q") ?? "").trim().slice(0, 100);
 
   const data = await loadProject(ctx);
@@ -176,7 +243,10 @@ export async function listTasks(ctx: AgentLinkContext, request: Request): Promis
   const { data: assigned } = await ctx.admin
     .from("task_assignees")
     .select("task_id, user_id")
-    .in("task_id", tasks.map((t) => t.id));
+    .in(
+      "task_id",
+      tasks.map((t) => t.id),
+    );
   const nameOf = new Map(data.members.map((m) => [m.id, m.name]));
   const categoryOf = new Map(data.categories.map((c) => [c.id, c.name]));
 
@@ -190,30 +260,41 @@ export async function listTasks(ctx: AgentLinkContext, request: Request): Promis
         dueDate: task.due_date,
         category: categoryOf.get(task.category_id) ?? null,
         done: task.completed_at !== null,
-        assignees: (assigned ?? []).filter((a) => a.task_id === task.id).map((a) => nameOf.get(a.user_id) ?? "Former member"),
+        assignees: (assigned ?? [])
+          .filter((a) => a.task_id === task.id)
+          .map((a) => nameOf.get(a.user_id) ?? "Former member"),
       })),
     },
   };
 }
 
 const PREVIEW_CHARS = 300;
-const preview = (value: string) => (value.length > PREVIEW_CHARS ? `${value.slice(0, PREVIEW_CHARS)}…` : value);
+const preview = (value: string) =>
+  value.length > PREVIEW_CHARS ? `${value.slice(0, PREVIEW_CHARS)}…` : value;
 
-export async function getTask(ctx: AgentLinkContext, taskId: string): Promise<ApiResult> {
+export async function getTask(
+  ctx: AgentLinkContext,
+  taskId: string,
+): Promise<ApiResult> {
   if (!UUID.test(taskId)) return failure(404, "not_found", "Task not found.");
 
   const [data, { data: task }] = await Promise.all([
     loadProject(ctx),
     ctx.admin
       .from("tasks")
-      .select("id, title, description, priority, due_date, completed_at, category_id")
+      .select(
+        "id, title, description, priority, due_date, completed_at, category_id",
+      )
       .eq("id", taskId)
       .eq("project_id", ctx.projectId)
       .maybeSingle(),
   ]);
   if (!task) return failure(404, "not_found", "Task not found.");
 
-  const { data: assigned } = await ctx.admin.from("task_assignees").select("user_id").eq("task_id", task.id);
+  const { data: assigned } = await ctx.admin
+    .from("task_assignees")
+    .select("user_id")
+    .eq("task_id", task.id);
   const nameOf = new Map(data.members.map((m) => [m.id, m.name]));
 
   return {
@@ -224,15 +305,22 @@ export async function getTask(ctx: AgentLinkContext, taskId: string): Promise<Ap
       description: task.description,
       priority: task.priority,
       dueDate: task.due_date,
-      category: data.categories.find((c) => c.id === task.category_id)?.name ?? null,
+      category:
+        data.categories.find((c) => c.id === task.category_id)?.name ?? null,
       done: task.completed_at !== null,
-      assignees: (assigned ?? []).map((a) => nameOf.get(a.user_id) ?? "Former member"),
+      assignees: (assigned ?? []).map(
+        (a) => nameOf.get(a.user_id) ?? "Former member",
+      ),
       url: boardUrl(ctx.projectId),
     },
   };
 }
 
-export async function deleteTask(ctx: AgentLinkContext, request: Request, taskId: string): Promise<ApiResult> {
+export async function deleteTask(
+  ctx: AgentLinkContext,
+  request: Request,
+  taskId: string,
+): Promise<ApiResult> {
   if (!UUID.test(taskId)) return failure(404, "not_found", "Task not found.");
   const parsed = await readJson(request);
   if (isApiResult(parsed)) return parsed;
@@ -246,20 +334,48 @@ export async function deleteTask(ctx: AgentLinkContext, request: Request, taskId
     .maybeSingle();
   if (!task) return failure(404, "not_found", "Task not found.");
 
-  if (body.dryRun === true) return { status: 200, body: { dryRun: true, id: task.id, title: task.title, willDelete: true } };
+  if (body.dryRun === true)
+    return {
+      status: 200,
+      body: { dryRun: true, id: task.id, title: task.title, willDelete: true },
+    };
 
-  return runIdempotent(ctx, request, `tasks.delete:${task.id}`, raw, async () => {
-    const { error } = await ctx.admin.from("tasks").delete().eq("id", task.id).eq("project_id", ctx.projectId);
-    if (error) return failure(500, "delete_failed", "Could not delete the task.");
-    return { status: 200, body: { deleted: true, id: task.id, title: task.title } };
-  });
+  return runIdempotent(
+    ctx,
+    request,
+    `tasks.delete:${task.id}`,
+    raw,
+    async () => {
+      const { error } = await ctx.admin
+        .from("tasks")
+        .delete()
+        .eq("id", task.id)
+        .eq("project_id", ctx.projectId);
+      if (error)
+        return failure(500, "delete_failed", "Could not delete the task.");
+      return {
+        status: 200,
+        body: { deleted: true, id: task.id, title: task.title },
+      };
+    },
+  );
 }
 
-export async function updateTask(ctx: AgentLinkContext, request: Request, taskId: string): Promise<ApiResult> {
+export async function updateTask(
+  ctx: AgentLinkContext,
+  request: Request,
+  taskId: string,
+): Promise<ApiResult> {
   if (!UUID.test(taskId)) return failure(404, "not_found", "Task not found.");
   const parsed = await readJson(request);
   if (isApiResult(parsed)) return parsed;
   const { data: body, raw } = parsed;
+  if (
+    body.notification !== undefined &&
+    typeof body.notification !== "boolean"
+  ) {
+    return invalid("notification must be true or false.");
+  }
 
   const [data, { data: task }] = await Promise.all([
     loadProject(ctx),
@@ -274,7 +390,8 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
 
   const warnings: string[] = [];
   const warn = (message: string) => warnings.push(message);
-  const nameOfCategory = (id: string) => data.categories.find((c) => c.id === id)?.name ?? "";
+  const nameOfCategory = (id: string) =>
+    data.categories.find((c) => c.id === id)?.name ?? "";
 
   const patch: {
     title?: string;
@@ -287,7 +404,9 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
   const changes: { field: string; from: unknown; to: unknown }[] = [];
 
   if (body.title !== undefined) {
-    const title = validateTitle(typeof body.title === "string" ? body.title : "");
+    const title = validateTitle(
+      typeof body.title === "string" ? body.title : "",
+    );
     if (title.error) return invalid(`title: ${title.error}.`);
     if (title.value !== task.title) {
       patch.title = title.value;
@@ -295,21 +414,31 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
     }
   }
   if (body.description !== undefined) {
-    if (typeof body.description !== "string") return invalid("description must be text.");
+    if (typeof body.description !== "string")
+      return invalid("description must be text.");
     const description = validateDescription(body.description);
     if (description.error) return invalid(`description: ${description.error}.`);
     if (description.value !== task.description) {
       patch.description = description.value;
-      changes.push({ field: "description", from: preview(task.description), to: preview(description.value) });
+      changes.push({
+        field: "description",
+        from: preview(task.description),
+        to: preview(description.value),
+      });
     }
   }
 
   if (body.category !== undefined) {
     const category = findCategory(data, body.category);
-    if (!category) return invalid(`Column ${JSON.stringify(body.category)} does not exist.`);
+    if (!category)
+      return invalid(`Column ${JSON.stringify(body.category)} does not exist.`);
     if (category.id !== task.category_id) {
       patch.category_id = category.id;
-      changes.push({ field: "category", from: nameOfCategory(task.category_id), to: category.name });
+      changes.push({
+        field: "category",
+        from: nameOfCategory(task.category_id),
+        to: category.name,
+      });
     }
   }
   const priority = resolvePriority(body.priority, warn);
@@ -323,68 +452,136 @@ export async function updateTask(ctx: AgentLinkContext, request: Request, taskId
     changes.push({ field: "dueDate", from: task.due_date, to: dueDate });
   }
   const assignees = resolveAssignees(data, body.assignees, warn);
-  if (assignees) changes.push({ field: "assignees", from: undefined, to: assignees.map((a) => a.name) });
+  if (assignees)
+    changes.push({
+      field: "assignees",
+      from: undefined,
+      to: assignees.map((a) => a.name),
+    });
 
   // addAssignees / removeAssignees change the list by name and leave everyone else as they are.
-  let assigneeDiff: { add: { id: string; name: string }[]; remove: { id: string; name: string }[] } | undefined;
-  if (!assignees && (body.addAssignees !== undefined || body.removeAssignees !== undefined)) {
-    const { data: rows } = await ctx.admin.from("task_assignees").select("user_id").eq("task_id", task.id);
+  let assigneeDiff:
+    | {
+        add: { id: string; name: string }[];
+        remove: { id: string; name: string }[];
+      }
+    | undefined;
+  if (
+    !assignees &&
+    (body.addAssignees !== undefined || body.removeAssignees !== undefined)
+  ) {
+    const { data: rows } = await ctx.admin
+      .from("task_assignees")
+      .select("user_id")
+      .eq("task_id", task.id);
     const current = new Set((rows ?? []).map((row) => row.user_id));
-    const add = (resolveAssignees(data, body.addAssignees, warn) ?? []).filter((a) => !current.has(a.id));
-    const remove = (resolveAssignees(data, body.removeAssignees, warn) ?? []).filter((a) => current.has(a.id));
+    const add = (resolveAssignees(data, body.addAssignees, warn) ?? []).filter(
+      (a) => !current.has(a.id),
+    );
+    const remove = (
+      resolveAssignees(data, body.removeAssignees, warn) ?? []
+    ).filter((a) => current.has(a.id));
     if (add.length > 0 || remove.length > 0) {
       assigneeDiff = { add, remove };
       changes.push({
         field: "assignees",
         from: undefined,
-        to: { added: add.map((a) => a.name), removed: remove.map((a) => a.name) },
+        to: {
+          added: add.map((a) => a.name),
+          removed: remove.map((a) => a.name),
+        },
       });
     }
   }
 
-  if (changes.length === 0) return { status: 200, body: { id: task.id, title: task.title, changes: [], warnings } };
-  if (body.dryRun === true) return { status: 200, body: { dryRun: true, id: task.id, title: task.title, changes, warnings } };
+  if (changes.length === 0)
+    return {
+      status: 200,
+      body: { id: task.id, title: task.title, changes: [], warnings },
+    };
+  if (body.dryRun === true)
+    return {
+      status: 200,
+      body: { dryRun: true, id: task.id, title: task.title, changes, warnings },
+    };
 
-  return runIdempotent(ctx, request, `tasks.update:${task.id}`, raw, async () => {
-    if (patch.category_id) {
-      const positions = await nextPositions(ctx.admin, [patch.category_id]);
-      patch.position = (positions.get(patch.category_id) ?? 0) + 1;
-    }
-    if (Object.keys(patch).length > 0) {
-      const { error } = await ctx.admin.from("tasks").update(patch).eq("id", task.id);
-      if (error) return failure(500, "update_failed", "Could not update the task.");
-    }
-    if (assignees) {
-      const { error: clearError } = await ctx.admin.from("task_assignees").delete().eq("task_id", task.id);
-      const { error: setError } =
-        assignees.length > 0
-          ? await ctx.admin.from("task_assignees").insert(assignees.map((a) => ({ task_id: task.id, user_id: a.id })))
-          : { error: null };
-      if (clearError || setError) warn("The task was updated, but its assignees could not be changed.");
-    }
-    if (assigneeDiff) {
-      const { add, remove } = assigneeDiff;
-      const { error: removeError } =
-        remove.length > 0
-          ? await ctx.admin.from("task_assignees").delete().eq("task_id", task.id).in("user_id", remove.map((a) => a.id))
-          : { error: null };
-      const { error: addError } =
-        add.length > 0
-          ? await ctx.admin.from("task_assignees").insert(add.map((a) => ({ task_id: task.id, user_id: a.id })))
-          : { error: null };
-      if (removeError || addError) warn("The task was updated, but its assignees could not be changed.");
-    }
-    if (patch.category_id) {
-      const sender = text(body.sender, 64);
-      notifyProject({
-        projectId: ctx.projectId,
-        taskId: task.id,
-        event: "task.completed",
-        actorLabel: sender ? `${sender} (via agent)` : "the agent",
-        exceptLinkId: ctx.id,
-        previousCategoryId: task.category_id,
-      });
-    }
-    return { status: 200, body: { id: task.id, title: task.title, changes, url: boardUrl(ctx.projectId), warnings } };
-  });
+  return runIdempotent(
+    ctx,
+    request,
+    `tasks.update:${task.id}`,
+    raw,
+    async () => {
+      if (patch.category_id) {
+        const positions = await nextPositions(ctx.admin, [patch.category_id]);
+        patch.position = (positions.get(patch.category_id) ?? 0) + 1;
+      }
+      if (Object.keys(patch).length > 0) {
+        const { error } = await ctx.admin
+          .from("tasks")
+          .update(patch)
+          .eq("id", task.id);
+        if (error)
+          return failure(500, "update_failed", "Could not update the task.");
+      }
+      if (assignees) {
+        const { error: clearError } = await ctx.admin
+          .from("task_assignees")
+          .delete()
+          .eq("task_id", task.id);
+        const { error: setError } =
+          assignees.length > 0
+            ? await ctx.admin
+                .from("task_assignees")
+                .insert(
+                  assignees.map((a) => ({ task_id: task.id, user_id: a.id })),
+                )
+            : { error: null };
+        if (clearError || setError)
+          warn("The task was updated, but its assignees could not be changed.");
+      }
+      if (assigneeDiff) {
+        const { add, remove } = assigneeDiff;
+        const { error: removeError } =
+          remove.length > 0
+            ? await ctx.admin
+                .from("task_assignees")
+                .delete()
+                .eq("task_id", task.id)
+                .in(
+                  "user_id",
+                  remove.map((a) => a.id),
+                )
+            : { error: null };
+        const { error: addError } =
+          add.length > 0
+            ? await ctx.admin
+                .from("task_assignees")
+                .insert(add.map((a) => ({ task_id: task.id, user_id: a.id })))
+            : { error: null };
+        if (removeError || addError)
+          warn("The task was updated, but its assignees could not be changed.");
+      }
+      if (patch.category_id && body.notification !== false) {
+        const sender = text(body.sender, 64);
+        notifyProject({
+          projectId: ctx.projectId,
+          taskId: task.id,
+          event: "task.completed",
+          actorLabel: sender ? `${sender} (via agent)` : "the agent",
+          exceptLinkId: ctx.id,
+          previousCategoryId: task.category_id,
+        });
+      }
+      return {
+        status: 200,
+        body: {
+          id: task.id,
+          title: task.title,
+          changes,
+          url: boardUrl(ctx.projectId),
+          warnings,
+        },
+      };
+    },
+  );
 }
