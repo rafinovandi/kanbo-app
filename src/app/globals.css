@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant amethyst (&:where([data-palette="amethyst"] *));
 
 @theme inline {
   --color-background: var(--background);
@@ -483,8 +484,11 @@
   }
 }
 
-/* Ocean palette (user-selectable on /settings/theme). Applied with data-palette on <html> (or on a preview element). */
-[data-palette="ocean"]:where(:not(.dark, .dark *)) {
+/* Ocean palette (user-selectable on /settings/theme). Applied with data-palette on <html> (or on a preview element).
+   Amethyst reuses Ocean and overrides the blue and lilac tokens below. */
+:is([data-palette="ocean"], [data-palette="amethyst"]):where(
+  :not(.dark, .dark *)
+) {
   --chart-1: #2a8ed9;
   --chart-2: #2bc76c;
   --chart-3: #ebc115;
@@ -518,7 +522,9 @@
 }
 
 .dark[data-palette="ocean"],
-.dark [data-palette="ocean"] {
+.dark [data-palette="ocean"],
+.dark[data-palette="amethyst"],
+.dark [data-palette="amethyst"] {
   --chart-1: #2a8ed9;
   --chart-2: #2bc76c;
   --chart-3: #ebc115;
@@ -549,6 +555,38 @@
   --kb-activity-2: #4c98d9;
   --kb-activity-3: #79b2e3;
   --kb-activity-4: #d9eaf7;
+}
+
+/* Amethyst palette: the blue tokens become purple, lilac becomes a soft blue so they stay distinct. */
+[data-palette="amethyst"]:where(:not(.dark, .dark *)) {
+  --chart-1: #bb97fb;
+  --chart-4: #7fb0f0;
+  --kb-blue: #bb97fb;
+  --kb-blue-fg: #6a3fc2;
+  --kb-blue-tint: #f1eafe;
+  --kb-lilac: #7fb0f0;
+  --kb-lilac-fg: #2b5d87;
+  --kb-lilac-tint: #dcebfa;
+  --kb-activity-1: #f1eafe;
+  --kb-activity-2: #d6c2fd;
+  --kb-activity-3: #bb97fb;
+  --kb-activity-4: #7c4fd6;
+}
+
+.dark[data-palette="amethyst"],
+.dark [data-palette="amethyst"] {
+  --chart-1: #bb97fb;
+  --chart-4: #7fb0f0;
+  --kb-blue: #bb97fb;
+  --kb-blue-fg: #d3bcfd;
+  --kb-blue-tint: #2d2547;
+  --kb-lilac: #7fb0f0;
+  --kb-lilac-fg: #a9cbf5;
+  --kb-lilac-tint: #1b3347;
+  --kb-activity-1: #5b3bb8;
+  --kb-activity-2: #8a64e8;
+  --kb-activity-3: #bb97fb;
+  --kb-activity-4: #e4d6fe;
 }
 
 /* Lets the palette picker preview the classic solids while another palette is active. */

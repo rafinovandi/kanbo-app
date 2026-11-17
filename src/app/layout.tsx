@@ -34,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var p=localStorage.getItem("palette");if(p==="vivid"||p==="classic")document.documentElement.dataset.palette=p;if(localStorage.getItem("surface")==="filled")document.documentElement.dataset.surface="filled"}catch(e){}`,
+            __html: `try{var p=localStorage.getItem("palette");if(p==="amethyst"||p==="vivid"||p==="classic")document.documentElement.dataset.palette=p;if(localStorage.getItem("surface")==="filled")document.documentElement.dataset.surface="filled"}catch(e){}`,
           }}
         />
       </head>

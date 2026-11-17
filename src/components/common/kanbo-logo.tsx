@@ -16,7 +16,15 @@ export default function KanboLogo({
         alt=""
         width={36}
         height={36}
-        className="size-9 flex-none"
+        className="size-9 flex-none amethyst:hidden"
+        priority
+      />
+      <Image
+        src="/new-logo-purple.png"
+        alt=""
+        width={36}
+        height={36}
+        className="hidden size-9 flex-none amethyst:block"
         priority
       />
       <span className="flex flex-col gap-px">

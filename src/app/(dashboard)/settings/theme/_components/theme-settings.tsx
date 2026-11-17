@@ -77,7 +77,7 @@ export default function ThemeSettings() {
           <CardContent
             role="radiogroup"
             aria-label="Color palette"
-            className="grid gap-3 sm:grid-cols-3"
+            className="grid gap-3 sm:grid-cols-2"
           >
             {PALETTE_OPTIONS.map((option) => (
               <OptionButton

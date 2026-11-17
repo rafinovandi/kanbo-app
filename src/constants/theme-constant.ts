@@ -1,6 +1,6 @@
 export const PALETTE_STORAGE_KEY = "palette";
 
-export const PALETTES = ["ocean", "vivid", "classic"] as const;
+export const PALETTES = ["ocean", "amethyst", "vivid", "classic"] as const;
 export type Palette = (typeof PALETTES)[number];
 export const DEFAULT_PALETTE: Palette = "ocean";
 
@@ -34,6 +34,11 @@ export const PALETTE_OPTIONS: {
     id: "ocean",
     label: "Ocean",
     description: "Bright blue with vivid accents.",
+  },
+  {
+    id: "amethyst",
+    label: "Amethyst",
+    description: "Soft purple with vivid accents.",
   },
   {
     id: "vivid",
