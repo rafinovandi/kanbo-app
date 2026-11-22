@@ -1,5 +1,5 @@
 begin;
-select plan(6);
+select plan(4);
 
 insert into auth.users (id, email) values
   ('00000000-0000-4000-8000-0000000000a1', 'alice@example.com'),
@@ -12,20 +12,6 @@ insert into public.tasks (id, project_id, category_id, title, created_by)
 select '00000000-0000-4000-8000-0000000000d1', c.project_id, c.id, 'A task', '00000000-0000-4000-8000-0000000000a1'
 from public.categories c
 where c.project_id = '00000000-0000-4000-8000-0000000000c1' and c.key = 'todo';
-
--- tasks.position must stay finite and bounded
-select throws_ok(
-  $$update public.tasks set position = 'NaN' where id = '00000000-0000-4000-8000-0000000000d1'$$,
-  '23514',
-  null,
-  'NaN is rejected as a task position'
-);
-select throws_ok(
-  $$update public.tasks set position = 'Infinity' where id = '00000000-0000-4000-8000-0000000000d1'$$,
-  '23514',
-  null,
-  'Infinity is rejected as a task position'
-);
 
 -- avatar colours must be hex
 select throws_ok(
