@@ -39,8 +39,8 @@ export async function inviteMemberAction(projectId: string, email: string): Prom
   const supabase = await getSession();
   if (!supabase) return fail("Your session expired. Sign in again.");
 
-  const link = await inviteMember(supabase, { email: address, roles: [] }, projectId);
-  return link ? done(link) : fail("Could not invite this email. They may already be a member.");
+  const { link, message } = await inviteMember(supabase, { email: address, roles: [] }, projectId);
+  return link ? done(link) : fail(message ?? "Could not invite this email. They may already be a member.");
 }
 
 // Issues a new link for a pending invite (the old one stops working).
@@ -57,8 +57,8 @@ export async function resendInviteAction(memberId: string): Promise<MemberAction
     .maybeSingle();
   if (!member || member.status !== "pending") return fail("This invite no longer exists.");
 
-  const link = await inviteMember(supabase, { email: member.email, roles: member.roles }, member.project_id);
-  return link ? done(link) : fail(NOT_ALLOWED);
+  const { link, message } = await inviteMember(supabase, { email: member.email, roles: member.roles }, member.project_id);
+  return link ? done(link) : fail(message ?? NOT_ALLOWED);
 }
 
 export async function updateMemberRolesAction(memberId: string, roles: string[]): Promise<MemberActionResult> {

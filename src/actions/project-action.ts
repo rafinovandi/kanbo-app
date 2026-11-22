@@ -47,8 +47,8 @@ export async function createProjectAction(
 
   const inviteLinks: { email: string; link: string }[] = [];
   const failedInvites: string[] = [];
-  const links = await Promise.all(invites.map((invite) => inviteMember(supabase, invite, project.id)));
-  links.forEach((link, index) => {
+  const results = await Promise.all(invites.map((invite) => inviteMember(supabase, invite, project.id)));
+  results.forEach(({ link }, index) => {
     if (link) inviteLinks.push({ email: invites[index].email, link });
     else failedInvites.push(invites[index].email);
   });
