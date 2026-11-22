@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `npx tsc --noEmit`, `npm run lint`, `npm test` and `npm run build` pass
+- [ ] `npm run typecheck`, `npm run lint`, `npm test` and `npm run build` pass
 - [ ] No new colors typed as hex in components (use the tokens in `src/app/globals.css`)
 - [ ] Reused an existing component, hook or helper instead of copying one
 - [ ] Database changes are a new file in `supabase/migrations/` (never an edit to an old one)

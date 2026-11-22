@@ -16,11 +16,13 @@ By taking part you agree to follow the [Code of Conduct](./CODE_OF_CONDUCT.md). 
 Run these and make sure they pass (CI runs the same):
 
 ```bash
-npx tsc --noEmit
+npm run typecheck
 npm run lint
 npm test
 npm run build
 ```
+
+`npm run typecheck` generates the route types Next.js 16 provides (`PageProps`, `LayoutProps`) before it runs `tsc`, so it also works on a fresh clone.
 
 For a UI change, try it in the browser in both light and dark mode, and attach a screenshot to the pull request.
 
