@@ -10,10 +10,22 @@ import AppSidebarLoader from "./_components/app-sidebar-loader";
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <SidebarProvider style={{ "--sidebar-width": "15.5rem" } as CSSProperties}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:text-foreground focus:shadow-md"
+      >
+        Skip to Content
+      </a>
       <Suspense fallback={<AppSidebarSkeleton />}>
         <AppSidebarLoader />
       </Suspense>
-      <SidebarInset className="min-w-0">{children}</SidebarInset>
+      <SidebarInset
+        id="main-content"
+        tabIndex={-1}
+        className="min-w-0 outline-none"
+      >
+        {children}
+      </SidebarInset>
     </SidebarProvider>
   );
 }

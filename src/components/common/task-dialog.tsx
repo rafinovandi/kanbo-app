@@ -1,7 +1,13 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useActionState, useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useActionState,
+  useEffect,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { toast } from "sonner";
 
 import {
@@ -16,9 +22,21 @@ import DatePicker from "@/components/common/date-picker";
 import PriorityPicker from "@/components/common/priority-picker";
 import TaskDescription from "@/components/common/task-description";
 import MemberSelector from "@/components/spaceui/member-selector";
-import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 import { PROJECT_TONE } from "@/constants/profile-constant";
@@ -49,7 +67,9 @@ type Fields = {
 };
 
 const sameField = (a: Fields[keyof Fields], b: Fields[keyof Fields]) =>
-  Array.isArray(a) && Array.isArray(b) ? [...a].sort().join() === [...b].sort().join() : a === b;
+  Array.isArray(a) && Array.isArray(b)
+    ? a.toSorted().join() === b.toSorted().join()
+    : a === b;
 
 // The form of the task dialog. Without `task` it adds a task to `category` (submit button). With `task` it is the
 // task modal: changes are kept as edits, and the bar at the bottom (Cancel, Save) appears to save them together.
@@ -71,7 +91,10 @@ function TaskForm({
   const queryClient = useQueryClient();
   const mutateBoard = useBoardMutation(project.id);
   const { data: membersData } = useProjectMembers(project.id);
-  const { data: detail, isLoading: detailLoading } = useTask(task?.id ?? "", !!task);
+  const { data: detail, isLoading: detailLoading } = useTask(
+    task?.id ?? "",
+    !!task,
+  );
   const [edits, setEdits] = useState<Partial<Fields>>({});
   const [editingDescription, setEditingDescription] = useState(false);
   const [viewKey, setViewKey] = useState(0);
@@ -81,7 +104,10 @@ function TaskForm({
     date.setHours(0, 0, 0, 0);
     return date;
   });
-  const [state, formAction, pending] = useActionState<TaskFormState, FormData>(createTaskAction, INITIAL_STATE_ACTION);
+  const [state, formAction, pending] = useActionState<TaskFormState, FormData>(
+    createTaskAction,
+    INITIAL_STATE_ACTION,
+  );
   const errors = state.errors ?? {};
 
   const saved: Fields = task
@@ -93,7 +119,14 @@ function TaskForm({
         dueDate: task.dueDate ?? "",
         description: detail?.description ?? "",
       }
-    : { title: "", categoryId: category.id, priority: "medium", assigneeIds: [], dueDate: "", description: "" };
+    : {
+        title: "",
+        categoryId: category.id,
+        priority: "medium",
+        assigneeIds: [],
+        dueDate: "",
+        description: "",
+      };
   const values: Fields = { ...saved, ...edits };
   const changed = (Object.keys(edits) as (keyof Fields)[]).filter(
     (key) => !sameField(edits[key] as Fields[typeof key], saved[key]),
@@ -120,7 +153,8 @@ function TaskForm({
       queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_KEY });
       queryClient.invalidateQueries({ queryKey: PROJECTS_OVERVIEW_KEY });
       queryClient.invalidateQueries({ queryKey: DUE_NOTIFICATIONS_KEY });
-      if (state.assigneesFailed) toast.warning("Task added, but the assignees could not be saved");
+      if (state.assigneesFailed)
+        toast.warning("Task added, but the assignees could not be saved");
       else toast.success("Task added");
       setOpen(false);
     } else if (state.status === "error" && state.errors?._form?.[0]) {
@@ -150,7 +184,9 @@ function TaskForm({
       (data) => {
         const bottom = Math.max(
           0,
-          ...data.tasks.filter((item) => item.categoryId === values.categoryId).map((item) => item.position),
+          ...data.tasks
+            .filter((item) => item.categoryId === values.categoryId)
+            .map((item) => item.position),
         );
         return {
           ...data,
@@ -162,18 +198,32 @@ function TaskForm({
                   title: values.title.trim(),
                   priority: values.priority,
                   dueDate: values.dueDate || null,
-                  assignees: changed.includes("assigneeIds") ? assignees : item.assignees,
-                  ...(changed.includes("categoryId") && { categoryId: values.categoryId, position: bottom + 1 }),
+                  assignees: changed.includes("assigneeIds")
+                    ? assignees
+                    : item.assignees,
+                  ...(changed.includes("categoryId") && {
+                    categoryId: values.categoryId,
+                    position: bottom + 1,
+                  }),
                 },
           ),
         };
       },
       async () => {
         const results = [];
-        if (Object.keys(patch).length > 0) results.push(await updateTaskAction(task.id, patch));
-        if (changed.includes("categoryId")) results.push(await moveTaskAction(task.id, values.categoryId));
-        if (changed.includes("assigneeIds")) results.push(await setTaskAssigneesAction(task.id, values.assigneeIds));
-        return results.find((result) => result.status === "error") ?? { status: "success" as const };
+        if (Object.keys(patch).length > 0)
+          results.push(await updateTaskAction(task.id, patch));
+        if (changed.includes("categoryId"))
+          results.push(await moveTaskAction(task.id, values.categoryId));
+        if (changed.includes("assigneeIds"))
+          results.push(
+            await setTaskAssigneesAction(task.id, values.assigneeIds),
+          );
+        return (
+          results.find((result) => result.status === "error") ?? {
+            status: "success" as const,
+          }
+        );
       },
     );
     setSaving(false);
@@ -188,7 +238,8 @@ function TaskForm({
         old ? { ...old, description: values.description.trim() } : old,
       );
     }
-    if (changed.includes("categoryId")) queryClient.invalidateQueries({ queryKey: boardKey(project.id) });
+    if (changed.includes("categoryId"))
+      queryClient.invalidateQueries({ queryKey: boardKey(project.id) });
     resetEdits();
   };
 
@@ -199,12 +250,20 @@ function TaskForm({
   };
 
   return (
-    <form action={task ? undefined : formAction} onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+    <form
+      action={task ? undefined : formAction}
+      onSubmit={onSubmit}
+      className="flex min-h-0 flex-1 flex-col"
+    >
       {!task && (
         <>
           <input type="hidden" name="project_id" value={project.id} />
           <input type="hidden" name="category_id" value={values.categoryId} />
-          <input type="hidden" name="assignee_ids" value={JSON.stringify(values.assigneeIds)} />
+          <input
+            type="hidden"
+            name="assignee_ids"
+            value={JSON.stringify(values.assigneeIds)}
+          />
           <input type="hidden" name="due_date" value={values.dueDate} />
         </>
       )}
@@ -219,10 +278,16 @@ function TaskForm({
         >
           {project.name[0].toUpperCase()}
         </span>
-        <span className="truncate text-[13px] text-muted-foreground">{project.name}</span>
-        <DialogTitle className="sr-only">{task ? "Task details" : "Add Task"}</DialogTitle>
+        <span className="truncate text-[13px] text-muted-foreground">
+          {project.name}
+        </span>
+        <DialogTitle className="sr-only">
+          {task ? "Task details" : "Add Task"}
+        </DialogTitle>
         <DialogDescription className="sr-only">
-          {task ? `Details of a task in ${project.name}.` : `Add a task to ${project.name}.`}
+          {task
+            ? `Details of a task in ${project.name}.`
+            : `Add a task to ${project.name}.`}
         </DialogDescription>
       </div>
 
@@ -249,20 +314,34 @@ function TaskForm({
               PAGE_TITLE_INPUT_CLASS,
             )}
           />
-          {errors.title?.[0] && <p className="text-xs text-destructive">{errors.title[0]}</p>}
+          {errors.title?.[0] && (
+            <p className="text-xs text-destructive">{errors.title[0]}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-3.5 text-[13px]">
           <span className={LABEL_CLASS}>Status</span>
           <div>
-            <Select value={values.categoryId} onValueChange={(next) => setField("categoryId", next)}>
-              <SelectTrigger aria-label="Status" className="w-fit gap-2 rounded-full pr-3 [&>svg]:hidden">
+            <Select
+              value={values.categoryId}
+              onValueChange={(next) => setField("categoryId", next)}
+            >
+              <SelectTrigger
+                aria-label="Status"
+                className="w-fit gap-2 rounded-full pr-3 [&>svg]:hidden"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((item) => (
                   <SelectItem key={item.id} value={item.id}>
-                    <span className={cn("size-2 rounded-full", PROJECT_TONE[item.color].dot)} aria-hidden="true" />
+                    <span
+                      className={cn(
+                        "size-2 rounded-full",
+                        PROJECT_TONE[item.color].dot,
+                      )}
+                      aria-hidden="true"
+                    />
                     {item.name}
                   </SelectItem>
                 ))}
@@ -295,7 +374,9 @@ function TaskForm({
 
           {task && (
             <>
-              <span className={cn(LABEL_CLASS, "self-start pt-3")}>Created by</span>
+              <span className={cn(LABEL_CLASS, "self-start pt-3")}>
+                Created by
+              </span>
               {detail ? (
                 <MemberSelector
                   readOnly
@@ -317,13 +398,17 @@ function TaskForm({
               minDate={today}
               invalid={!!errors.due_date}
             />
-            {errors.due_date?.[0] && <p className="text-xs text-destructive">{errors.due_date[0]}</p>}
+            {errors.due_date?.[0] && (
+              <p className="text-xs text-destructive">{errors.due_date[0]}</p>
+            )}
           </div>
 
           {task && (
             <>
               <span className={LABEL_CLASS}>Created on</span>
-              <span>{detail ? formatDisplayDate(new Date(detail.created_at)) : "—"}</span>
+              <span>
+                {detail ? formatDisplayDate(new Date(detail.created_at)) : "—"}
+              </span>
             </>
           )}
         </div>
@@ -350,7 +435,11 @@ function TaskForm({
               onChange={(next) => setField("description", next)}
               invalid={!!errors.description}
             />
-            {errors.description?.[0] && <p className="text-xs text-destructive">{errors.description[0]}</p>}
+            {errors.description?.[0] && (
+              <p className="text-xs text-destructive">
+                {errors.description[0]}
+              </p>
+            )}
           </div>
         )}
       </div>
@@ -385,7 +474,13 @@ type TaskDialogProps = {
   project: BoardData["project"];
   categories: BoardCategory[];
 } & (
-  | { task?: undefined; category: BoardCategory; children: ReactNode; open?: undefined; onOpenChange?: undefined }
+  | {
+      task?: undefined;
+      category: BoardCategory;
+      children: ReactNode;
+      open?: undefined;
+      onOpenChange?: undefined;
+    }
   | {
       task: BoardTask;
       category?: undefined;
@@ -410,7 +505,10 @@ export default function TaskDialog({
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const isOpen = task ? open : ownOpen;
   const setOpen = task ? onOpenChange : setOwnOpen;
-  const initialCategory = category ?? categories.find((item) => item.id === task?.categoryId) ?? categories[0];
+  const initialCategory =
+    category ??
+    categories.find((item) => item.id === task?.categoryId) ??
+    categories[0];
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>

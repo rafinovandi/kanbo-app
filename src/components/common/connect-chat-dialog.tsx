@@ -408,17 +408,16 @@ export default function ConnectChatDialog({
               </Button>
             </DialogClose>
           </DialogFooter>
+          <ConfirmDeleteDialog
+            open={revoking !== null}
+            onOpenChange={(next) => !next && setRevoking(null)}
+            title="Revoke this connection?"
+            description={`${revoking?.kind === "mcp" ? (displayClientName(revoking.client_name) ?? "This MCP client") : (revoking?.chat_id ?? "")} is disconnected from ${project.name}. Its token stops working right away.`}
+            confirmLabel="Revoke"
+            onConfirm={revoke}
+          />
         </DialogContent>
       </Dialog>
-
-      <ConfirmDeleteDialog
-        open={revoking !== null}
-        onOpenChange={(next) => !next && setRevoking(null)}
-        title="Revoke this connection?"
-        description={`${revoking?.kind === "mcp" ? (displayClientName(revoking.client_name) ?? "This MCP client") : (revoking?.chat_id ?? "")} is disconnected from ${project.name}. Its token stops working right away.`}
-        confirmLabel="Revoke"
-        onConfirm={revoke}
-      />
     </>
   );
 }

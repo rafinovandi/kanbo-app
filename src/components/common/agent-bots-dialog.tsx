@@ -4,10 +4,18 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { addAgentBotAction, removeAgentBotAction } from "@/actions/agent-bot-action";
+import {
+  addAgentBotAction,
+  removeAgentBotAction,
+} from "@/actions/agent-bot-action";
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import useAgentBots, { AGENT_BOTS_KEY } from "@/hooks/use-agent-bots";
@@ -37,7 +45,10 @@ function AddBotForm() {
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
-        <label htmlFor="bot-token" className="text-[13px] font-medium text-kb-text-2">
+        <label
+          htmlFor="bot-token"
+          className="text-[13px] font-medium text-kb-text-2"
+        >
           Bot token
         </label>
         <Input
@@ -53,8 +64,12 @@ function AddBotForm() {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <label htmlFor="bot-name" className="text-[13px] font-medium text-kb-text-2">
-          Name<span className="font-normal text-muted-foreground"> (optional)</span>
+        <label
+          htmlFor="bot-name"
+          className="text-[13px] font-medium text-kb-text-2"
+        >
+          Name
+          <span className="font-normal text-muted-foreground"> (optional)</span>
         </label>
         <Input
           id="bot-name"
@@ -66,14 +81,24 @@ function AddBotForm() {
           disabled={pending}
         />
       </div>
-      <Button type="submit" disabled={pending || token.trim() === ""} className="w-full sm:w-auto sm:self-end">
+      <Button
+        type="submit"
+        disabled={pending || token.trim() === ""}
+        className="w-full sm:w-auto sm:self-end"
+      >
         {pending ? "Checking…" : "Add Bot"}
       </Button>
     </form>
   );
 }
 
-function BotRow({ bot, onRemove }: { bot: AgentBot; onRemove: (bot: AgentBot) => void }) {
+function BotRow({
+  bot,
+  onRemove,
+}: {
+  bot: AgentBot;
+  onRemove: (bot: AgentBot) => void;
+}) {
   return (
     <li className="flex items-center gap-3 rounded-[10px] bg-kb-surface p-3 dark:bg-background">
       <span className="flex min-w-0 flex-1 flex-col gap-px">
@@ -83,7 +108,12 @@ function BotRow({ bot, onRemove }: { bot: AgentBot; onRemove: (bot: AgentBot) =>
           {bot.token_hint && ` · ${bot.token_hint}`}
         </span>
       </span>
-      <Button type="button" variant="outline" size="sm" onClick={() => onRemove(bot)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => onRemove(bot)}
+      >
         Revoke
       </Button>
     </li>
@@ -117,14 +147,20 @@ export default function AgentBotsDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent closeClassName="top-3.5" className="gap-0 p-0 sm:max-w-[480px]">
+        <DialogContent
+          closeClassName="top-3.5"
+          className="gap-0 p-0 sm:max-w-[480px]"
+        >
           <div className="flex h-[68px] items-center border-b border-kb-divider pr-16 pl-6">
-            <DialogTitle className="text-[15px] font-semibold">Agent Bots</DialogTitle>
+            <DialogTitle className="text-[15px] font-semibold">
+              Agent Bots
+            </DialogTitle>
           </div>
 
           <div className="flex flex-col gap-5 p-6">
             <DialogDescription>
-              Add your own Telegram bot. Kanbo keeps its token encrypted and uses it to talk to the chats you connect.
+              Add your own Telegram bot. Kanbo keeps its token encrypted and
+              uses it to talk to the chats you connect.
             </DialogDescription>
 
             {isLoading ? (
@@ -142,17 +178,16 @@ export default function AgentBotsDialog({
 
             <AddBotForm />
           </div>
+          <ConfirmDeleteDialog
+            open={removing !== null}
+            onOpenChange={(next) => !next && setRemoving(null)}
+            title="Revoke this bot?"
+            description={`@${removing?.bot_username ?? ""} is removed from Kanbo and every chat connected through it is disconnected.`}
+            confirmLabel="Revoke"
+            onConfirm={remove}
+          />
         </DialogContent>
       </Dialog>
-
-      <ConfirmDeleteDialog
-        open={removing !== null}
-        onOpenChange={(next) => !next && setRemoving(null)}
-        title="Revoke this bot?"
-        description={`@${removing?.bot_username ?? ""} is removed from Kanbo and every chat connected through it is disconnected.`}
-        confirmLabel="Revoke"
-        onConfirm={remove}
-      />
     </>
   );
 }

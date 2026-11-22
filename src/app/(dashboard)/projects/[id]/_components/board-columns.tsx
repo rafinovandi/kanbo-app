@@ -11,6 +11,7 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  type Announcements,
   type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
@@ -34,27 +35,45 @@ import { DASHBOARD_STATS_KEY } from "@/hooks/use-dashboard-stats";
 import useBoardMutation from "@/hooks/use-board-mutation";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
 import { cn } from "@/lib/utils";
-import { applyBoardView, countActiveFilters, groupTasksByCategory, moveTaskInColumns } from "@/lib/board";
-import type { BoardCategory, BoardColumns, BoardData, BoardTask, BoardView } from "@/types/board";
+import {
+  applyBoardView,
+  countActiveFilters,
+  groupTasksByCategory,
+  moveTaskInColumns,
+} from "@/lib/board";
+import type {
+  BoardCategory,
+  BoardColumns,
+  BoardData,
+  BoardTask,
+  BoardView,
+} from "@/types/board";
 
 import BoardColumn from "./board-column";
 import BoardOverview from "./board-overview";
 
 const measuring = { droppable: { strategy: MeasuringStrategy.Always } };
 
-const isColumnDrag = (data: { current?: Record<string, unknown> }) => data.current?.type === "column";
+const isColumnDrag = (data: { current?: Record<string, unknown> }) =>
+  data.current?.type === "column";
 
 // Dragging a column only considers the other columns; dragging a card keeps using the nearest corners.
 const collisionDetection: CollisionDetection = (args) =>
   isColumnDrag(args.active.data)
     ? closestCenter({
         ...args,
-        droppableContainers: args.droppableContainers.filter((c) => c.data.current?.type === "column"),
+        droppableContainers: args.droppableContainers.filter(
+          (c) => c.data.current?.type === "column",
+        ),
       })
     : closestCorners(args);
 
 const findColumnId = (columns: BoardColumns, id: string) =>
-  id in columns ? id : Object.keys(columns).find((columnId) => columns[columnId].some((task) => task.id === id));
+  id in columns
+    ? id
+    : Object.keys(columns).find((columnId) =>
+        columns[columnId].some((task) => task.id === id),
+      );
 
 // The columns with drag and drop (@dnd-kit). While a card is dragged the arrangement lives in `drag`
 // (valid only for the data it was made from); a drop saves optimistically and rolls back on error.
@@ -81,8 +100,15 @@ export default function BoardColumns({
   const projectId = project.id;
   const mutateBoard = useBoardMutation(projectId);
   const serverColumns = useMemo(() => {
-    const doneIds = new Set(categories.filter((category) => category.key === "done").map((category) => category.id));
-    return groupTasksByCategory(categories, applyBoardView(tasks, view, { meId, today, doneIds }));
+    const doneIds = new Set(
+      categories
+        .filter((category) => category.key === "done")
+        .map((category) => category.id),
+    );
+    return groupTasksByCategory(
+      categories,
+      applyBoardView(tasks, view, { meId, today, doneIds }),
+    );
   }, [categories, tasks, view, meId, today]);
   const [drag, setDrag] = useState<{
     base: BoardColumns;
@@ -90,16 +116,22 @@ export default function BoardColumns({
   } | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const categoryIds = useMemo(() => categories.map((category) => category.id), [categories]);
+  const categoryIds = useMemo(
+    () => categories.map((category) => category.id),
+    [categories],
+  );
   const isColumnDragging = activeId !== null && categoryIds.includes(activeId);
 
-  const columns = drag && drag.base === serverColumns ? drag.columns : serverColumns;
+  const columns =
+    drag && drag.base === serverColumns ? drag.columns : serverColumns;
   const activeTask = activeId
     ? Object.values(columns)
         .flat()
         .find((task) => task.id === activeId)
     : undefined;
-  const activeCategory = activeTask ? categories.find((category) => category.id === activeTask.categoryId) : undefined;
+  const activeCategory = activeTask
+    ? categories.find((category) => category.id === activeTask.categoryId)
+    : undefined;
 
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
@@ -120,15 +152,23 @@ export default function BoardColumns({
     mutateBoard(
       (data) => ({
         ...data,
-        tasks: data.tasks.map((task) => (task.id === taskId ? { ...task, categoryId, position } : task)),
+        tasks: data.tasks.map((task) =>
+          task.id === taskId ? { ...task, categoryId, position } : task,
+        ),
       }),
       () => moveTaskAction(taskId, categoryId, position),
     );
 
   const moveToCategory = (taskId: string, categoryId: string) => {
     const from = findColumnId(serverColumns, taskId);
-    const moved = moveTaskInColumns(serverColumns, taskId, categoryId, serverColumns[categoryId]?.length ?? 0);
-    if (from !== categoryId && moved) persistMove(taskId, categoryId, moved.position);
+    const moved = moveTaskInColumns(
+      serverColumns,
+      taskId,
+      categoryId,
+      serverColumns[categoryId]?.length ?? 0,
+    );
+    if (from !== categoryId && moved)
+      persistMove(taskId, categoryId, moved.position);
   };
 
   const deleteTask = async (taskId: string) => {
@@ -147,7 +187,9 @@ export default function BoardColumns({
     mutateBoard(
       (data) => ({
         ...data,
-        categories: order.map((id) => data.categories.find((c) => c.id === id)).filter((c) => !!c),
+        categories: order
+          .map((id) => data.categories.find((c) => c.id === id))
+          .filter((c) => !!c),
       }),
       () => reorderCategoriesAction(projectId, order),
     );
@@ -168,9 +210,33 @@ export default function BoardColumns({
     const to = findColumnId(columns, overId);
     if (!from || !to || from === to) return;
 
-    const overIndex = overId in columns ? columns[to].length : columns[to].findIndex((task) => task.id === overId);
+    const overIndex =
+      overId in columns
+        ? columns[to].length
+        : columns[to].findIndex((task) => task.id === overId);
     const moved = moveTaskInColumns(columns, taskId, to, overIndex);
     if (moved) setDrag({ base: serverColumns, columns: moved.columns });
+  };
+
+  const labelOf = (id: string | number) => {
+    const key = String(id);
+    const category = categories.find((item) => item.id === key);
+    if (category) return `${category.name} column`;
+    const task = tasks.find((item) => item.id === key);
+    return task ? `Task ${task.title}` : "Item";
+  };
+
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => `Picked up ${labelOf(active.id)}.`,
+    onDragOver: ({ active, over }) =>
+      over
+        ? `${labelOf(active.id)} is over ${labelOf(over.id)}.`
+        : `${labelOf(active.id)} is no longer over a drop area.`,
+    onDragEnd: ({ active, over }) =>
+      over
+        ? `${labelOf(active.id)} was dropped over ${labelOf(over.id)}.`
+        : `${labelOf(active.id)} was dropped.`,
+    onDragCancel: ({ active }) => `Moving ${labelOf(active.id)} was cancelled.`,
   };
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
@@ -178,7 +244,8 @@ export default function BoardColumns({
     if (isColumnDrag(active.data)) {
       const from = categoryIds.indexOf(String(active.id));
       const to = over ? categoryIds.indexOf(String(over.id)) : -1;
-      if (from !== -1 && to !== -1 && from !== to) persistColumnOrder(arrayMove(categoryIds, from, to));
+      if (from !== -1 && to !== -1 && from !== to)
+        persistColumnOrder(arrayMove(categoryIds, from, to));
       return;
     }
     const taskId = String(active.id);
@@ -186,14 +253,20 @@ export default function BoardColumns({
     if (!over || !to) return setDrag(null);
 
     const overId = String(over.id);
-    const overIndex = overId in columns ? columns[to].length : columns[to].findIndex((task) => task.id === overId);
+    const overIndex =
+      overId in columns
+        ? columns[to].length
+        : columns[to].findIndex((task) => task.id === overId);
     const moved = moveTaskInColumns(columns, taskId, to, overIndex);
     if (!moved) return setDrag(null);
 
     const originalColumn = findColumnId(serverColumns, taskId);
-    const originalIndex = originalColumn ? serverColumns[originalColumn].findIndex((task) => task.id === taskId) : -1;
+    const originalIndex = originalColumn
+      ? serverColumns[originalColumn].findIndex((task) => task.id === taskId)
+      : -1;
     const newIndex = moved.columns[to].findIndex((task) => task.id === taskId);
-    if (originalColumn === to && originalIndex === newIndex) return setDrag(null);
+    if (originalColumn === to && originalIndex === newIndex)
+      return setDrag(null);
 
     setDrag({ base: serverColumns, columns: moved.columns });
     persistMove(taskId, to, moved.position);
@@ -204,6 +277,7 @@ export default function BoardColumns({
       id="board-dnd"
       sensors={sensors}
       measuring={measuring}
+      accessibility={{ announcements }}
       collisionDetection={collisionDetection}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
@@ -222,7 +296,10 @@ export default function BoardColumns({
           isColumnDragging ? "snap-none" : "snap-x snap-proximity",
         )}
       >
-        <SortableContext items={categoryIds} strategy={horizontalListSortingStrategy}>
+        <SortableContext
+          items={categoryIds}
+          strategy={horizontalListSortingStrategy}
+        >
           {categories.map((category) => (
             <BoardColumn
               key={category.id}
@@ -241,7 +318,13 @@ export default function BoardColumns({
         <BoardOverview projectId={projectId} />
       </div>
       <DragOverlay>
-        {activeTask && <TaskCardFace task={activeTask} done={activeCategory?.key === "done"} isOverlay />}
+        {activeTask && (
+          <TaskCardFace
+            task={activeTask}
+            done={activeCategory?.key === "done"}
+            isOverlay
+          />
+        )}
       </DragOverlay>
     </DndContext>
   );
