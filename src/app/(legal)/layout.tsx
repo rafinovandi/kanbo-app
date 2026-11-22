@@ -1,13 +1,21 @@
+import { ArrowLeft } from "iconsax-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import BackLink from "@/components/common/back-link";
 import KanboLogo from "@/components/common/kanbo-logo";
+import { Button } from "@/components/ui/button";
 
-// Public pages without the sidebar (Privacy Policy, Terms): the logo, a readable column and links to both documents.
+// Public pages without the sidebar (Privacy Policy, Terms): a back button, the logo, a readable column and links to both documents.
 export default function LegalLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <header className="border-b border-kb-divider px-6 py-4 sm:px-10">
+      <header className="flex items-center gap-2 border-b border-kb-divider px-6 py-4 sm:px-10">
+        <Button asChild variant="ghost" size="icon" aria-label="Back">
+          <BackLink href="/" previous>
+            <ArrowLeft size={20} variant="Linear" color="currentColor" aria-hidden />
+          </BackLink>
+        </Button>
         <Link
           href="/login"
           aria-label="Kanbo, back to sign in"
