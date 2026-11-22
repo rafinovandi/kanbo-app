@@ -111,11 +111,19 @@ export async function updateProfileAction(
 
   if (error) {
     if (avatarPath) await supabase.storage.from("avatars").remove([avatarPath]);
-    if (error.code === "23505")
+    if (error.code === "23505") {
+      if (error.message.includes("telegram_username"))
+        return {
+          status: "error",
+          errors: {
+            telegram_username: ["That Telegram username is already linked"],
+          },
+        };
       return {
         status: "error",
         errors: { username: ["That username is taken"] },
       };
+    }
     return {
       status: "error",
       errors: { _form: ["Could not save your profile. Try again."] },
