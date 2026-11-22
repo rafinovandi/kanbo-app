@@ -66,7 +66,7 @@ supabase/
 
 ## Database
 
-Migrations in `supabase/migrations/` (001 to 024) are applied in order to each Supabase project; a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
+Every file in `supabase/migrations/` is applied, in filename order, to each Supabase project (the newest ones are security fixes, so do not stop early); a new project also needs one row in `private.app_config` (`supabase_host`, your project's host) or avatar uploads are rejected. After a schema change, regenerate the types:
 
 ```bash
 npx supabase gen types typescript --project-id <project-ref> > src/types/database.types.ts
@@ -81,7 +81,7 @@ Never edit `src/types/database.types.ts` by hand.
 3. Import the repo into [Vercel](https://vercel.com) and set the environment variables from [`env.example`](./env.example). Set `NEXT_PUBLIC_APP_URL` to your production URL and generate a fresh `TOKEN_HASH_PEPPER` for production.
 4. Deploy. Use a separate Supabase project for production; do not reuse your development keys.
 
-To report a security issue, see [`SECURITY.md`](./SECURITY.md).
+Contributions are welcome: see [`CONTRIBUTING.md`](./CONTRIBUTING.md) and the [Code of Conduct](./CODE_OF_CONDUCT.md). To report a security issue, see [`SECURITY.md`](./SECURITY.md).
 
 ## Scripts
 
@@ -91,3 +91,4 @@ To report a security issue, see [`SECURITY.md`](./SECURITY.md).
 | `npm run build` | Production build           |
 | `npm run start` | Serve the production build |
 | `npm run lint`  | ESLint                     |
+| `npm test`      | Unit tests (`node --test`) |
