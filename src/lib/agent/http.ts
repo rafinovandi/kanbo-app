@@ -112,8 +112,10 @@ export async function withAuth(request: Request, handler: (ctx: AgentLinkContext
   return reply(isApiResult(auth) ? auth : await handler(auth));
 }
 
-// The caller's address, hashed so no raw IP is stored. Behind Vercel the first x-forwarded-for entry is the client.
+// The caller's address, hashed so no raw IP is stored. A client can put its own entries at the front of
+// x-forwarded-for but cannot change the last one, which the proxy in front of the app writes.
 export function clientKey(request: Request) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
+  const ip = request.headers.get("x-vercel-forwarded-for")?.trim() || forwarded || request.headers.get("x-real-ip") || "unknown";
   return hashAgentSecret("client-ip", ip);
 }
