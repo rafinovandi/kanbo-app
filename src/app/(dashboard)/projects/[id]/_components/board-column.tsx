@@ -20,7 +20,7 @@ import type { BoardCategory, BoardData, BoardTask } from "@/types/board";
 import TaskDialog from "@/components/common/task-dialog";
 import BoardCard from "./board-card";
 import BoardColumnMenu from "./board-column-menu";
-import CategoryDialog from "./category-dialog";
+import CategoryDialog from "@/components/common/category-dialog";
 
 const animateLayoutChanges: AnimateLayoutChanges = (args) =>
   defaultAnimateLayoutChanges({ ...args, wasDragging: true });

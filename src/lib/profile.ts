@@ -14,34 +14,43 @@ import { createClient } from "@/lib/supabase/server";
 import type { AuthProfile } from "@/types/auth";
 import type { ActivityRow, ProfileData, RecentTask } from "@/types/profile";
 
-// The signed-in user's profile for Server Components. Verifies the session (getClaims), loads the
-// profile row and redirects to /login when there is no session. `cache` makes it one query per
-// request, so the sidebar and the page can both call it.
+// The signed-in user's profile, or null when there is no session (public pages that adapt to who is
+// looking, like the landing page). Verifies the session (getClaims) and loads the profile row.
+export const getOptionalProfile = cache(
+  async (): Promise<AuthProfile | null> => {
+    // getClaims() compares the token's expiry with Date.now(). With Cache Components that must not
+    // run during prerender/prefetch, so wait for a real request first (callers sit behind <Suspense>).
+    await connection();
+    const supabase = await createClient();
+    const { data: claimsData } = await supabase.auth.getClaims();
+    const claims = claimsData?.claims;
+    if (!claims?.sub) return null;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select(AUTH_PROFILE_COLUMNS)
+      .eq("id", claims.sub)
+      .single();
+
+    // The profile is created by a trigger on first sign in; fall back to the token if it isn't readable.
+    const email = typeof claims.email === "string" ? claims.email : "";
+    return (
+      data ?? {
+        ...INITIAL_STATE_PROFILE,
+        id: claims.sub,
+        email,
+        name: email.split("@")[0] || "User",
+      }
+    );
+  },
+);
+
+// The signed-in user's profile for Server Components; redirects to /login when there is no session.
+// `cache` makes it one query per request, so the sidebar and the page can both call it.
 export const getCurrentProfile = cache(async (): Promise<AuthProfile> => {
-  // getClaims() compares the token's expiry with Date.now(). With Cache Components that must not
-  // run during prerender/prefetch, so wait for a real request first (callers sit behind <Suspense>).
-  await connection();
-  const supabase = await createClient();
-  const { data: claimsData } = await supabase.auth.getClaims();
-  const claims = claimsData?.claims;
-  if (!claims?.sub) redirect("/login");
-
-  const { data } = await supabase
-    .from("profiles")
-    .select(AUTH_PROFILE_COLUMNS)
-    .eq("id", claims.sub)
-    .single();
-
-  // The profile is created by a trigger on first sign in; fall back to the token if it isn't readable.
-  const email = typeof claims.email === "string" ? claims.email : "";
-  return (
-    data ?? {
-      ...INITIAL_STATE_PROFILE,
-      id: claims.sub,
-      email,
-      name: email.split("@")[0] || "User",
-    }
-  );
+  const profile = await getOptionalProfile();
+  if (!profile) redirect("/login");
+  return profile;
 });
 
 // Everything a profile page shows: the get_profile() payload, the activity graph rows and the

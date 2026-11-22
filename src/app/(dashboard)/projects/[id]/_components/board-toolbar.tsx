@@ -11,7 +11,7 @@ import type { MemberRow } from "@/types/project";
 
 import BoardFilterMenu from "./board-filter-menu";
 import BoardSortMenu from "./board-sort-menu";
-import CategoryDialog from "./category-dialog";
+import CategoryDialog from "@/components/common/category-dialog";
 
 // Search, Filter, Sort and Add Category; Add Category is for admins only.
 export default function BoardToolbar({
@@ -39,11 +39,25 @@ export default function BoardToolbar({
         <BoardSortMenu boardView={boardView} />
         {isAdmin && (
           <>
-            <Button type="button" className="gap-2" onClick={() => setAddOpen(true)}>
-              <Add size={20} variant="Linear" color="currentColor" aria-hidden />
+            <Button
+              type="button"
+              className="gap-2"
+              onClick={() => setAddOpen(true)}
+            >
+              <Add
+                size={20}
+                variant="Linear"
+                color="currentColor"
+                aria-hidden
+              />
               Add Category
             </Button>
-            <CategoryDialog open={addOpen} onOpenChange={setAddOpen} projectId={projectId} categories={categories} />
+            <CategoryDialog
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              projectId={projectId}
+              categories={categories}
+            />
           </>
         )}
       </div>

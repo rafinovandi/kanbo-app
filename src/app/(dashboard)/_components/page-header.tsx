@@ -5,7 +5,7 @@ import ThemeToggle from "@/components/common/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-import BackLink from "./back-link";
+import BackLink from "@/components/common/back-link";
 
 // Top bar: page icon + name on the left, theme toggle and Notifications (tasks that are due) on the right.
 // On phones the sidebar opens from the burger button, so the page icon is hidden there. Sub-pages pass `backHref`:

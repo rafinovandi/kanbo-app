@@ -450,7 +450,8 @@
   html {
     @apply font-sans;
     accent-color: var(--primary);
-    scrollbar-color: color-mix(in oklab, var(--foreground) 35%, transparent) transparent;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 35%, transparent)
+      transparent;
   }
 }
 /* Page transitions between routes (<PageTransition>, React <ViewTransition>): the old page fades
@@ -680,4 +681,82 @@ html:not(.dark)[data-surface="filled"] [data-slot="card"] {
 /* Cards inside a board column sit on kb-surface, so they use the raised fill to stay visible. */
 [data-surface="filled"] .kb-column [data-slot="card"] {
   --kb-card-bg: var(--kb-fill-raised);
+}
+
+/* Landing page motion (off for prefers-reduced-motion). The first screen eases in when the page opens (.kb-enter, and
+   .kb-enter-words for text). Further down, each .kb-reveal block slides up and each .kb-words text sharpens word by word
+   the first time it scrolls into view; RevealObserver adds .is-in once, so nothing replays on the way back. */
+.kb-word {
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes kb-enter {
+    from {
+      opacity: 0;
+      translate: 0 1.5rem;
+      filter: blur(10px);
+    }
+  }
+
+  @keyframes kb-word {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      translate: 0 0.35em;
+    }
+  }
+
+  @keyframes kb-reveal {
+    from {
+      opacity: 0;
+      translate: 0 2rem;
+    }
+  }
+
+  .kb-enter {
+    animation: kb-enter 800ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  .kb-enter-1 {
+    animation-delay: 100ms;
+  }
+  .kb-enter-2 {
+    animation-delay: 300ms;
+  }
+  .kb-enter-3 {
+    animation-delay: 450ms;
+  }
+  .kb-enter-4 {
+    animation-delay: 550ms;
+  }
+  .kb-enter-5 {
+    animation-delay: 650ms;
+  }
+
+  .kb-enter-words .kb-word,
+  .kb-words.is-in .kb-word {
+    animation: kb-word 800ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation-delay: calc(var(--base, 0ms) + var(--i, 0) * var(--step, 50ms));
+  }
+
+  .kb-js .kb-words:not(.is-in) .kb-word {
+    opacity: 0;
+    filter: blur(8px);
+    translate: 0 0.35em;
+  }
+
+  .kb-js .kb-reveal:not(.is-in) {
+    opacity: 0;
+    translate: 0 2rem;
+  }
+
+  .kb-reveal.is-in {
+    animation: kb-reveal 900ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+
+  /* Links like "See how it works" glide to their section; only on the landing page (RevealObserver sets .kb-js). */
+  html.kb-js {
+    scroll-behavior: smooth;
+  }
 }
