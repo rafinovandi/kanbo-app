@@ -29,7 +29,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -38,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { INITIAL_STATE_ACTION } from "@/constants/general-constant";
 import { PROJECT_TONE } from "@/constants/profile-constant";
 import { PROJECT_TILE } from "@/constants/project-constant";
@@ -298,10 +298,18 @@ function TaskForm({
         )}
       >
         <div className="flex flex-col gap-1.5">
-          <Input
+          <Textarea
             name={task ? undefined : "title"}
+            rows={1}
             value={values.title}
-            onChange={(e) => setField("title", e.target.value)}
+            onChange={(e) =>
+              setField("title", e.target.value.replace(/[\r\n]+/g, " "))
+            }
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" || e.nativeEvent.isComposing) return;
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }}
             maxLength={TASK_LIMITS.title}
             placeholder="Task title (required)"
             aria-label="Task title"
@@ -310,7 +318,7 @@ function TaskForm({
             required={!task}
             aria-invalid={!!errors.title}
             className={cn(
-              "h-auto rounded-none border-0 bg-transparent px-0 py-1 shadow-none focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent",
+              "min-h-0 resize-none rounded-none border-0 bg-transparent px-0 py-1 shadow-none focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent",
               PAGE_TITLE_INPUT_CLASS,
             )}
           />
