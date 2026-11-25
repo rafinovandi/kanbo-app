@@ -15,13 +15,20 @@ export type BoardTask = {
   title: string;
   priority: TaskPriority;
   dueDate: string | null;
+  createdAt: string;
   position: number;
   createdBy: string | null;
   assignees: MemberPreview[];
 };
 
 export type BoardData = {
-  project: { id: string; name: string; description: string; color: ProjectColor; ownerId: string };
+  project: {
+    id: string;
+    name: string;
+    description: string;
+    color: ProjectColor;
+    ownerId: string;
+  };
   categories: BoardCategory[];
   tasks: BoardTask[];
 };
@@ -30,12 +37,10 @@ export type BoardData = {
 export type BoardColumns = Record<string, BoardTask[]>;
 
 export type DueFilter = "overdue" | "today" | "week" | "none";
-export type BoardSort = "manual" | "due" | "priority" | "name";
 
 export type BoardView = {
   mine: boolean;
   priorities: TaskPriority[];
   assigneeIds: string[];
   due: DueFilter[];
-  sort: BoardSort;
 };
