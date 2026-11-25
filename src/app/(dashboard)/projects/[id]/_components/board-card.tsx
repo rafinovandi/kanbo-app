@@ -7,6 +7,7 @@ import { useState } from "react";
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import TaskCardFace from "@/components/common/task-card-face";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth-store";
 import type { BoardCategory, BoardData, BoardTask } from "@/types/board";
 
 import BoardCardMenu from "./board-card-menu";
@@ -33,6 +34,8 @@ export default function BoardCard({
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const meId = useAuthStore((state) => state.profile.id);
+  const canDelete = isAdmin || (!!task.createdBy && task.createdBy === meId);
   const {
     attributes,
     listeners,
@@ -69,7 +72,7 @@ export default function BoardCard({
             <BoardCardMenu
               categories={categories}
               categoryId={category.id}
-              isAdmin={isAdmin}
+              canDelete={canDelete}
               onMove={(categoryId) => onMove(task.id, categoryId)}
               onRequestDelete={() => setConfirmOpen(true)}
             />
