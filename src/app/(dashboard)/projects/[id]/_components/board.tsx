@@ -6,7 +6,6 @@ import { useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import useBoard from "@/hooks/use-board";
-import useBoardTab from "@/hooks/use-board-tab";
 import useBoardView from "@/hooks/use-board-view";
 import useBoardRealtime from "@/hooks/use-board-realtime";
 import useDebounce from "@/hooks/use-debounce";
@@ -15,12 +14,11 @@ import { getTodayInTimeZone } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 
 import BoardColumns from "./board-columns";
-import BoardGantt from "./board-gantt";
 import BoardHeader from "./board-header";
 import BoardToolbar from "./board-toolbar";
 
-// The Board of one project: header, toolbar and the Kanban columns or the Gantt timeline. Dragging cards is off while a search is
-// active, because the cards on screen are then only part of each column.
+// The Board of one project: header, toolbar and the columns. Dragging cards is off while a search is
+// active or the cards are sorted, because the order on screen is then not the saved one.
 export default function Board({ projectId }: { projectId: string }) {
   const me = useAuthStore((state) => state.profile);
   const debounce = useDebounce();
@@ -28,7 +26,6 @@ export default function Board({ projectId }: { projectId: string }) {
   const { data, isLoading, isError } = useBoard(projectId, search);
   const { data: members } = useProjectMembers(projectId);
   const boardView = useBoardView();
-  const { tab, setTab } = useBoardTab();
   useBoardRealtime(projectId);
 
   const isAdmin = !!members?.members.some(
@@ -67,34 +64,18 @@ export default function Board({ projectId }: { projectId: string }) {
         isAdmin={isAdmin}
         members={activeMembers}
         boardView={boardView}
-        tab={tab}
-        onTabChange={setTab}
         onSearch={(value) => debounce(() => setSearch(value.trim()), 500)}
       />
-      {tab === "gantt" ? (
-        <BoardGantt
-          project={data.project}
-          categories={data.categories}
-          tasks={data.tasks}
-          members={activeMembers}
-          view={boardView.view}
-          isSearching={!!search}
-          meId={me.id}
-          today={getTodayInTimeZone(me.timezone)}
-          timeZone={me.timezone}
-        />
-      ) : (
-        <BoardColumns
-          project={data.project}
-          categories={data.categories}
-          tasks={data.tasks}
-          canDrag={!search}
-          isAdmin={isAdmin}
-          view={boardView.view}
-          meId={me.id}
-          today={getTodayInTimeZone(me.timezone)}
-        />
-      )}
+      <BoardColumns
+        project={data.project}
+        categories={data.categories}
+        tasks={data.tasks}
+        canDrag={!search && boardView.view.sort === "manual"}
+        isAdmin={isAdmin}
+        view={boardView.view}
+        meId={me.id}
+        today={getTodayInTimeZone(me.timezone)}
+      />
     </>
   );
 }
