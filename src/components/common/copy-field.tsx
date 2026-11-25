@@ -40,7 +40,7 @@ export default function CopyField({
           variant="ghost"
           onClick={copy}
           aria-label={copied ? "Copied" : label ? `Copy: ${label}` : "Copy"}
-          className="h-auto flex-none rounded-none border-l border-border px-3.5"
+          className="h-auto flex-none rounded-none border-0 border-l border-border px-3.5"
         >
           {copied ? (
             <TickCircle

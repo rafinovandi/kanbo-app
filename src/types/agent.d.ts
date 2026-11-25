@@ -16,6 +16,8 @@ export type AgentLink = {
   chat_id: string;
   client_name: string | null;
   bot_username: string | null;
+  linked_by_name: string | null;
+  mine: boolean;
   last_used_at: string | null;
   created_at: string;
   notify_task_created: boolean;

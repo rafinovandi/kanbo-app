@@ -17,17 +17,17 @@ import { PROJECT_TONE } from "@/constants/profile-constant";
 import { cn } from "@/lib/utils";
 import type { BoardCategory } from "@/types/board";
 
-// The ⋯ menu of a task card: every member can move it, only admins delete it.
+// The ⋯ menu of a task card: every member can move it; admins and the task's creator can delete it.
 export default function BoardCardMenu({
   categories,
   categoryId,
-  isAdmin,
+  canDelete,
   onMove,
   onRequestDelete,
 }: {
   categories: BoardCategory[];
   categoryId: string;
-  isAdmin: boolean;
+  canDelete: boolean;
   onMove: (categoryId: string) => void;
   onRequestDelete: () => void;
 }) {
@@ -66,7 +66,7 @@ export default function BoardCardMenu({
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
-        {isAdmin && (
+        {canDelete && (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem

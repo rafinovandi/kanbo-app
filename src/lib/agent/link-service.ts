@@ -84,7 +84,7 @@ export async function linkChat(request: Request): Promise<ApiResult> {
   if (!used) return gone;
   const isChat = used.kind === "chat";
 
-  const [{ data: bot }, { data: stillAdmin }, { data: project }] =
+  const [{ data: bot }, { data: stillMember }, { data: project }] =
     await Promise.all([
       used.bot_id
         ? admin
@@ -100,7 +100,6 @@ export async function linkChat(request: Request): Promise<ApiResult> {
         .eq("project_id", used.project_id)
         .eq("user_id", used.created_by)
         .eq("status", "active")
-        .eq("is_admin", true)
         .maybeSingle(),
       admin
         .from("projects")
@@ -108,7 +107,7 @@ export async function linkChat(request: Request): Promise<ApiResult> {
         .eq("id", used.project_id)
         .maybeSingle(),
     ]);
-  if (!bot || !stillAdmin || !project) return gone;
+  if (!bot || !stillMember || !project) return gone;
 
   const linkChatId = isChat ? chatId : `mcp-${randomBytes(8).toString("hex")}`;
   const { data: existing } = isChat

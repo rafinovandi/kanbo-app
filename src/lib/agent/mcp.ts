@@ -176,7 +176,7 @@ const TOOLS = [
   {
     name: "delete_task",
     description:
-      "Permanently deletes a task, with its assignees. It cannot be undone: preview with dryRun and get the user's confirmation first.",
+      "Permanently deletes a task, with its assignees. It cannot be undone: preview with dryRun and get the user's confirmation first. A project admin can delete any task; other members only tasks they created.",
     inputSchema: {
       type: "object",
       properties: {

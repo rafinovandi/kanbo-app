@@ -56,7 +56,7 @@ export default function LandingFeatures() {
   return (
     <section
       id="features"
-      className="mx-auto flex w-full max-w-[1200px] scroll-mt-20 flex-col gap-12 px-6 pt-24 sm:px-10"
+      className="mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-6 pt-24 sm:px-10"
     >
       <h2 className="kb-words max-w-[820px] text-4xl leading-[1.12] font-semibold tracking-[-0.04em] text-muted-foreground sm:text-[52px]">
           <Words text="Made for teams that want to see" />{" "}

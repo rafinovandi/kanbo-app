@@ -16,6 +16,7 @@ export type BoardTask = {
   priority: TaskPriority;
   dueDate: string | null;
   position: number;
+  createdBy: string | null;
   assignees: MemberPreview[];
 };
 

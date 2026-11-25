@@ -47,15 +47,18 @@ const KIND_OPTIONS: { value: AgentLinkKind; label: string }[] = [
   { value: "mcp", label: "MCP Client" },
 ];
 
-// Admin-only: link a Telegram chat or an MCP client to this project with a one-time code, and manage what is already linked.
+// Link a Telegram chat or an MCP client to this project with a one-time code, and manage what is already linked.
+// Members see their own connections; admins see everyone's.
 export default function ConnectChatDialog({
   open,
   onOpenChange,
   project,
+  isAdmin,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   project: { id: string; name: string };
+  isAdmin: boolean;
 }) {
   const queryClient = useQueryClient();
   const [kind, setKind] = useState<AgentLinkKind>("chat");
@@ -100,7 +103,7 @@ export default function ConnectChatDialog({
   useEffect(() => {
     if (!waiting || !links) return;
     const created = links.find(
-      (link) => !linkIdsAtGenerate.current.has(link.id),
+      (link) => link.mine && !linkIdsAtGenerate.current.has(link.id),
     );
     if (!created) return;
     toast.success("Chat connected");
@@ -365,7 +368,9 @@ export default function ConnectChatDialog({
 
             <section className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold">Connected</h3>
+                <h3 className="text-sm font-semibold">
+                  {isAdmin ? "Connected" : "Your Connections"}
+                </h3>
                 <span className="text-xs font-semibold text-muted-foreground">
                   {links?.length === 1
                     ? "1 connection"

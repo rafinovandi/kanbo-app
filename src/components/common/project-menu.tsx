@@ -31,8 +31,8 @@ const plural = (count: number, one: string, many: string) =>
 
 const MAX_PINS = 3;
 
-// The ⋯ menu of a project. Every member can pin it to their profile; admins can also connect a chat
-// to the agent or delete the whole project after typing its name.
+// The ⋯ menu of a project. Every member can pin it and connect a chat or MCP client to it; admins can
+// also edit it or delete the whole project after typing its name.
 export default function ProjectMenu({
   project,
   isAdmin,
@@ -135,6 +135,24 @@ export default function ProjectMenu({
               </span>
             </span>
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => setConnectOpen(true)}
+            className="items-start gap-2.5"
+          >
+            <Link21
+              size={18}
+              variant="Linear"
+              color="currentColor"
+              className="mt-0.5"
+              aria-hidden
+            />
+            <span className="flex flex-col gap-0.5">
+              <span>Connect Chat</span>
+              <span className="text-xs font-normal text-muted-foreground">
+                Link a Telegram group or MCP client.
+              </span>
+            </span>
+          </DropdownMenuItem>
           {isAdmin && (
             <>
               <DropdownMenuItem
@@ -152,24 +170,6 @@ export default function ProjectMenu({
                   <span>Edit Project</span>
                   <span className="text-xs font-normal text-muted-foreground">
                     Change the name, description or color.
-                  </span>
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => setConnectOpen(true)}
-                className="items-start gap-2.5"
-              >
-                <Link21
-                  size={18}
-                  variant="Linear"
-                  color="currentColor"
-                  className="mt-0.5"
-                  aria-hidden
-                />
-                <span className="flex flex-col gap-0.5">
-                  <span>Connect Chat</span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    Link a Telegram group to your agent.
                   </span>
                 </span>
               </DropdownMenuItem>
@@ -196,17 +196,18 @@ export default function ProjectMenu({
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      <ConnectChatDialog
+        open={connectOpen}
+        onOpenChange={setConnectOpen}
+        project={project}
+        isAdmin={isAdmin}
+      />
       {isAdmin && (
         <>
           <NewProjectDialog
             project={project}
             open={editOpen}
             onOpenChange={setEditOpen}
-          />
-          <ConnectChatDialog
-            open={connectOpen}
-            onOpenChange={setConnectOpen}
-            project={project}
           />
           <ConfirmDeleteDialog
             open={confirmOpen}

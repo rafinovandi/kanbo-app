@@ -9,10 +9,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AdminClient = ReturnType<typeof createAdminClient>;
 // `agentLabel` is who created the tasks of this link: the bot's name for a Telegram chat, the client's name for MCP.
+// `isAdmin` is the current role of the member who linked it, so the agent never has more rights than they do.
 export type AgentLinkContext = {
   id: string;
   projectId: string;
   linkedBy: string;
+  isAdmin: boolean;
   kind: "chat" | "mcp";
   clientName: string | null;
   agentLabel: string;
@@ -85,15 +87,14 @@ export async function authenticate(request: Request): Promise<AgentLinkContext |
     .maybeSingle();
   if (!link) return failure(401, "unauthorized", "Invalid or revoked token.");
 
-  const { data: stillAdmin } = await admin
+  const { data: member } = await admin
     .from("project_members")
-    .select("id")
+    .select("is_admin")
     .eq("project_id", link.project_id)
     .eq("user_id", link.linked_by)
     .eq("status", "active")
-    .eq("is_admin", true)
     .maybeSingle();
-  if (!stillAdmin) return failure(401, "unauthorized", "Invalid or revoked token.");
+  if (!member) return failure(401, "unauthorized", "Invalid or revoked token.");
 
   const { data: limit } = await admin.rpc("agent_rate_limit", { p_token_id: link.id });
   const verdict = limit?.[0];
@@ -104,7 +105,7 @@ export async function authenticate(request: Request): Promise<AgentLinkContext |
   await admin.from("agent_links").update({ last_used_at: new Date().toISOString() }).eq("id", link.id);
   const kind = link.kind === "mcp" ? "mcp" : "chat";
   const agentLabel = (kind === "mcp" ? displayClientName(link.client_name) : link.agent_bots?.name) ?? "Agent";
-  return { id: link.id, projectId: link.project_id, linkedBy: link.linked_by, kind, clientName: link.client_name, agentLabel, admin };
+  return { id: link.id, projectId: link.project_id, linkedBy: link.linked_by, isAdmin: member.is_admin, kind, clientName: link.client_name, agentLabel, admin };
 }
 
 export async function withAuth(request: Request, handler: (ctx: AgentLinkContext) => Promise<ApiResult>) {

@@ -292,8 +292,8 @@ export default function BoardColumns({
         aria-label="Board columns"
         tabIndex={0}
         className={cn(
-          "-mr-4 flex items-start gap-4 overflow-x-auto pr-4 pb-3 sm:-mr-7 sm:pr-7",
-          isColumnDragging ? "snap-none" : "snap-x snap-proximity",
+          "-mr-4 flex items-start gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain pr-4 pb-3 sm:-mr-7 sm:pr-7",
+          !isColumnDragging && "pointer-coarse:snap-x pointer-coarse:snap-proximity",
         )}
       >
         <SortableContext

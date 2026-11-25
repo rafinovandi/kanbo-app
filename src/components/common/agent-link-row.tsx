@@ -55,6 +55,8 @@ export default function AgentLinkRow({
     : isChat
       ? "Never used"
       : "Waiting for the first request from your client";
+  const owner =
+    !link.mine && link.linked_by_name ? ` · by ${link.linked_by_name}` : "";
 
   return (
     <li className="kb-panel flex flex-col gap-3 rounded-xl border border-border p-3.5">
@@ -71,7 +73,7 @@ export default function AgentLinkRow({
               : (displayClientName(link.client_name) ?? "MCP client")}
           </span>
           <span className="text-[13px] text-muted-foreground [overflow-wrap:anywhere]">
-            {isChat ? `@${link.bot_username} · ${used}` : used}
+            {isChat ? `@${link.bot_username} · ${used}${owner}` : `${used}${owner}`}
           </span>
         </span>
         <div className="flex flex-none items-center gap-2">

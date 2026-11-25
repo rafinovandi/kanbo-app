@@ -52,7 +52,7 @@ When someone sends `link kanbo ABCD1234` (the code is exactly 8 letters and digi
 {baseDir}/kanbo.mjs link --chat <chatId> --code ABCD1234
 ```
 
-On success, say which project the chat is now linked to. If the code is invalid or expired, tell them a project admin can generate a new one in Kanbo under the project's ⋯ menu → Connect Chat (codes last 10 minutes and work once). Linking another project to the same chat keeps the earlier ones; linking the same project again replaces its token. To disconnect a project, run `unlink --chat <chatId> --project <name>`. `projects --chat <chatId>` lists the projects linked to this chat.
+On success, say which project the chat is now linked to. If the code is invalid or expired, tell them any project member can generate a new one in Kanbo under the project's ⋯ menu → Connect Chat (codes last 10 minutes and work once). Linking another project to the same chat keeps the earlier ones; linking the same project again replaces its token. To disconnect a project, run `unlink --chat <chatId> --project <name>`. `projects --chat <chatId>` lists the projects linked to this chat.
 
 If any command answers `project_required`, `project_not_found` or `project_ambiguous`, the result lists the project names: ask the user which project they mean, then stop until they reply.
 
@@ -82,7 +82,7 @@ Never run `create-tasks`, `update-task` or `delete-task` in the same turn as the
 
 ## 4. Deleting a task
 
-Deleting is permanent. Only do it when the user clearly asks to delete that task.
+Deleting is permanent. Only do it when the user clearly asks to delete that task. If the chat was linked by a project admin, any task can be deleted; otherwise only tasks created by the member who linked it, and Kanbo answers `forbidden` for the others: tell the user to ask a project admin.
 
 1. Find the task with `list` and confirm which one if several match.
 2. Run `preview-delete --chat <chatId> --task <taskId>`. Nothing is deleted yet.

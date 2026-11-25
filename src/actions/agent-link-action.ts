@@ -24,12 +24,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const NOT_ALLOWED = "You don't have permission to do that.";
 const FAILED = "Something went wrong. Try again.";
 const CODE_TTL_MS = 10 * 60 * 1000;
+const MAX_LINKS_PER_MEMBER = 5;
 
 const fail = (message: string): Failure => ({ status: "error", message });
 
 // The agent tables have no RLS policies (service role only), so every action here first proves the
-// caller is an active admin of the project, then talks to the database with the admin client.
-async function getAdminSession(projectId: string) {
+// caller is an active member of the project, then talks to the database with the admin client.
+// Members manage only the links they made; admins manage every link of the project.
+async function getMemberSession(projectId: string) {
   if (!environment.AGENT_ENABLED || !UUID.test(projectId)) return null;
 
   const supabase = await createClient();
@@ -44,9 +46,46 @@ async function getAdminSession(projectId: string) {
     .eq("user_id", userId)
     .eq("status", "active")
     .maybeSingle();
-  if (!member?.is_admin) return null;
+  if (!member) return null;
 
-  return { supabase, userId, admin: createAdminClient() };
+  return {
+    supabase,
+    userId,
+    isAdmin: member.is_admin,
+    admin: createAdminClient(),
+  };
+}
+
+type MemberSession = NonNullable<Awaited<ReturnType<typeof getMemberSession>>>;
+
+// An MCP link that was never used is replaced by the next one, so it does not count.
+async function linkLimitReached(session: MemberSession, projectId: string) {
+  const { count } = await session.admin
+    .from("agent_links")
+    .select("id", { count: "exact", head: true })
+    .eq("project_id", projectId)
+    .eq("linked_by", session.userId)
+    .is("revoked_at", null)
+    .or("kind.eq.chat,last_used_at.not.is.null");
+  return (count ?? 0) >= MAX_LINKS_PER_MEMBER;
+}
+
+const LIMIT_REACHED = `You can have up to ${MAX_LINKS_PER_MEMBER} connections in this project. Revoke one first.`;
+
+async function canManageLink(
+  session: MemberSession,
+  projectId: string,
+  linkId: string,
+) {
+  if (session.isAdmin) return true;
+  const { data } = await session.admin
+    .from("agent_links")
+    .select("id")
+    .eq("id", linkId)
+    .eq("project_id", projectId)
+    .eq("linked_by", session.userId)
+    .maybeSingle();
+  return !!data;
 }
 
 // One-time code for linking a Telegram chat (needs one of your bots) or an MCP client (needs no bot).
@@ -60,8 +99,9 @@ export async function createLinkCodeAction(
   const chatBotId = kind === "chat" && botId && UUID.test(botId) ? botId : null;
   if (kind === "chat" && !chatBotId) return fail(FAILED);
 
-  const session = await getAdminSession(projectId);
+  const session = await getMemberSession(projectId);
   if (!session) return fail(NOT_ALLOWED);
+  if (await linkLimitReached(session, projectId)) return fail(LIMIT_REACHED);
 
   if (chatBotId) {
     const { data: bot } = await session.supabase
@@ -101,8 +141,9 @@ export async function createLinkCodeAction(
 export async function createMcpLinkAction(
   projectId: string,
 ): Promise<McpLinkResult> {
-  const session = await getAdminSession(projectId);
+  const session = await getMemberSession(projectId);
   if (!session) return fail(NOT_ALLOWED);
+  if (await linkLimitReached(session, projectId)) return fail(LIMIT_REACHED);
 
   const link = await createMcpLink(session.admin, projectId, session.userId);
   if (!link) return fail(FAILED);
@@ -112,17 +153,18 @@ export async function createMcpLinkAction(
 export async function listAgentLinksAction(
   projectId: string,
 ): Promise<AgentLinksResult> {
-  const session = await getAdminSession(projectId);
+  const session = await getMemberSession(projectId);
   if (!session) return fail(NOT_ALLOWED);
 
-  const { data, error } = await session.admin
+  let query = session.admin
     .from("agent_links")
     .select(
-      "id, kind, chat_id, client_name, last_used_at, created_at, notify_task_created, notify_task_completed, notify_disabled_reason, agent_bots(bot_username)",
+      "id, kind, chat_id, client_name, linked_by, last_used_at, created_at, notify_task_created, notify_task_completed, notify_disabled_reason, agent_bots(bot_username), profiles!agent_links_linked_by_fkey(name)",
     )
     .eq("project_id", projectId)
-    .is("revoked_at", null)
-    .order("created_at", { ascending: true });
+    .is("revoked_at", null);
+  if (!session.isAdmin) query = query.eq("linked_by", session.userId);
+  const { data, error } = await query.order("created_at", { ascending: true });
   if (error) return fail(FAILED);
 
   return {
@@ -133,6 +175,8 @@ export async function listAgentLinksAction(
       chat_id: row.chat_id,
       client_name: row.client_name,
       bot_username: row.agent_bots?.bot_username ?? null,
+      linked_by_name: row.profiles?.name ?? null,
+      mine: row.linked_by === session.userId,
       last_used_at: row.last_used_at,
       created_at: row.created_at,
       notify_task_created: row.notify_task_created,
@@ -149,8 +193,9 @@ export async function updateLinkNotifyAction(
 ): Promise<AgentLinkActionResult> {
   if (!UUID.test(linkId)) return fail(FAILED);
 
-  const session = await getAdminSession(projectId);
-  if (!session) return fail(NOT_ALLOWED);
+  const session = await getMemberSession(projectId);
+  if (!session || !(await canManageLink(session, projectId, linkId)))
+    return fail(NOT_ALLOWED);
 
   const update: {
     notify_task_created?: boolean;
@@ -182,8 +227,9 @@ export async function sendTestMessageAction(
 ): Promise<AgentLinkActionResult> {
   if (!UUID.test(linkId)) return fail(FAILED);
 
-  const session = await getAdminSession(projectId);
-  if (!session) return fail(NOT_ALLOWED);
+  const session = await getMemberSession(projectId);
+  if (!session || !(await canManageLink(session, projectId, linkId)))
+    return fail(NOT_ALLOWED);
 
   const [{ data: link }, { data: project }] = await Promise.all([
     session.admin
@@ -219,8 +265,9 @@ export async function revokeLinkAction(
 ): Promise<AgentLinkActionResult> {
   if (!UUID.test(linkId)) return fail(FAILED);
 
-  const session = await getAdminSession(projectId);
-  if (!session) return fail(NOT_ALLOWED);
+  const session = await getMemberSession(projectId);
+  if (!session || !(await canManageLink(session, projectId, linkId)))
+    return fail(NOT_ALLOWED);
 
   const { data, error } = await session.admin
     .from("agent_links")

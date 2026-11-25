@@ -19,7 +19,7 @@ export default function useBoard(projectId: string, search = "", enabled = true)
       const tasksQuery = supabase
         .from("tasks")
         .select(
-          "id, category_id, title, priority, due_date, position, task_assignees(profiles!task_assignees_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg))",
+          "id, category_id, title, priority, due_date, position, created_by, task_assignees(profiles!task_assignees_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg))",
         )
         .eq("project_id", projectId)
         .order("position");
@@ -50,6 +50,7 @@ export default function useBoard(projectId: string, search = "", enabled = true)
           priority: task.priority,
           dueDate: task.due_date,
           position: task.position,
+          createdBy: task.created_by,
           assignees: task.task_assignees.flatMap((assignee) => (assignee.profiles ? [assignee.profiles] : [])),
         })),
       };
