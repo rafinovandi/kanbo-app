@@ -328,11 +328,18 @@ export async function deleteTask(
 
   const { data: task } = await ctx.admin
     .from("tasks")
-    .select("id, title")
+    .select("id, title, created_by")
     .eq("id", taskId)
     .eq("project_id", ctx.projectId)
     .maybeSingle();
   if (!task) return failure(404, "not_found", "Task not found.");
+  if (!ctx.isAdmin && task.created_by !== ctx.linkedBy) {
+    return failure(
+      403,
+      "forbidden",
+      "You can only delete tasks you created. Ask a project admin to delete this one.",
+    );
+  }
 
   if (body.dryRun === true)
     return {

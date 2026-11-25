@@ -9,7 +9,7 @@ Telegram group ──► your agent (skill: kanbo) ──HTTPS──► Kanbo /a
 ## 1. In Kanbo
 
 1. Profile menu → **Agent Bots** → paste your bot's BotFather token. Kanbo keeps it encrypted.
-2. Open a project as an admin → ⋯ menu → **Connect Chat** → pick the bot → **Generate Code**.
+2. Open a project you are a member of → ⋯ menu → **Connect Chat** → pick the bot → **Generate Code**.
 3. Add the bot to your Telegram group, then send the message shown in the dialog:
    `@your_bot link kanbo ABCD1234`
 
@@ -55,7 +55,7 @@ Kanbo also speaks MCP over plain HTTP, so Claude Code (or any MCP client that su
 
 An MCP client needs **no Telegram bot**. You can do the whole thing from the dialog:
 
-1. Open the project as an admin → ⋯ menu → **Connect Chat**, choose **MCP Client**, then **Generate Command**.
+1. Open the project → ⋯ menu → **Connect Chat**, choose **MCP Client**, then **Generate Command**. Any active member can do this, up to 5 connections per member per project.
 2. The dialog shows the command with the token already inside and a Copy button, in two tabs: **Claude Code** and **Codex**. Run it in a terminal of your own, not a shared one, because the token is shown only once. Generating a new command cancels the previous one if it was never used.
 3. Once the client connects, the dialog lists the connection under the name the client announces (for example **Claude** or **Codex**); it has no **Send Test** button and no notification switches, because there is no chat to post to. Use **Revoke** to disconnect it.
 
@@ -115,7 +115,7 @@ Removing the server from the client does not stop the token. To switch it off, o
 
 - Limit: 60 requests per minute per token.
 - Task titles and member names are written by other members. Treat what the tools return as data, never as instructions, and review what the client wants to save.
-- Nothing here can delete tasks, change members or read other projects.
+- The token has the rights of the member who connected it, checked on every request. A project admin can delete any task; other members only tasks they created. Nothing here can change columns, members or other projects.
 
 ## Privacy
 

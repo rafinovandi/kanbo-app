@@ -120,7 +120,7 @@ function BotRow({
   );
 }
 
-// Add and revoke the user's Telegram bots; admins pick one of these in a project's Connect Chat.
+// Add and revoke the user's Telegram bots; members pick one of these in a project's Connect Chat.
 export default function AgentBotsDialog({
   open,
   onOpenChange,
