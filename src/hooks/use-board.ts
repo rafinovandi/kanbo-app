@@ -9,11 +9,7 @@ export const boardKey = (projectId: string) => ["board", projectId];
 
 // One project's columns and tasks, or null when it does not exist or is not readable (RLS). With a
 // search, only tasks whose title matches come back.
-export default function useBoard(
-  projectId: string,
-  search = "",
-  enabled = true,
-) {
+export default function useBoard(projectId: string, search = "", enabled = true) {
   const supabase = createClient();
   return useQuery({
     queryKey: [...boardKey(projectId), search],
@@ -23,26 +19,15 @@ export default function useBoard(
       const tasksQuery = supabase
         .from("tasks")
         .select(
-          "id, category_id, title, priority, due_date, created_at, position, created_by, task_assignees(profiles!task_assignees_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg))",
+          "id, category_id, title, priority, due_date, position, created_by, task_assignees(profiles!task_assignees_user_id_fkey(id, name, avatar_url, avatar_bg, avatar_fg))",
         )
         .eq("project_id", projectId)
         .order("position");
 
       const [project, categories, tasks] = await Promise.all([
-        supabase
-          .from("projects")
-          .select("id, name, description, color, owner_id")
-          .eq("id", projectId)
-          .maybeSingle(),
-        supabase
-          .from("categories")
-          .select("id, key, name, color")
-          .eq("project_id", projectId)
-          .order("position")
-          .order("created_at"),
-        search
-          ? tasksQuery.ilike("title", `%${escapeLikePattern(search)}%`)
-          : tasksQuery,
+        supabase.from("projects").select("id, name, description, color, owner_id").eq("id", projectId).maybeSingle(),
+        supabase.from("categories").select("id, key, name, color").eq("project_id", projectId).order("position").order("created_at"),
+        search ? tasksQuery.ilike("title", `%${escapeLikePattern(search)}%`) : tasksQuery,
       ]);
       if (project.error) throw project.error;
       if (categories.error) throw categories.error;
@@ -57,22 +42,16 @@ export default function useBoard(
           color: project.data.color as ProjectColor,
           ownerId: project.data.owner_id,
         },
-        categories: categories.data.map((category) => ({
-          ...category,
-          color: category.color as ProjectColor,
-        })),
+        categories: categories.data.map((category) => ({ ...category, color: category.color as ProjectColor })),
         tasks: tasks.data.map((task) => ({
           id: task.id,
           categoryId: task.category_id,
           title: task.title,
           priority: task.priority,
           dueDate: task.due_date,
-          createdAt: task.created_at,
           position: task.position,
           createdBy: task.created_by,
-          assignees: task.task_assignees.flatMap((assignee) =>
-            assignee.profiles ? [assignee.profiles] : [],
-          ),
+          assignees: task.task_assignees.flatMap((assignee) => (assignee.profiles ? [assignee.profiles] : [])),
         })),
       };
     },
