@@ -15,7 +15,7 @@ export default function LandingHero() {
     <div className="relative isolate flex min-h-[calc(100svh-5rem)] flex-col">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-[url(/landing-plus.svg)] bg-[length:440px_440px] bg-bottom opacity-50 blur-[0.7px] [mask-image:linear-gradient(to_top,black_0%,rgb(0_0_0/0.9)_18%,rgb(0_0_0/0.45)_55%,transparent_100%)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[360px] bg-[url(/landing-plus.svg)] bg-[length:264px_264px] bg-bottom sm:bg-[length:440px_440px] opacity-50 blur-[0.7px] [mask-image:linear-gradient(to_top,black_0%,rgb(0_0_0/0.9)_18%,rgb(0_0_0/0.45)_55%,transparent_100%)]"
       />
       <section className="mx-auto flex w-full max-w-[1200px] flex-1 flex-col items-center gap-8 px-6 pt-8 sm:px-10 sm:pt-12">
         <div className="flex flex-1 flex-col items-center justify-center gap-8 pb-8 text-center">
