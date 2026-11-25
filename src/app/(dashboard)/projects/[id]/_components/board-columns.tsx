@@ -28,11 +28,12 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { reorderCategoriesAction } from "@/actions/category-action";
-import { deleteTaskAction, moveTaskAction } from "@/actions/task-action";
+import { deleteTaskAction } from "@/actions/task-action";
 import TaskCardFace from "@/components/common/task-card-face";
 import { boardKey } from "@/hooks/use-board";
 import { DASHBOARD_STATS_KEY } from "@/hooks/use-dashboard-stats";
 import useBoardMutation from "@/hooks/use-board-mutation";
+import useMoveTask from "@/hooks/use-move-task";
 import { PROJECTS_OVERVIEW_KEY } from "@/hooks/use-projects-overview";
 import { cn } from "@/lib/utils";
 import {
@@ -148,16 +149,7 @@ export default function BoardColumns({
     queryClient.invalidateQueries({ queryKey: PROJECTS_OVERVIEW_KEY });
   };
 
-  const persistMove = (taskId: string, categoryId: string, position: number) =>
-    mutateBoard(
-      (data) => ({
-        ...data,
-        tasks: data.tasks.map((task) =>
-          task.id === taskId ? { ...task, categoryId, position } : task,
-        ),
-      }),
-      () => moveTaskAction(taskId, categoryId, position),
-    );
+  const persistMove = useMoveTask(projectId);
 
   const moveToCategory = (taskId: string, categoryId: string) => {
     const from = findColumnId(serverColumns, taskId);
@@ -293,7 +285,8 @@ export default function BoardColumns({
         tabIndex={0}
         className={cn(
           "-mr-4 flex items-start gap-4 overflow-x-auto overflow-y-hidden overscroll-x-contain pr-4 pb-3 sm:-mr-7 sm:pr-7",
-          !isColumnDragging && "pointer-coarse:snap-x pointer-coarse:snap-proximity",
+          !isColumnDragging &&
+            "pointer-coarse:snap-x pointer-coarse:snap-proximity",
         )}
       >
         <SortableContext
