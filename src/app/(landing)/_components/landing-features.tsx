@@ -8,7 +8,7 @@ import LandingCodeDemo from "./landing-code-demo";
 import LandingColumnsDemo from "./landing-columns-demo";
 import LandingPriorityDemo from "./landing-priority-demo";
 import LandingRolesDemo from "./landing-roles-demo";
-import LandingTelegram from "./landing-telegram";
+import LandingIntegrations from "./landing-integrations";
 import Words from "./words";
 
 // A feature: a grey card with a headline and a sub headline, and the live component in a white card inside it.
@@ -111,7 +111,7 @@ export default function LandingFeatures() {
         </Feature>
       </div>
 
-      <LandingTelegram />
+      <LandingIntegrations />
     </section>
   );
 }
