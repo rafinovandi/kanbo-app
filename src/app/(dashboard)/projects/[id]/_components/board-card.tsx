@@ -1,11 +1,11 @@
 "use client";
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { useSortable } from "@dnd-kit/react/sortable";
 import { useState } from "react";
 
 import ConfirmDeleteDialog from "@/components/common/confirm-delete-dialog";
 import TaskCardFace from "@/components/common/task-card-face";
+import { BOARD_SORTABLE_PLUGINS } from "@/constants/dnd-constant";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth-store";
 import type { BoardCategory, BoardData, BoardTask } from "@/types/board";
@@ -14,6 +14,7 @@ import BoardCardMenu from "./board-card-menu";
 import TaskDialog from "@/components/common/task-dialog";
 
 export default function BoardCard({
+  index,
   project,
   task,
   category,
@@ -23,6 +24,7 @@ export default function BoardCard({
   onMove,
   onDelete,
 }: {
+  index: number;
   project: BoardData["project"];
   task: BoardTask;
   category: BoardCategory;
@@ -36,16 +38,14 @@ export default function BoardCard({
   const [detailOpen, setDetailOpen] = useState(false);
   const meId = useAuthStore((state) => state.profile.id);
   const canDelete = isAdmin || (!!task.createdBy && task.createdBy === meId);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { ref } = useSortable({
     id: task.id,
-    disabled: !canDrag,
+    index,
+    group: category.id,
+    type: "item",
+    accept: "item",
+    disabled: { draggable: !canDrag },
+    plugins: BOARD_SORTABLE_PLUGINS,
   });
 
   const shortTitle =
@@ -54,15 +54,11 @@ export default function BoardCard({
   return (
     <>
       <div
-        ref={setNodeRef}
-        style={{ transform: CSS.Transform.toString(transform), transition }}
-        {...attributes}
-        {...listeners}
+        ref={ref}
         onClick={() => setDetailOpen(true)}
         className={cn(
           "touch-manipulation rounded-2xl outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
           canDrag && "cursor-grab",
-          isDragging && "opacity-40",
         )}
       >
         <TaskCardFace

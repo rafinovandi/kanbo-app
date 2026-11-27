@@ -1,18 +1,13 @@
 "use client";
 
-import {
-  defaultAnimateLayoutChanges,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-  type AnimateLayoutChanges,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { CollisionPriority } from "@dnd-kit/abstract";
+import { useSortable } from "@dnd-kit/react/sortable";
 import { Add } from "iconsax-react";
 import { useState } from "react";
 
 import GripIcon from "@/components/common/grip-icon";
 import { Button } from "@/components/ui/button";
+import { BOARD_SORTABLE_PLUGINS } from "@/constants/dnd-constant";
 import { PROJECT_TONE } from "@/constants/profile-constant";
 import { cn } from "@/lib/utils";
 import type { BoardCategory, BoardData, BoardTask } from "@/types/board";
@@ -22,12 +17,10 @@ import BoardCard from "./board-card";
 import BoardColumnMenu from "./board-column-menu";
 import CategoryDialog from "@/components/common/category-dialog";
 
-const animateLayoutChanges: AnimateLayoutChanges = (args) =>
-  defaultAnimateLayoutChanges({ ...args, wasDragging: true });
-
 // One column: header with color bar, name, count and a hover + button, then its cards and
-// an "Add New" card. The card list is the drop target, so empty columns accept drops too.
+// an "Add New" card. The column also accepts cards (below the cards' own priority), so empty columns take drops too.
 export default function BoardColumn({
+  index,
   project,
   category,
   categories,
@@ -38,6 +31,7 @@ export default function BoardColumn({
   onMove,
   onDelete,
 }: {
+  index: number;
   project: BoardData["project"];
   category: BoardCategory;
   categories: BoardCategory[];
@@ -48,32 +42,22 @@ export default function BoardColumn({
   onMove: (taskId: string, categoryId: string) => void;
   onDelete: (taskId: string) => Promise<boolean>;
 }) {
-  const {
-    setNodeRef,
-    setActivatorNodeRef,
-    attributes,
-    listeners,
-    transform,
-    transition,
-    isDragging,
-    isOver,
-  } = useSortable({
+  const { ref, handleRef, isDropTarget } = useSortable({
     id: category.id,
-    data: { type: "column" },
+    index,
+    type: "column",
+    accept: ["column", "item"],
+    collisionPriority: CollisionPriority.Low,
     disabled: { draggable: !isAdmin },
-    animateLayoutChanges,
+    plugins: BOARD_SORTABLE_PLUGINS,
   });
   const [editOpen, setEditOpen] = useState(false);
 
   return (
     <section
-      ref={setNodeRef}
+      ref={ref}
       aria-label={category.name}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn(
-        "kb-column group/column flex w-[300px] flex-none snap-start flex-col gap-2.5 rounded-[20px] bg-kb-surface p-2.5",
-        isDragging && "relative z-10 opacity-40",
-      )}
+      className="kb-column group/column flex w-[300px] flex-none snap-start flex-col gap-2.5 rounded-[20px] bg-kb-surface p-2.5"
     >
       <div className="flex min-h-8 items-center gap-2 pl-1.5">
         <span
@@ -118,14 +102,12 @@ export default function BoardColumn({
           )}
           {isAdmin && (
             <Button
-              ref={setActivatorNodeRef}
+              ref={handleRef}
               type="button"
               variant="ghost"
               size="icon-sm"
               aria-label={`Move ${category.name} column`}
               className="cursor-grab touch-none opacity-0 max-md:opacity-100 group-hover/column:opacity-100 focus-visible:opacity-100 active:cursor-grabbing"
-              {...attributes}
-              {...listeners}
             >
               <GripIcon />
             </Button>
@@ -136,27 +118,23 @@ export default function BoardColumn({
       <div
         className={cn(
           "flex min-h-12 flex-col gap-2.5 rounded-2xl",
-          isOver && tasks.length === 0 && "bg-kb-gray-tint",
+          isDropTarget && tasks.length === 0 && "bg-kb-gray-tint",
         )}
       >
-        <SortableContext
-          items={tasks.map((task) => task.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {tasks.map((task) => (
-            <BoardCard
-              key={task.id}
-              project={project}
-              task={task}
-              category={category}
-              categories={categories}
-              canDrag={canDrag}
-              isAdmin={isAdmin}
-              onMove={onMove}
-              onDelete={onDelete}
-            />
-          ))}
-        </SortableContext>
+        {tasks.map((task, taskIndex) => (
+          <BoardCard
+            key={task.id}
+            index={taskIndex}
+            project={project}
+            task={task}
+            category={category}
+            categories={categories}
+            canDrag={canDrag}
+            isAdmin={isAdmin}
+            onMove={onMove}
+            onDelete={onDelete}
+          />
+        ))}
         {tasks.length === 0 && (
           <div className="rounded-2xl border border-dashed border-kb-line px-4 py-6 text-center text-[13px] text-muted-foreground">
             {filtered ? "No tasks match" : "No tasks here yet"}
