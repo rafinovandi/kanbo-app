@@ -1,35 +1,26 @@
 "use client";
 
 import {
-  closestCenter,
-  closestCorners,
-  DndContext,
-  DragOverlay,
+  Accessibility,
+  defaultPreset,
+  Feedback,
+  PointerActivationConstraints,
+} from "@dnd-kit/dom";
+import { move } from "@dnd-kit/helpers";
+import {
+  DragDropProvider,
   KeyboardSensor,
-  MouseSensor,
-  MeasuringStrategy,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type Announcements,
-  type CollisionDetection,
+  PointerSensor,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  horizontalListSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
+} from "@dnd-kit/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { reorderCategoriesAction } from "@/actions/category-action";
 import { deleteTaskAction, moveTaskAction } from "@/actions/task-action";
-import TaskCardFace from "@/components/common/task-card-face";
 import { boardKey } from "@/hooks/use-board";
 import { DASHBOARD_STATS_KEY } from "@/hooks/use-dashboard-stats";
 import useBoardMutation from "@/hooks/use-board-mutation";
@@ -52,21 +43,15 @@ import type {
 import BoardColumn from "./board-column";
 import BoardOverview from "./board-overview";
 
-const measuring = { droppable: { strategy: MeasuringStrategy.Always } };
-
-const isColumnDrag = (data: { current?: Record<string, unknown> }) =>
-  data.current?.type === "column";
-
-// Dragging a column only considers the other columns; dragging a card keeps using the nearest corners.
-const collisionDetection: CollisionDetection = (args) =>
-  isColumnDrag(args.active.data)
-    ? closestCenter({
-        ...args,
-        droppableContainers: args.droppableContainers.filter(
-          (c) => c.data.current?.type === "column",
-        ),
-      })
-    : closestCorners(args);
+const sensors = [
+  PointerSensor.configure({
+    activationConstraints: (event) =>
+      event.pointerType === "touch"
+        ? [new PointerActivationConstraints.Delay({ value: 250, tolerance: 8 })]
+        : [new PointerActivationConstraints.Distance({ value: 8 })],
+  }),
+  KeyboardSensor,
+];
 
 const findColumnId = (columns: BoardColumns, id: string) =>
   id in columns
@@ -75,7 +60,7 @@ const findColumnId = (columns: BoardColumns, id: string) =>
         columns[columnId].some((task) => task.id === id),
       );
 
-// The columns with drag and drop (@dnd-kit). While a card is dragged the arrangement lives in `drag`
+// The columns with drag and drop (@dnd-kit/react). While a card is dragged the arrangement lives in `drag`
 // (valid only for the data it was made from); a drop saves optimistically and rolls back on error.
 export default function BoardColumns({
   project,
@@ -114,34 +99,19 @@ export default function BoardColumns({
     base: BoardColumns;
     columns: BoardColumns;
   } | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [columnDrag, setColumnDrag] = useState<{
+    base: BoardCategory[];
+    order: BoardCategory[];
+  } | null>(null);
 
-  const categoryIds = useMemo(
-    () => categories.map((category) => category.id),
-    [categories],
-  );
-  const isColumnDragging = activeId !== null && categoryIds.includes(activeId);
-
+  const filtered = countActiveFilters(view) > 0;
   const columns =
     drag && drag.base === serverColumns ? drag.columns : serverColumns;
-  const activeTask = activeId
-    ? Object.values(columns)
-        .flat()
-        .find((task) => task.id === activeId)
-    : undefined;
-  const activeCategory = activeTask
-    ? categories.find((category) => category.id === activeTask.categoryId)
-    : undefined;
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const orderedCategories =
+    columnDrag && columnDrag.base === categories
+      ? columnDrag.order
+      : categories;
+  const isColumnDragging = columnDrag !== null;
 
   const refreshStats = () => {
     queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_KEY });
@@ -194,98 +164,110 @@ export default function BoardColumns({
       () => reorderCategoriesAction(projectId, order),
     );
 
-  const onDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(String(active.id));
-    if (isColumnDrag(active.data)) return;
-    setDrag({ base: serverColumns, columns: serverColumns });
+  const onDragStart = ({ operation: { source } }: DragStartEvent) => {
+    if (source?.type === "column")
+      setColumnDrag({ base: categories, order: categories });
+    else if (source) setDrag({ base: serverColumns, columns: serverColumns });
   };
 
-  // Crossing into another column moves the card there right away, so the column opens a gap for it.
-  const onDragOver = ({ active, over }: DragOverEvent) => {
-    if (!over) return;
-    if (isColumnDrag(active.data)) return;
-    const taskId = String(active.id);
-    const overId = String(over.id);
-    const from = findColumnId(columns, taskId);
-    const to = findColumnId(columns, overId);
-    if (!from || !to || from === to) return;
-
-    const overIndex =
-      overId in columns
-        ? columns[to].length
-        : columns[to].findIndex((task) => task.id === overId);
-    const moved = moveTaskInColumns(columns, taskId, to, overIndex);
-    if (moved) setDrag({ base: serverColumns, columns: moved.columns });
+  // Every reorder goes through React state while dragging (cards across columns, columns sideways);
+  // the sortables then animate from their old spot to the new one.
+  const onDragOver = (event: DragOverEvent) => {
+    const type = event.operation.source?.type;
+    if (type === "column")
+      setColumnDrag((current) =>
+        current && current.base === categories
+          ? { base: current.base, order: move(current.order, event) }
+          : current,
+      );
+    else if (type === "item")
+      setDrag((current) =>
+        current && current.base === serverColumns
+          ? { base: current.base, columns: move(current.columns, event) }
+          : current,
+      );
   };
 
-  const labelOf = (id: string | number) => {
-    const key = String(id);
-    const category = categories.find((item) => item.id === key);
-    if (category) return `${category.name} column`;
-    const task = tasks.find((item) => item.id === key);
-    return task ? `Task ${task.title}` : "Item";
-  };
-
-  const announcements: Announcements = {
-    onDragStart: ({ active }) => `Picked up ${labelOf(active.id)}.`,
-    onDragOver: ({ active, over }) =>
-      over
-        ? `${labelOf(active.id)} is over ${labelOf(over.id)}.`
-        : `${labelOf(active.id)} is no longer over a drop area.`,
-    onDragEnd: ({ active, over }) =>
-      over
-        ? `${labelOf(active.id)} was dropped over ${labelOf(over.id)}.`
-        : `${labelOf(active.id)} was dropped.`,
-    onDragCancel: ({ active }) => `Moving ${labelOf(active.id)} was cancelled.`,
-  };
-
-  const onDragEnd = ({ active, over }: DragEndEvent) => {
-    setActiveId(null);
-    if (isColumnDrag(active.data)) {
-      const from = categoryIds.indexOf(String(active.id));
-      const to = over ? categoryIds.indexOf(String(over.id)) : -1;
-      if (from !== -1 && to !== -1 && from !== to)
-        persistColumnOrder(arrayMove(categoryIds, from, to));
+  const onDragEnd = (event: DragEndEvent) => {
+    const { source } = event.operation;
+    if (event.canceled || !source) {
+      setDrag(null);
+      setColumnDrag(null);
       return;
     }
-    const taskId = String(active.id);
-    const to = over ? findColumnId(columns, String(over.id)) : undefined;
-    if (!over || !to) return setDrag(null);
 
-    const overId = String(over.id);
-    const overIndex =
-      overId in columns
-        ? columns[to].length
-        : columns[to].findIndex((task) => task.id === overId);
-    const moved = moveTaskInColumns(columns, taskId, to, overIndex);
-    if (!moved) return setDrag(null);
+    if (source.type === "column") {
+      const order = orderedCategories.map((category) => category.id);
+      setColumnDrag(null);
+      if (order.some((id, index) => id !== categories[index]?.id))
+        persistColumnOrder(order);
+      return;
+    }
 
-    const originalColumn = findColumnId(serverColumns, taskId);
-    const originalIndex = originalColumn
-      ? serverColumns[originalColumn].findIndex((task) => task.id === taskId)
+    const taskId = String(source.id);
+    const to = findColumnId(columns, taskId);
+    const from = findColumnId(serverColumns, taskId);
+    const toIndex = to
+      ? columns[to].findIndex((task) => task.id === taskId)
       : -1;
-    const newIndex = moved.columns[to].findIndex((task) => task.id === taskId);
-    if (originalColumn === to && originalIndex === newIndex)
+    const moved = to
+      ? moveTaskInColumns(serverColumns, taskId, to, toIndex)
+      : null;
+    const originalIndex = from
+      ? serverColumns[from].findIndex((task) => task.id === taskId)
+      : -1;
+    if (!to || !moved || (from === to && originalIndex === toIndex))
       return setDrag(null);
 
     setDrag({ base: serverColumns, columns: moved.columns });
     persistMove(taskId, to, moved.position);
   };
 
+  // Kept stable across the re-renders a drag causes, so the provider doesn't reconfigure plugins mid-drag.
+  const plugins = useMemo(() => {
+    const labelOf = (id: string | number) => {
+      const key = String(id);
+      const category = categories.find((item) => item.id === key);
+      if (category) return `${category.name} column`;
+      const task = tasks.find((item) => item.id === key);
+      return task ? `Task ${task.title}` : "Item";
+    };
+    const accessibility = Accessibility.configure({
+      announcements: {
+        dragstart: ({ operation: { source } }: DragStartEvent) =>
+          source ? `Picked up ${labelOf(source.id)}.` : undefined,
+        dragover: ({ operation: { source, target } }: DragOverEvent) => {
+          if (!source) return;
+          return target && target.id !== source.id
+            ? `${labelOf(source.id)} is over ${labelOf(target.id)}.`
+            : undefined;
+        },
+        dragend: ({
+          operation: { source, target },
+          canceled,
+        }: DragEndEvent) => {
+          if (!source) return;
+          if (canceled) return `Moving ${labelOf(source.id)} was cancelled.`;
+          return target
+            ? `${labelOf(source.id)} was dropped over ${labelOf(target.id)}.`
+            : `${labelOf(source.id)} was dropped.`;
+        },
+      },
+    });
+    return [
+      ...defaultPreset.plugins,
+      accessibility,
+      Feedback.configure({ dropAnimation: null }),
+    ];
+  }, [categories, tasks]);
+
   return (
-    <DndContext
-      id="board-dnd"
+    <DragDropProvider
       sensors={sensors}
-      measuring={measuring}
-      accessibility={{ announcements }}
-      collisionDetection={collisionDetection}
+      plugins={plugins}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
-      onDragCancel={() => {
-        setActiveId(null);
-        setDrag(null);
-      }}
     >
       <div
         role="region"
@@ -296,36 +278,23 @@ export default function BoardColumns({
           !isColumnDragging && "pointer-coarse:snap-x pointer-coarse:snap-proximity",
         )}
       >
-        <SortableContext
-          items={categoryIds}
-          strategy={horizontalListSortingStrategy}
-        >
-          {categories.map((category) => (
-            <BoardColumn
-              key={category.id}
-              project={project}
-              category={category}
-              categories={categories}
-              tasks={columns[category.id] ?? []}
-              canDrag={canDrag}
-              isAdmin={isAdmin}
-              filtered={countActiveFilters(view) > 0}
-              onMove={moveToCategory}
-              onDelete={deleteTask}
-            />
-          ))}
-        </SortableContext>
+        {orderedCategories.map((category, index) => (
+          <BoardColumn
+            key={category.id}
+            index={index}
+            project={project}
+            category={category}
+            categories={categories}
+            tasks={columns[category.id] ?? []}
+            canDrag={canDrag}
+            isAdmin={isAdmin}
+            filtered={filtered}
+            onMove={moveToCategory}
+            onDelete={deleteTask}
+          />
+        ))}
         <BoardOverview projectId={projectId} />
       </div>
-      <DragOverlay>
-        {activeTask && (
-          <TaskCardFace
-            task={activeTask}
-            done={activeCategory?.key === "done"}
-            isOverlay
-          />
-        )}
-      </DragOverlay>
-    </DndContext>
+    </DragDropProvider>
   );
 }
