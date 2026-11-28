@@ -17,9 +17,19 @@ function isRejectedPageRequest(request: NextRequest) {
   return !request.headers.get("content-type")?.startsWith("multipart/form-data");
 }
 
+// The MCP endpoint is POST-only and answers GET/DELETE with a bare 405. A browser opening it
+// (Accept: text/html) gets the 405 page; MCP clients never ask for HTML, so they keep the plain 405.
+function isBrowserOpeningMcpEndpoint(request: NextRequest) {
+  return (
+    request.nextUrl.pathname === "/api/agent/mcp" &&
+    request.method !== "POST" &&
+    request.headers.get("accept")?.includes("text/html") === true
+  );
+}
+
 // Next.js 16: Proxy replaces Middleware (lives in src/ because the app uses the src folder).
 export async function proxy(request: NextRequest) {
-  if (isRejectedPageRequest(request)) {
+  if (isRejectedPageRequest(request) || isBrowserOpeningMcpEndpoint(request)) {
     return NextResponse.redirect(new URL("/405", request.url), 303);
   }
   return updateSession(request);
