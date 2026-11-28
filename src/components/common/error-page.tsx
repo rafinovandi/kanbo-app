@@ -4,12 +4,13 @@ import KanboLogo from "@/components/common/kanbo-logo";
 import { Badge } from "@/components/ui/badge";
 import { kbAnimation } from "@/lib/utils";
 
-// Badge and disc colors per error page: 404 blue, 403 orange, 401 lilac, 410 yellow.
+// Badge and disc colors per error page: 404 blue, 403 orange, 401/405 lilac, 410 yellow, 500 red.
 const TONE_CLASS = {
   blue: { badge: "bg-kb-blue-tint text-kb-blue-fg", disc: "fill-kb-blue-tint" },
   orange: { badge: "bg-kb-orange-tint text-kb-orange-fg", disc: "fill-kb-orange-tint" },
   lilac: { badge: "bg-kb-lilac-tint text-kb-lilac-fg", disc: "fill-kb-lilac-tint" },
   yellow: { badge: "bg-kb-yellow-tint text-kb-yellow-fg", disc: "fill-kb-yellow-tint" },
+  red: { badge: "bg-kb-red-tint text-kb-red-fg", disc: "fill-kb-gray-tint" },
 } as const;
 
 const STAR_CLASS = {
@@ -32,7 +33,8 @@ const STAR_PATHS = [
 
 type ErrorPageProps = {
   // Three digits; the middle one (always 0) is replaced by the disc and `illustration`.
-  code: string;
+  // Without a code the hero shows only the disc (the generic error page).
+  code?: string;
   // Text inside the badge, e.g. "Error 401 · Sign in required".
   label: string;
   tone: ErrorTone;
@@ -47,7 +49,7 @@ type ErrorPageProps = {
   note?: ReactNode;
 };
 
-// Shared full-page layout for the 401 / 403 / 404 / 410 pages, no sidebar.
+// Shared full-page layout for the 401 / 403 / 404 / 405 / 410 and generic error pages, no sidebar.
 // The dot grid is one static image (public/error-grid.svg) used as a CSS background.
 // Everything animated stops under prefers-reduced-motion (kb-anim).
 export default function ErrorPage({
@@ -72,15 +74,19 @@ export default function ErrorPage({
             viewBox="0 0 360 200"
             fill="none"
             role="img"
-            aria-label={`Error ${code}`}
+            aria-label={code ? `Error ${code}` : label}
             className="block h-auto w-[360px] max-w-full overflow-visible"
           >
-            <text x="70" y="160" textAnchor="middle" fontSize="150" fontWeight="700" letterSpacing="-6" className="fill-foreground">
-              {code[0]}
-            </text>
-            <text x="292" y="160" textAnchor="middle" fontSize="150" fontWeight="700" letterSpacing="-6" className="fill-foreground">
-              {code[2]}
-            </text>
+            {code && (
+              <>
+                <text x="70" y="160" textAnchor="middle" fontSize="150" fontWeight="700" letterSpacing="-6" className="fill-foreground">
+                  {code[0]}
+                </text>
+                <text x="292" y="160" textAnchor="middle" fontSize="150" fontWeight="700" letterSpacing="-6" className="fill-foreground">
+                  {code[2]}
+                </text>
+              </>
+            )}
 
             <circle cx="180" cy="108" r="58" className={TONE_CLASS[tone].disc} />
             <circle

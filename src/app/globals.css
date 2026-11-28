@@ -434,6 +434,36 @@
     transform: rotate(360deg);
   }
 }
+/* Error pages (405): the cursor reaches for the blocked card, rests, then pulls back. */
+@keyframes kb-cursor-nudge {
+  0%,
+  100% {
+    transform: translate(10px, 10px);
+  }
+  45%,
+  55% {
+    transform: translate(0, 0);
+  }
+}
+/* Error pages (500): the broken card rocks side to side and the alert badge throbs. */
+@keyframes kb-rock {
+  0%,
+  100% {
+    transform: rotate(-4deg);
+  }
+  50% {
+    transform: rotate(4deg);
+  }
+}
+@keyframes kb-throb {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.12);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .kb-anim {
     animation: none !important;

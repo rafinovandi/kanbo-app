@@ -8,6 +8,7 @@ import type { Database } from "@/types/database.types";
 const PUBLIC_PATHS = [
   "/login",
   "/401",
+  "/405",
   "/auth",
   "/invite",
   "/privacy",
